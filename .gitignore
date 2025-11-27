@@ -1,1 +1,10 @@
-mytest
+# Debug
+mytest*
+debug*
+
+# Python
+*.egg-info
+__pycache__/
+
+# Logger
+logs/

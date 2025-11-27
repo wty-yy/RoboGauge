@@ -1,0 +1,7 @@
+from robogauge.utils.task_register import task_register
+from robogauge.tasks.simulator.mujoco_config import MujocoConfig
+from robogauge.tasks.robots import RobotConfig
+from robogauge.tasks.pipeline import BasePipeline
+from robogauge.tasks.gauge import BaseGaugeConfig
+
+task_register.register('base', BasePipeline, MujocoConfig, BaseGaugeConfig, RobotConfig)

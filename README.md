@@ -12,6 +12,11 @@
 | - | - | - |
 | Unitree go2 | 四足 | ✅ |
 
+## 目录结构
+- `robogauge/scripts`: 启动指标测试程序
+- `robogauge/tasks`: 定义测试任务
+- `robogauge/utils`: 常用工具
+
 ## 指标
 指标的计算方法是通过在环境中发送固定指令及持续时长, 通过Mujoco获取所需参数并计算.
 
