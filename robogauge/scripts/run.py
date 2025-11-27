@@ -15,5 +15,6 @@ from robogauge.utils.logger import logger
 if __name__ == '__main__':
     args = parse_args()
     logger.create(args.experiment_name)
+    logger.info(f"Starting experiment: {args.experiment_name}")
     pipeline: BasePipeline = task_register.make_pipeline(args.task_name, args=args)
     pipeline.run()

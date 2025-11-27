@@ -69,6 +69,7 @@ class Logger:
         """
         self.logger = logging.getLogger(experiment_name + "_logger")
         self.logger.setLevel(log_level)
+        self.logger.propagate = False
 
         console_formatter = ColorFormatter(    # console output format
             fmt="%(asctime)s - %(color_level)s - %(filename)s:%(lineno)d - %(message)s",
@@ -92,21 +93,21 @@ class Logger:
             fh = logging.FileHandler(path_log_file, mode=save_file_mode, encoding='utf-8')
             fh.setFormatter(file_formatter)
             self.logger.addHandler(fh)
-    
+
     def debug(self, msg, *args, **kwargs):
-        self.logger.debug(msg, *args, **kwargs)
+        self.logger.debug(msg, *args, **kwargs, stacklevel=2)
     
     def info(self, msg, *args, **kwargs):
-        self.logger.info(msg, *args, **kwargs)
+        self.logger.info(msg, *args, **kwargs, stacklevel=2)
     
     def warning(self, msg, *args, **kwargs):
-        self.logger.warning(msg, *args, **kwargs)
+        self.logger.warning(msg, *args, **kwargs, stacklevel=2)
 
     def error(self, msg, *args, **kwargs):
-        self.logger.error(msg, *args, **kwargs)
+        self.logger.error(msg, *args, **kwargs, stacklevel=2)
 
     def critical(self, msg, *args, **kwargs):
-        self.logger.critical(msg, *args, **kwargs)
+        self.logger.critical(msg, *args, **kwargs, stacklevel=2)
 
 logger = Logger()
 
