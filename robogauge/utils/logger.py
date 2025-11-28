@@ -14,6 +14,7 @@ import time
 import logging
 from pathlib import Path
 from robogauge import ROBOGAUGE_ROOT_DIR
+from torch.utils.tensorboard import SummaryWriter
 
 class LogColor:
     """ ANSI color codes """
@@ -49,6 +50,10 @@ class ColorFormatter(logging.Formatter):
 
 
 class Logger:
+    logger: logging.Logger = None
+    log_dir: Path = None
+    writer: SummaryWriter = None
+
     def create(self,
         experiment_name,
         console_output=True, color_output=True,
@@ -93,6 +98,12 @@ class Logger:
             fh = logging.FileHandler(path_log_file, mode=save_file_mode, encoding='utf-8')
             fh.setFormatter(file_formatter)
             self.logger.addHandler(fh)
+    
+    def create_tensorboard(self, run_name: str):
+        if self.writer is not None:
+            self.writer.close()
+        self.writer = SummaryWriter(str(self.log_dir / run_name))
+        self.info(f"Tensorboard writer created at: {self.log_dir / run_name}")
 
     def debug(self, msg, *args, **kwargs):
         self.logger.debug(msg, *args, **kwargs, stacklevel=2)
@@ -108,6 +119,19 @@ class Logger:
 
     def critical(self, msg, *args, **kwargs):
         self.logger.critical(msg, *args, **kwargs, stacklevel=2)
+    
+    def log(self, value, tag, step):
+        """ Log scalar value to tensorboard
+
+        Args:
+            value (float): scalar value
+            tag (str): tag name
+            step (int): step number
+        """
+        if self.writer is not None:
+            self.writer.add_scalar(tag, value, step)
+        else:
+            self.warning("Tensorboard writer is not initialized, skipping log.")
 
 logger = Logger()
 

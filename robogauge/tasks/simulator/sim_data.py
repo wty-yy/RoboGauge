@@ -11,19 +11,25 @@ class JointState:
 class BaseState:
     pos: np.ndarray
     quat: np.ndarray
-    vel: np.ndarray
+    lin_vel: np.ndarray
     ang_vel: np.ndarray
 
 @dataclass
 class IMUState:
-    quat: np.ndarray
-    ang_vel: np.ndarray
-    acc: np.ndarray
     pos: np.ndarray
+    quat: np.ndarray
+    acc: np.ndarray
     lin_vel: np.ndarray
+    ang_vel: np.ndarray
 
 @dataclass
 class RobotProprioception:
     joint: JointState
     base: BaseState
     imu: IMUState
+
+@dataclass
+class SimData:
+    n_step: int
+    sim_dt: float
+    proprio: RobotProprioception

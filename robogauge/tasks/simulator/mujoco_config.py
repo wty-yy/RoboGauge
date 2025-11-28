@@ -13,7 +13,7 @@ class MujocoConfig(Config):
     simulator_class = 'MujocoSimulator'
 
     class physics:
-        simulation_dt = 0.005  # 200 Hz
+        simulation_dt = 0.002  # 500 Hz
     
     class viewer:
         headless = False
@@ -21,5 +21,6 @@ class MujocoConfig(Config):
     
     class render:
         save_video = False
+        video_fps = 30
         height = 480
         width = 640

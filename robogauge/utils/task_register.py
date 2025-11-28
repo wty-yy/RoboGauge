@@ -33,7 +33,7 @@ class TaskRegister():
         robot_cfg = self.robot_cfgs[name]
         return sim_cfg, gauger_cfg, robot_cfg
     
-    def make_pipeline(self, name, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None):
+    def make_pipeline(self, name, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None, run_name='0'):
         default_cfgs = self.get_cfgs(name)
         if sim_cfg is None:
             sim_cfg = default_cfgs[0]
@@ -44,7 +44,7 @@ class TaskRegister():
         if args is not None:
             self.update_args_to_cfg(sim_cfg, gauger_cfg, robot_cfg, args)
         pipeline_class = self.get_pipeline_class(name)
-        return pipeline_class(sim_cfg, robot_cfg, gauger_cfg)
+        return pipeline_class(run_name, sim_cfg, robot_cfg, gauger_cfg)
 
     def update_args_to_cfg(self, sim_cfg, gauger_cfg, robot_cfg, args):
         if args.headless is not None:

@@ -7,6 +7,9 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Run Robogauge Pipeline
 '''
+import os
+os.environ['MUJOCO_GL'] = 'glfw'  # avoid mujoco.Renderer EGL context error
+
 from robogauge.tasks import *
 from robogauge.utils.task_register import task_register
 from robogauge.utils.helpers import parse_args

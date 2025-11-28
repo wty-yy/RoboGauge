@@ -5,7 +5,7 @@
 @Author  : wty-yy
 @Version : 1.0
 @Blog    : https://wty-yy.github.io/
-@Desc    : None
+@Desc    : Mujoco Simulator for Robogauge
 '''
 import mujoco
 import mujoco.viewer
@@ -15,11 +15,15 @@ import re
 import time
 import imageio
 import numpy as np
+from typing import Literal
 
 from robogauge.utils.logger import logger
-from robogauge.utils.helpers import pares_path
+from robogauge.utils.helpers import parse_path
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
-from robogauge.tasks.simulator.sim_data import RobotProprioception, JointState, BaseState, IMUState
+from robogauge.tasks.simulator.sim_data import (
+    SimData,
+    RobotProprioception, JointState, BaseState, IMUState
+)
 
 class MujocoSimulator:
     def __init__(self, sim_cfg: MujocoConfig):
@@ -28,12 +32,14 @@ class MujocoSimulator:
         self.robot_xml = None
         self.terrain_spawn_xy = None
         self.robot_spawn_height = None
+        self.default_dof_pos = None
         self.viewer = None
         self.renderer = None
         self.vid_writer = None
         self.vid_count = 0
         self._pause = True
         self.n_step = 0
+        self.sim_time = 0.0
 
     def load(
         self,
@@ -41,16 +47,19 @@ class MujocoSimulator:
         robot_xml: str = None,
         terrain_spawn_xy: list = None,
         robot_spawn_height: float = None,
+        default_dof_pos: list = None,
     ):
         """ Load terrain and robot into the simulator, support re-loading. """
         if terrain_xml is not None:
-            self.terrain_xml = pares_path(terrain_xml)
+            self.terrain_xml = parse_path(terrain_xml)
         if robot_xml is not None:
-            self.robot_xml = pares_path(robot_xml)
+            self.robot_xml = parse_path(robot_xml)
         if terrain_spawn_xy is not None:
             self.terrain_spawn_xy = terrain_spawn_xy
         if robot_spawn_height is not None:
             self.robot_spawn_height = robot_spawn_height
+        if default_dof_pos is not None:
+            self.default_dof_pos = default_dof_pos
 
         terrain_xml = self.terrain_xml
         robot_xml = self.robot_xml
@@ -58,6 +67,8 @@ class MujocoSimulator:
         robot_spawn_height = self.robot_spawn_height
         if terrain_xml is None or robot_xml is None:
             raise ValueError("Terrain and robot XML paths must be provided.")
+        if default_dof_pos is None:
+            raise ValueError("Default DOF positions must be provided.")
         
         robot_mjcf = mjcf.from_path(robot_xml)
         terrain_mjcf = mjcf.from_path(terrain_xml)
@@ -74,6 +85,10 @@ class MujocoSimulator:
         self.mj_model = self.mj_physics.model.ptr
         self.mj_data = self.mj_physics.data.ptr
         self.mj_model.opt.timestep = self.cfg.physics.simulation_dt
+        self.sim_dt = self.cfg.physics.simulation_dt
+        self.mj_data.qpos[7:] = default_dof_pos
+        mujoco.mj_forward(self.mj_model, self.mj_data)
+
         self.headless = self.cfg.viewer.headless
         if self.cfg.render.save_video and self.headless:
             logger.warning("Cannot save video in headless mode, disabling video saving.")
@@ -94,23 +109,33 @@ class MujocoSimulator:
                 vid_path = str(vid_dir / f"sim_video_{self.vid_count:03d}.mp4")
                 self.vid_writer = imageio.get_writer(
                     vid_path,
-                    fps=int(1 / self.cfg.physics.simulation_dt),
+                    fps=self.cfg.render.video_fps,
                 )
+                self.vid_frame_skip = int(1 / (self.cfg.render.video_fps * self.sim_dt * 2))
                 logger.info(f"Saving simulation video to: {vid_path}")
                 self.vid_count += 1
         self._pause = False
         self.n_step = 0
+        self.sim_time = 0.0
         self.preload_sensors()
+
+
+        # Robot controller placeholders
+        self.action = None
+        self.p_gains = None
+        self.d_gains = None
+        self.control_type = None
 
     def key_callback(self, keycode):
         if keycode == 32:
             self._pause = not self._pause
             logger.info(f"Pause toggled: {self._pause}")
     
-    def step(self) -> dict:
+    def step(self) -> SimData:
         """ Simulation step, pause will block thread. """
         while self._pause:
             time.sleep(0.1)
+        self.update_torque()
         self.mj_physics.step()
         if self.viewer is not None:
             if self.viewer.is_running():
@@ -120,7 +145,7 @@ class MujocoSimulator:
                 if time_untile_next_render > 0:
                     time.sleep(time_untile_next_render)
                 self.viewer.sync()
-                if self.vid_writer is not None:
+                if self.vid_writer is not None and self.n_step % self.vid_frame_skip == 0:
                     self.renderer.update_scene(self.mj_data, camera=self.viewer.cam)
                     frame = self.renderer.render()
                     self.vid_writer.append_data(frame)
@@ -129,43 +154,75 @@ class MujocoSimulator:
                 logger.warning("Viewer closed by user, stop video recording.")
                 self.close_viewer()
 
-        n_sensor = self.mj_model.nsensor
-        
-        proprio = RobotProprioception(
+        self.proprio = proprio = RobotProprioception(
             joint=JointState(
                 pos=self.get_sensor_data('joint_pos'),
                 vel=self.get_sensor_data('joint_vel'),
                 force=self.get_sensor_data('joint_eff'),
             ),
             imu=IMUState(
-                quat=self.get_sensor_data('imu_quat'),
-                ang_vel=self.get_sensor_data('imu_ang_vel'),
-                acc=self.get_sensor_data('imu_acc'),
                 pos=self.get_sensor_data('imu_pos'),
+                quat=self.get_sensor_data('imu_quat'),
+                acc=self.get_sensor_data('imu_acc'),
                 lin_vel=self.get_sensor_data('imu_lin_vel'),
+                ang_vel=self.get_sensor_data('imu_ang_vel'),
             ),
             base=BaseState(
                 pos=self.mj_data.qpos[:3],      # world frame
                 quat=self.mj_data.qpos[3:7],    # world frame
-                vel=self.mj_data.qvel[:3],      # body frame
+                lin_vel=self.mj_data.qvel[:3],  # body frame
                 ang_vel=self.mj_data.qvel[3:6], # body frame
             )
         )
+        if self.n_step % int(0.1 / self.sim_dt) == 0:
+            logger.log(value=np.mean(proprio.imu.quat - proprio.base.quat), tag="sim/delta_quat", step=self.n_step)
+            logger.log(value=np.mean(proprio.imu.ang_vel - proprio.base.ang_vel), tag="sim/delta_ang_vel", step=self.n_step)
+            logger.log(value=np.mean(proprio.imu.lin_vel - proprio.base.lin_vel), tag="sim/delta_lin_vel", step=self.n_step)
         if self.n_step == 0:
-            self.debug_print_proprio_shapes(proprio)
-        self.n_step += 1
+            self.debug_print_proprio_shapes()
 
-        return proprio
+        sim_data = SimData(
+            n_step=self.n_step,
+            sim_dt=self.sim_dt,
+            proprio=proprio
+        )
+
+        self.n_step += 1
+        self.sim_time = self.n_step * self.sim_dt
+        return sim_data
     
     def reset(self):
         """ Reset the simulator to initial state. """
         self.mj_physics.reset()
+        self.mj_data.qpos[7:] = self.default_dof_pos
+        mujoco.mj_forward(self.mj_model, self.mj_data)
+
+        self.action = None
         if self.viewer is not None:
             self.viewer.sync()
 
-    def apply_action(self, action: np.ndarray):
-        """ Apply action to the simulator. """
-        self.mj_data.ctrl[:] = action
+    def setup_action(self,
+            action: np.ndarray,
+            p_gains: np.ndarray = None,
+            d_gains: np.ndarray = None,
+            control_type: Literal['P'] = 'P'
+        ):
+        """ Setup action to the simulator. """
+        self.action = action
+        self.p_gains = p_gains
+        self.d_gains = d_gains
+        self.control_type = control_type
+    
+    def update_torque(self):
+        if self.action is None:
+            return
+        dof_pos = self.proprio.joint.pos
+        dof_vel = self.proprio.joint.vel
+        if self.control_type == 'P':
+            torques = self.p_gains * (self.action - dof_pos) - self.d_gains * dof_vel
+        else:
+            raise NotImplementedError(f"Control type '{self.control_type}' not implemented.")
+        self.mj_data.ctrl[:] = torques
     
     def close_viewer(self):
         """ Close the viewer and video writer. """
@@ -189,12 +246,16 @@ class MujocoSimulator:
         self.imu_acc = self.find_sensors(tag_name="accelerometer")
         self.imu_pos = self.find_sensors(tag_name="framepos")
         self.imu_lin_vel = self.find_sensors(tag_name="framelinvel")
+        actuator_names = [mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) for i in range(self.mj_model.nu)]
         logger.info(
             f"\n{'='*20} XML SENSOR NAMES {'='*20}\n"
-            f"""Joint Position Sensors [{len(self.joint_pos_sensor_names)}]: {self.joint_pos_sensor_names}\n"""
-            f"""Joint Velocity Sensors [{len(self.joint_vel_sensor_names)}]: {self.joint_vel_sensor_names}\n"""
-            f"""Joint Effort Sensors [{len(self.joint_eff_sensor_names)}]: {self.joint_eff_sensor_names}\n"""
-            f"""IMU Sensors: Quat{self.imu_quat}, AngVel{self.imu_ang_vel}, Acc{self.imu_acc}, Pos{self.imu_pos}, LinVel{self.imu_lin_vel}"""
+            f"""Joint Position Sensors [{len(self.joint_pos_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_pos_sensor_names]}\n"""
+            f"""Joint Velocity Sensors [{len(self.joint_vel_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_vel_sensor_names]}\n"""
+            f"""Joint Effort Sensors [{len(self.joint_eff_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_eff_sensor_names]}\n"""
+            f"""Actuators [{len(actuator_names)}]: {[x.rsplit('/')[-1] for x in actuator_names]}\n"""
+            f"""IMU Sensors: Quat{self.imu_quat}, AngVel{self.imu_ang_vel}, Acc{self.imu_acc}, Pos{self.imu_pos}, LinVel{self.imu_lin_vel}\n"""
+            f"""!!!Checkout actuators order is consistent with joint sensors!!!\n"""
+            f"{'='*58}"
         )
 
         # Cache sensor indices
@@ -259,7 +320,7 @@ class MujocoSimulator:
             data_list.append(self.mj_data.sensordata[adr:adr+dim])
         return np.concatenate(data_list)
 
-    def debug_print_proprio_shapes(self, proprio: RobotProprioception):
+    def debug_print_proprio_shapes(self):
         """Log shapes (or lengths) of each numpy vector inside a RobotProprioception.
 
         This helps debug mismatched sensor sizes between robots.
@@ -271,9 +332,9 @@ class MujocoSimulator:
             except Exception:
                 return None
 
-        jp = proprio.joint
-        bs = proprio.base
-        imu = proprio.imu
+        jp = self.proprio.joint
+        bs = self.proprio.base
+        imu = self.proprio.imu
 
         logger.info("Proprioception shapes:")
         logger.info(f"  joint.pos: { _shape(jp.pos) }")
@@ -282,7 +343,7 @@ class MujocoSimulator:
 
         logger.info(f"  base.pos: { _shape(bs.pos) }")
         logger.info(f"  base.quat: { _shape(bs.quat) }")
-        logger.info(f"  base.vel: { _shape(bs.vel) }")
+        logger.info(f"  base.vel: { _shape(bs.lin_vel) }")
         logger.info(f"  base.ang_vel: { _shape(bs.ang_vel) }")
 
         logger.info(f"  imu.quat: { _shape(imu.quat) }")

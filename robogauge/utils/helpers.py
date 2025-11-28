@@ -14,7 +14,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from robogauge import ROBOGAUGE_ROOT_DIR
 
-def pares_path(path):
+def parse_path(path):
     if "{ROBOGAUGE_ROOT_DIR}" in str(path):
         path = str(path).replace("{ROBOGAUGE_ROOT_DIR}", ROBOGAUGE_ROOT_DIR)
     return path
@@ -47,10 +47,13 @@ def parse_args():
     parser = ArgumentParser()
     parameters = [
         {"name": "--task-name", "type": str, "default": "base", "help": "Name of the task to run."},
-        {"name": "--experiment-name", "type": str, "default": "base", "help": "Name of the experiment to run."},
+        {"name": "--experiment-name", "type": str, "help": "Name of the experiment to run."},
         {"name": "--headless", "action": "store_true", "default": False, "help": "Run in headless mode."},
         {"name": "--save-video", "action": "store_true", "default": False, "help": "Save video output."},
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.experiment_name is None:
+        args.experiment_name = f"{args.task_name}_exp"
+    return args

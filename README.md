@@ -44,3 +44,21 @@
 | 4 | base高度变化 | 固定高度 | 高速移动时机身存在趴低问题 | 平地 |
 | 5 | 速度对角突变base高度变化 | 固定高度 | 速度发生对角突变时无法平衡 | 平地 |
 | 6 | 高速移动急停稳定性 | 固定用时 | 楼梯上静止时, 关节不稳定 | Any |
+
+## 创建新任务
+评测任务注册在[`tasks/__init__.py`](./robogauge/tasks/__init__.py)中完成, 包含四个部分:
+- BasePipline: 标准Pipline一般无需修改
+- MujocoConfig: 仿真器配置文件, 一般无需修改
+- BaseGaugeConfig: 指标配置文件, 参考下文创建新指标
+- RobotConfig: 机器人配置文件, 参考下文创建新机器人
+### 新指标
+在`robogauge/tasks/gauge`下创建新的场景、评估指标
+### 新机器人
+在`robogauge/tasks/robots`下创建新机器人、配置控制模型, 参考`go2`配置
+- [go2.py](./robogauge/tasks/robots/go2/go2.py)控制模型, 包含观测构建和动作输出两个函数, 继承`BaseRobot`
+- [go2_config.py](./robogauge/tasks/robots/go2/go2_config.py)配置文件, 包含机器人模型xml路径, 控制模型路径, 观测构建参数, 关节映射顺序, 各类缩放系数, 控制频率等
+
+## 注意事项
+### 导入新机器人/控制模型
+1. 在Robot中创建新的机器人xml文件时, 需包含力矩控制`actuator`, 传感器`sensor - jointpos, jointvel, imu (framequat, gyro, accelerometer)`, 参考[`go2.xml`](resources/robots/go2/go2.xml), **注意: actuator的顺序需要和joint顺序一致, 该顺序称为mujoco关节顺序**
+2. 控制模型相关位置位于[`RobotConfig.control`](robogauge/tasks/robots/base_robot_config.py)中, 不同仿真中关节顺序可能不同, 需保证`mj2model_dof_indices`从mujoco映射到模型训练的关节次序配置正确 (IsaacGym次序和Mujoco相同), 其他模型配置需保持一致

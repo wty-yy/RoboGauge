@@ -40,7 +40,6 @@
     <material name="metal" rgba=".9 .95 .95 1" />
     <material name="black" rgba="0 0 0 1" />
     <material name="white" rgba="1 1 1 1" />
-    <!-- <material name="white" rgba="1 1 0 1" /> -->
     <material name="gray" rgba="0.671705 0.692426 0.774270 1" />
 
     <mesh file="base_0.obj" />
@@ -222,59 +221,60 @@
   </worldbody>
 
   <actuator>
-    <motor class="abduction" name="FR_hip" joint="FR_hip_joint" />
-    <motor class="hip" name="FR_thigh" joint="FR_thigh_joint" />
-    <motor class="knee" name="FR_calf" joint="FR_calf_joint" />
-    <motor class="abduction" name="FL_hip" joint="FL_hip_joint" />
-    <motor class="hip" name="FL_thigh" joint="FL_thigh_joint" />
-    <motor class="knee" name="FL_calf" joint="FL_calf_joint" />
-    <motor class="abduction" name="RR_hip" joint="RR_hip_joint" />
-    <motor class="hip" name="RR_thigh" joint="RR_thigh_joint" />
-    <motor class="knee" name="RR_calf" joint="RR_calf_joint" />
-    <motor class="abduction" name="RL_hip" joint="RL_hip_joint" />
-    <motor class="hip" name="RL_thigh" joint="RL_thigh_joint" />
-    <motor class="knee" name="RL_calf" joint="RL_calf_joint" />
+    <!-- mujoco dof actuator (not real robot actuators order) -->
+    <motor name="FL_hip"   joint="FL_hip_joint"/>
+    <motor name="FL_thigh" joint="FL_thigh_joint"/>
+    <motor name="FL_calf"  joint="FL_calf_joint"/>
+    <motor name="FR_hip"   joint="FR_hip_joint"/>
+    <motor name="FR_thigh" joint="FR_thigh_joint"/>
+    <motor name="FR_calf"  joint="FR_calf_joint"/>
+    <motor name="RL_hip"   joint="RL_hip_joint"/>
+    <motor name="RL_thigh" joint="RL_thigh_joint"/>
+    <motor name="RL_calf"  joint="RL_calf_joint"/>
+    <motor name="RR_hip"   joint="RR_hip_joint"/>
+    <motor name="RR_thigh" joint="RR_thigh_joint"/>
+    <motor name="RR_calf"  joint="RR_calf_joint"/>
   </actuator>
 
   <sensor>
-    <jointpos name="FR_hip_pos" joint="FR_hip_joint" />
-    <jointpos name="FR_thigh_pos" joint="FR_thigh_joint" />
-    <jointpos name="FR_calf_pos" joint="FR_calf_joint" />
     <jointpos name="FL_hip_pos" joint="FL_hip_joint" />
     <jointpos name="FL_thigh_pos" joint="FL_thigh_joint" />
     <jointpos name="FL_calf_pos" joint="FL_calf_joint" />
-    <jointpos name="RR_hip_pos" joint="RR_hip_joint" />
-    <jointpos name="RR_thigh_pos" joint="RR_thigh_joint" />
-    <jointpos name="RR_calf_pos" joint="RR_calf_joint" />
+    <jointpos name="FR_hip_pos" joint="FR_hip_joint" />
+    <jointpos name="FR_thigh_pos" joint="FR_thigh_joint" />
+    <jointpos name="FR_calf_pos" joint="FR_calf_joint" />
     <jointpos name="RL_hip_pos" joint="RL_hip_joint" />
     <jointpos name="RL_thigh_pos" joint="RL_thigh_joint" />
     <jointpos name="RL_calf_pos" joint="RL_calf_joint" />
+    <jointpos name="RR_hip_pos" joint="RR_hip_joint" />
+    <jointpos name="RR_thigh_pos" joint="RR_thigh_joint" />
+    <jointpos name="RR_calf_pos" joint="RR_calf_joint" />
 
-    <jointvel name="FR_hip_vel" joint="FR_hip_joint" />
-    <jointvel name="FR_thigh_vel" joint="FR_thigh_joint" />
-    <jointvel name="FR_calf_vel" joint="FR_calf_joint" />
     <jointvel name="FL_hip_vel" joint="FL_hip_joint" />
     <jointvel name="FL_thigh_vel" joint="FL_thigh_joint" />
     <jointvel name="FL_calf_vel" joint="FL_calf_joint" />
-    <jointvel name="RR_hip_vel" joint="RR_hip_joint" />
-    <jointvel name="RR_thigh_vel" joint="RR_thigh_joint" />
-    <jointvel name="RR_calf_vel" joint="RR_calf_joint" />
+    <jointvel name="FR_hip_vel" joint="FR_hip_joint" />
+    <jointvel name="FR_thigh_vel" joint="FR_thigh_joint" />
+    <jointvel name="FR_calf_vel" joint="FR_calf_joint" />
     <jointvel name="RL_hip_vel" joint="RL_hip_joint" />
     <jointvel name="RL_thigh_vel" joint="RL_thigh_joint" />
     <jointvel name="RL_calf_vel" joint="RL_calf_joint" />
+    <jointvel name="RR_hip_vel" joint="RR_hip_joint" />
+    <jointvel name="RR_thigh_vel" joint="RR_thigh_joint" />
+    <jointvel name="RR_calf_vel" joint="RR_calf_joint" />
 
-    <jointactuatorfrc name="FR_hip_torque" joint="FR_hip_joint" noise="0.01" />
-    <jointactuatorfrc name="FR_thigh_torque" joint="FR_thigh_joint" noise="0.01" />
-    <jointactuatorfrc name="FR_calf_torque" joint="FR_calf_joint" noise="0.01" />
     <jointactuatorfrc name="FL_hip_torque" joint="FL_hip_joint" noise="0.01" />
     <jointactuatorfrc name="FL_thigh_torque" joint="FL_thigh_joint" noise="0.01" />
     <jointactuatorfrc name="FL_calf_torque" joint="FL_calf_joint" noise="0.01" />
-    <jointactuatorfrc name="RR_hip_torque" joint="RR_hip_joint" noise="0.01" />
-    <jointactuatorfrc name="RR_thigh_torque" joint="RR_thigh_joint" noise="0.01" />
-    <jointactuatorfrc name="RR_calf_torque" joint="RR_calf_joint" noise="0.01" />
+    <jointactuatorfrc name="FR_hip_torque" joint="FR_hip_joint" noise="0.01" />
+    <jointactuatorfrc name="FR_thigh_torque" joint="FR_thigh_joint" noise="0.01" />
+    <jointactuatorfrc name="FR_calf_torque" joint="FR_calf_joint" noise="0.01" />
     <jointactuatorfrc name="RL_hip_torque" joint="RL_hip_joint" noise="0.01" />
     <jointactuatorfrc name="RL_thigh_torque" joint="RL_thigh_joint" noise="0.01" />
     <jointactuatorfrc name="RL_calf_torque" joint="RL_calf_joint" noise="0.01" />
+    <jointactuatorfrc name="RR_hip_torque" joint="RR_hip_joint" noise="0.01" />
+    <jointactuatorfrc name="RR_thigh_torque" joint="RR_thigh_joint" noise="0.01" />
+    <jointactuatorfrc name="RR_calf_torque" joint="RR_calf_joint" noise="0.01" />
 
     <framequat name="imu_quat" objtype="site" objname="imu" />
     <gyro name="imu_gyro" site="imu" />
@@ -283,9 +283,4 @@
     <framepos name="frame_pos" objtype="site" objname="imu" />
     <framelinvel name="frame_vel" objtype="site" objname="imu" />
   </sensor>
-
-  <!-- <keyframe>
-    <key name="home" qpos="0 0 0.27 1 0 0 0 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8"
-      ctrl="0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8 0 0.9 -1.8" />
-  </keyframe> -->
 </mujoco>
