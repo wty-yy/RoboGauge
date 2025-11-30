@@ -1,0 +1,57 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : velocity_goals.py
+@Time    : 2025/11/30 21:44:13
+@Author  : wty-yy
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : Velocity Goals Implementation
+'''
+from typing import Optional
+
+from robogauge.tasks.gauge.goals import BaseGoal
+from robogauge.tasks.robots import RobotConfig
+from robogauge.tasks.simulator.sim_data import SimData
+from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal
+from robogauge.utils.helpers import class_to_dict
+from robogauge.utils.logger import logger
+
+class MaxVelocityGoal(BaseGoal):
+    """ Goal class for maximizing velocity commands. """
+    def __init__(self, max_velocity: RobotConfig.commands, cmd_duration: float = 5, **kwargs):
+        kwargs.pop('enabled', None)
+        if kwargs:
+            logger.warning(f"Unused kwargs in MaxVelocityGoal: {kwargs}")
+
+        self.max_velocity = class_to_dict(max_velocity)
+        self.cmd_duration = cmd_duration
+        self.last_reset_time = 0.0
+
+        self.goals = []
+        for key, min_max in self.max_velocity.items():
+            if min_max is None: continue
+            for value in min_max:
+                if value != 0:
+                    self.goals.append(VelocityGoal(**{key: value}))
+        
+        self.count = 0
+        self.total = len(self.goals)
+
+    def is_reset(self, sim_data: SimData) -> bool:
+        if sim_data.sim_time - self.last_reset_time >= self.cmd_duration:
+            self.last_reset_time = sim_data.sim_time
+            return True
+        return False
+
+    def get_goal(self, sim_data: SimData) -> Optional[GoalData]:
+        self.count = int(sim_data.sim_time / self.cmd_duration)
+        if self.count >= self.total:
+            return None
+        self.current_goal = self.goals[self.count]
+        return GoalData(
+            goal_type='velocity',
+            velocity_goal=self.current_goal
+        )
+    
+    def __repr__(self):
+        return f"{self.current_goal}"

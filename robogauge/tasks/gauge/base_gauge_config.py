@@ -15,9 +15,16 @@ class BaseGaugeConfig(Config):
     class assets:
         terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/flat.xml'
         terrain_spawn_xy = [0, 0]  # x y [m]
+    
+    class goals:
+        class max_velocity:  # goal with maximum velocity
+            enabled = True
+            cmd_duration = 3.0  # duration for each velocity command [s]
 
     class metrics:
-        dof_limits = True
+        class dof_limits:
+            enabled = True
+            soft_dof_limit_ratio = 0.9
     
     class commands:
         stance = True

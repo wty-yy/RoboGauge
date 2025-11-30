@@ -19,7 +19,7 @@ from robogauge.utils.logger import logger
 class Go2(BaseRobot):
     def __init__(self, cfg: Go2Config):
         super().__init__(cfg)
-        self.max_velocity_cmd = np.array(cfg.control.max_velocity_cmd, dtype=np.float32)
+        self.cmd_range = cfg.commands
         self.default_dof_pos = np.array(cfg.control.default_dof_pos, dtype=np.float32)
         self.last_action = np.zeros(self.num_action, dtype=np.float32)
         self.action_scale = cfg.control.scales.action
@@ -35,8 +35,11 @@ class Go2(BaseRobot):
             dof_pos = (sim_proprio.joint.pos - self.default_dof_pos) * self.cfg.control.scales.dof_pos
             dof_vel = sim_proprio.joint.vel * self.cfg.control.scales.dof_vel
 
-            cmd = np.array(goal_data.velocity_goal.lin_vel[:2] + goal_data.velocity_goal.ang_vel[2:3], np.float32)
-            cmd = np.minimum(np.maximum(cmd, -self.max_velocity_cmd), self.max_velocity_cmd)
+            goal = goal_data.velocity_goal
+            cmd = np.array([goal.lin_vel_x, goal.lin_vel_y, goal.ang_vel_yaw], dtype=np.float32)
+            cmd = np.minimum(np.maximum(cmd, np.array([self.cmd_range.lin_vel_x[0], self.cmd_range.lin_vel_y[0], self.cmd_range.ang_vel_yaw[0]], dtype=np.float32)), 
+                             np.array([self.cmd_range.lin_vel_x[1], self.cmd_range.lin_vel_y[1], self.cmd_range.ang_vel_yaw[1]], dtype=np.float32))
+            
             cmd *= self.cfg.control.scales.cmd
 
             obs[:3] = ang_vel

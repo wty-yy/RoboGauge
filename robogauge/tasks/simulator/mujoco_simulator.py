@@ -117,6 +117,7 @@ class MujocoSimulator:
         self._pause = False
         self.n_step = 0
         self.sim_time = 0.0
+        self.load_dof_limits()
         self.preload_sensors()
 
 
@@ -159,6 +160,7 @@ class MujocoSimulator:
                 pos=self.get_sensor_data('joint_pos'),
                 vel=self.get_sensor_data('joint_vel'),
                 force=self.get_sensor_data('joint_eff'),
+                limits=self.dof_limits,
             ),
             imu=IMUState(
                 pos=self.get_sensor_data('imu_pos'),
@@ -184,6 +186,7 @@ class MujocoSimulator:
         sim_data = SimData(
             n_step=self.n_step,
             sim_dt=self.sim_dt,
+            sim_time=self.sim_time,
             proprio=proprio
         )
 
@@ -248,7 +251,9 @@ class MujocoSimulator:
         self.imu_lin_vel = self.find_sensors(tag_name="framelinvel")
         actuator_names = [mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_ACTUATOR, i) for i in range(self.mj_model.nu)]
         logger.info(
-            f"\n{'='*20} XML SENSOR NAMES {'='*20}\n"
+            f"""\nRobot XML: {self.robot_xml}\n"""
+            f"""Robot joint names: {[x.rsplit('/')[-1] for x in self.dof_names]}\n"""
+            f"""{'='*20} XML SENSOR NAMES {'='*20}\n"""
             f"""Joint Position Sensors [{len(self.joint_pos_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_pos_sensor_names]}\n"""
             f"""Joint Velocity Sensors [{len(self.joint_vel_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_vel_sensor_names]}\n"""
             f"""Joint Effort Sensors [{len(self.joint_eff_sensor_names)}]: {[x.rsplit('/')[-1] for x in self.joint_eff_sensor_names]}\n"""
@@ -351,3 +356,16 @@ class MujocoSimulator:
         logger.info(f"  imu.acc: { _shape(imu.acc) }")
         logger.info(f"  imu.pos: { _shape(imu.pos) }")
         logger.info(f"  imu.lin_vel: { _shape(imu.lin_vel) }")
+
+    def load_dof_limits(self):
+        self.dof_limits = []
+        self.dof_names = []
+        for i in range(self.mj_model.njnt):
+            name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_JOINT, i)
+            jnt_type = self.mj_model.jnt_type[i]
+            if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
+                continue
+            limits = self.mj_model.jnt_range[i]
+            self.dof_limits.append(limits)
+            self.dof_names.append(name)
+        self.dof_limits = np.array(self.dof_limits, np.float32)

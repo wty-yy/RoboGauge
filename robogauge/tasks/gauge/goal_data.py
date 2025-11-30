@@ -4,8 +4,19 @@ from typing import List, Optional, Literal
 
 @dataclass
 class VelocityGoal:
-    lin_vel: List[float]  # x, y, z [m/s], z is ignored for ground robots
-    ang_vel: List[float]  # roll, pitch, yaw [rad/s], roll and pitch are ignored for ground robots
+    lin_vel_x: float = 0.0  # [m/s]
+    lin_vel_y: float = 0.0  # [m/s]
+    lin_vel_z: float = 0.0  # [m/s]
+    ang_vel_roll: float = 0.0  # [rad/s]
+    ang_vel_pitch: float = 0.0  # [rad/s]
+    ang_vel_yaw: float = 0.0  # [rad/s]
+    
+    def __repr__(self):
+        s = ""
+        for field in self.__dataclass_fields__:
+            if getattr(self, field) != 0.0:
+                s += f"{field}={getattr(self, field):.1f}, "
+        return s[:-2] if s else "stance"
 
 @dataclass
 class PositionGoal:

@@ -27,7 +27,7 @@ class BasePipeline:
 
         self.sim: MujocoSimulator = eval(simulator_cfg.simulator_class)(simulator_cfg)
         self.robot: BaseRobot = eval(robot_cfg.robot_class)(robot_cfg)
-        self.gauge: BaseGauge = eval(gauge_cfg.gauge_class)(gauge_cfg)
+        self.gauge: BaseGauge = eval(gauge_cfg.gauge_class)(gauge_cfg, robot_cfg)
     
     def load(self):
         logger.create_tensorboard(self.run_name)
@@ -47,14 +47,16 @@ class BasePipeline:
             logger.info(f"Sim FPS: {1.0 / self.simulator_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
             logger.info("Running pipeline...")
             while not self.gauge.is_done():
-                goal = self.gauge.get_goal()
+                goal = self.gauge.get_goal(sim_data)
+                if goal is None:
+                    continue
                 obs = self.robot.build_observation(sim_data, goal)
                 action, p_gains, d_gains, control_type = self.robot.get_action(obs)
                 self.sim.setup_action(action, p_gains, d_gains, control_type)
                 for _ in range(frame_skip):
                     sim_data = self.sim.step()
                     self.gauge.update_metrics(sim_data)
-                if self.gauge.is_reset():
+                if self.gauge.is_reset(sim_data):
                     self.sim.reset()
                     sim_data = self.sim.step()
         finally:

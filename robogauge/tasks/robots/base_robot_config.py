@@ -7,7 +7,8 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Base Robot Configuration
 '''
-from typing_extensions import Literal
+from dataclasses import dataclass
+from typing import Optional, List
 from robogauge.utils.config import Config
 
 class RobotConfig(Config):
@@ -30,7 +31,6 @@ class RobotConfig(Config):
         num_observations = 45
         num_actions = 12
 
-        max_velocity_cmd = [1.5, 1.0, 2.0]
         default_dof_pos = [0.1,  0.8,  -1.5,  -0.1, 0.8, -1.5, 
                            0.1,  1.0,  -1.5,  -0.1, 1.0, -1.5] 
 
@@ -47,5 +47,7 @@ class RobotConfig(Config):
     class commands:
         lin_vel_x = [-1, 1]  # min max [m/s]
         lin_vel_y = [-1, 1]  # min max [m/s]
+        lin_vel_z = None  # min max [m/s]
+        ang_vel_roll = None  # min max [rad/s]
+        ang_vel_pitch = None  # min max [rad/s]
         ang_vel_yaw = [-1, 1]  # min max [rad/s]
-    

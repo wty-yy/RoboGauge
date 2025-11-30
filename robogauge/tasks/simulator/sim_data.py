@@ -3,9 +3,10 @@ from dataclasses import dataclass
 
 @dataclass
 class JointState:
-    pos: np.ndarray
-    vel: np.ndarray
-    force: np.ndarray
+    pos: np.ndarray     # [rad] shape (n_dof,)
+    vel: np.ndarray     # [rad/s] shape (n_dof,)
+    force: np.ndarray   # [N*m] shape (n_dof,)
+    limits: np.ndarray  # [rad] shape (n_dof, 2), lower and upper limits
 
 @dataclass
 class BaseState:
@@ -32,4 +33,5 @@ class RobotProprioception:
 class SimData:
     n_step: int
     sim_dt: float
+    sim_time: float
     proprio: RobotProprioception

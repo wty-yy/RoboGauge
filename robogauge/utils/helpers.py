@@ -20,6 +20,7 @@ def parse_path(path):
     return path
 
 def class_to_dict(obj) -> dict:
+    # From https://github.com/leggedrobotics/legged_gym/blob/master/legged_gym/utils/helpers.py
     if not hasattr(obj, "__dict__"):
         return obj
     result = {}
