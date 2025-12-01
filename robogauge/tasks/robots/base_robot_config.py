@@ -12,15 +12,16 @@ from typing import Optional, List
 from robogauge.utils.config import Config
 
 class RobotConfig(Config):
+    robot_name = 'base_robot'
     robot_class = 'BaseRobot'
 
     class assets:
         robot_xml = "{ROBOGAUGE_ROOT_DIR}/resources/robots/go2/go2.xml"
-        robot_spawn_height = 0.1  # z [m]
 
     class control:
         device = 'cpu'
-        torch_script_model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
+        # torch script model path
+        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
         control_dt = 0.02  # 50 Hz
         control_type = 'P'  # Position control
 

@@ -1,4 +1,10 @@
 # UPDATE
+## 20251201
+### v0.1.5
+1. 加入goals, metrics结果存储
+2. 优化路径存储: `logs/experiment_name/`下分别有两个文件`{time_tag}_{run_name}`存储实验启动的参数, 保存视频; `data/robot/model/goal/{time_tag}_{run_name}`下存储tensorboard
+3. 优化视频存储, 优先记录可视化界面, 否则使用跟随base的相机
+4. 修改`go2.xml`大腿的电机范围不超过base的高度
 ## 20251130
 ### v0.1.4
 1. 加入velocity_goals中的MaxVelocityGoal, 依次执行每种维度上的极值

@@ -15,6 +15,7 @@ import re
 import time
 import imageio
 import numpy as np
+from pathlib import Path
 from typing import Literal
 
 from robogauge.utils.logger import logger
@@ -30,10 +31,11 @@ class MujocoSimulator:
         self.cfg = sim_cfg
         self.terrain_xml = None
         self.robot_xml = None
-        self.terrain_spawn_xy = None
+        self.terrain_spawn_pos = None
         self.robot_spawn_height = None
         self.default_dof_pos = None
         self.viewer = None
+        self.offscreen_cam = mujoco.MjvCamera()
         self.renderer = None
         self.vid_writer = None
         self.vid_count = 0
@@ -45,8 +47,7 @@ class MujocoSimulator:
         self,
         terrain_xml: str = None,
         robot_xml: str = None,
-        terrain_spawn_xy: list = None,
-        robot_spawn_height: float = None,
+        terrain_spawn_pos: list = None,
         default_dof_pos: list = None,
     ):
         """ Load terrain and robot into the simulator, support re-loading. """
@@ -54,22 +55,20 @@ class MujocoSimulator:
             self.terrain_xml = parse_path(terrain_xml)
         if robot_xml is not None:
             self.robot_xml = parse_path(robot_xml)
-        if terrain_spawn_xy is not None:
-            self.terrain_spawn_xy = terrain_spawn_xy
-        if robot_spawn_height is not None:
-            self.robot_spawn_height = robot_spawn_height
+        if terrain_spawn_pos is not None:
+            self.terrain_spawn_pos = terrain_spawn_pos
         if default_dof_pos is not None:
             self.default_dof_pos = default_dof_pos
 
         terrain_xml = self.terrain_xml
         robot_xml = self.robot_xml
-        terrain_spawn_xy = self.terrain_spawn_xy
-        robot_spawn_height = self.robot_spawn_height
+        terrain_spawn_pos = self.terrain_spawn_pos
         if terrain_xml is None or robot_xml is None:
             raise ValueError("Terrain and robot XML paths must be provided.")
         if default_dof_pos is None:
             raise ValueError("Default DOF positions must be provided.")
         
+        # Create MJCF models
         robot_mjcf = mjcf.from_path(robot_xml)
         terrain_mjcf = mjcf.from_path(terrain_xml)
         for j in robot_mjcf.find_all('joint'):
@@ -77,10 +76,10 @@ class MujocoSimulator:
                 j.remove()
         attachment_frame = terrain_mjcf.attach(robot_mjcf)
         attachment_frame.add('freejoint')
-        attachment_frame.pos = [*terrain_spawn_xy, robot_spawn_height]
+        attachment_frame.pos = terrain_spawn_pos
 
-        if self.viewer is not None:
-            self.close_viewer()
+        self.close_viewer()
+        self.close_video_writer()
         self.mj_physics = mjcf.Physics.from_mjcf_model(terrain_mjcf)
         self.mj_model = self.mj_physics.model.ptr
         self.mj_data = self.mj_physics.data.ptr
@@ -89,37 +88,58 @@ class MujocoSimulator:
         self.mj_data.qpos[7:] = default_dof_pos
         mujoco.mj_forward(self.mj_model, self.mj_data)
 
+        # Setup offscreen camera
+        base_body_name = f'{Path(self.robot_xml).stem}/base_link'
+        body_id = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, base_body_name)
+        if body_id == -1:
+            body_id = 1
+            logger.warning(f"Body '{base_body_name}' not found, tracking body ID 1 instead.")
+        self.offscreen_cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+        self.offscreen_cam.trackbodyid = body_id
+        self.offscreen_cam.distance = self.cfg.viewer.camera_distance
+        self.offscreen_cam.elevation = self.cfg.viewer.camera_elevation
+        self.offscreen_cam.azimuth = self.cfg.viewer.camera_azimuth
+        self.offscreen_cam.lookat = np.array([0.0, 0.0, 0.0])
+
+        # Setup viewer
         self.headless = self.cfg.viewer.headless
-        if self.cfg.render.save_video and self.headless:
-            logger.warning("Cannot save video in headless mode, disabling video saving.")
-            self.cfg.render.save_video = False
         if not self.headless:
             self.viewer = mujoco.viewer.launch_passive(
                 self.mj_model, self.mj_data, key_callback=self.key_callback
             )
-            self.last_render_time = time.time()
-            if self.cfg.render.save_video:
-                self.renderer = mujoco.Renderer(
-                    self.mj_model, height=self.cfg.render.height,
-                    width=self.cfg.render.width
-                )
 
-                vid_dir = logger.log_dir / "videos"
-                vid_dir.mkdir(parents=True, exist_ok=True)
-                vid_path = str(vid_dir / f"sim_video_{self.vid_count:03d}.mp4")
-                self.vid_writer = imageio.get_writer(
-                    vid_path,
-                    fps=self.cfg.render.video_fps,
-                )
-                self.vid_frame_skip = int(1 / (self.cfg.render.video_fps * self.sim_dt * 2))
-                logger.info(f"Saving simulation video to: {vid_path}")
-                self.vid_count += 1
+            # set viewer.camera to follow robot
+            self.viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+            self.viewer.cam.trackbodyid = body_id
+            self.viewer.cam.distance = self.cfg.viewer.camera_distance
+            self.viewer.cam.elevation = self.cfg.viewer.camera_elevation
+            self.viewer.cam.azimuth = self.cfg.viewer.camera_azimuth
+            self.last_render_time = time.time()
+        
+        # Setup video writer
+        if self.cfg.render.save_video:
+            self.renderer = mujoco.Renderer(
+                self.mj_model, height=self.cfg.render.height,
+                width=self.cfg.render.width
+            )
+
+            vid_dir = logger.log_dir / "videos"
+            vid_dir.mkdir(parents=True, exist_ok=True)
+            vid_path = str(vid_dir / f"sim_video_{self.vid_count:03d}.mp4")
+            self.vid_writer = imageio.get_writer(
+                vid_path,
+                fps=self.cfg.render.video_fps,
+            )
+            self.vid_frame_skip = int(1 / (self.cfg.render.video_fps * self.sim_dt * 2))
+            logger.info(f"Simulation video saved at: {vid_path}")
+            self.vid_count += 1
+
+        # Initialize simulation state
         self._pause = False
         self.n_step = 0
         self.sim_time = 0.0
         self.load_dof_limits()
         self.preload_sensors()
-
 
         # Robot controller placeholders
         self.action = None
@@ -138,22 +158,28 @@ class MujocoSimulator:
             time.sleep(0.1)
         self.update_torque()
         self.mj_physics.step()
+
+        # Viewer sync
         if self.viewer is not None:
             if self.viewer.is_running():
+                self.viewer.sync()
                 time_untile_next_render = self.cfg.physics.simulation_dt - (
                     time.time() - self.last_render_time
                 )
                 if time_untile_next_render > 0:
                     time.sleep(time_untile_next_render)
-                self.viewer.sync()
-                if self.vid_writer is not None and self.n_step % self.vid_frame_skip == 0:
-                    self.renderer.update_scene(self.mj_data, camera=self.viewer.cam)
-                    frame = self.renderer.render()
-                    self.vid_writer.append_data(frame)
                 self.last_render_time = time.time()
             else:
-                logger.warning("Viewer closed by user, stop video recording.")
+                logger.warning("Viewer closed by user.")
                 self.close_viewer()
+
+        # Video recording
+        if self.vid_writer is not None and self.n_step % self.vid_frame_skip == 0:
+            render_cam = self.viewer.cam if self.viewer is not None else self.offscreen_cam
+            # mujoco.mjv_updateCamera(render_cam)
+            self.renderer.update_scene(self.mj_data, camera=render_cam)
+            frame = self.renderer.render()
+            self.vid_writer.append_data(frame)
 
         self.proprio = proprio = RobotProprioception(
             joint=JointState(
@@ -161,6 +187,7 @@ class MujocoSimulator:
                 vel=self.get_sensor_data('joint_vel'),
                 force=self.get_sensor_data('joint_eff'),
                 limits=self.dof_limits,
+                names=self.dof_names,
             ),
             imu=IMUState(
                 pos=self.get_sensor_data('imu_pos'),
@@ -233,6 +260,9 @@ class MujocoSimulator:
             self.viewer.close()
             self.viewer = None
             logger.info("Closing viewer.")
+    
+    def close_video_writer(self):
+        """ Close the video writer if exists. """
         if self.vid_writer is not None:
             self.vid_writer.close()
             self.vid_writer = None

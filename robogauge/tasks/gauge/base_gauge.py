@@ -7,7 +7,9 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Base Gauge for Robogauge
 '''
+import yaml
 from typing import List
+from pathlib import Path
 from functools import partial
 
 from robogauge.utils.logger import logger
@@ -19,11 +21,12 @@ from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal, PositionGoal
 from robogauge.tasks.simulator.sim_data import SimData
 
 from robogauge.tasks.gauge.goals import BaseGoal, MaxVelocityGoal
-from robogauge.tasks.gauge.metrics import dof_limits_metric
+from robogauge.tasks.gauge.metrics import *
 
 class BaseGauge:
     def __init__(self, cfg: BaseGaugeConfig, robot_cfg: RobotConfig):
         self.cfg = cfg
+        self.robot_cfg = robot_cfg
         self.goals_cfg = class_to_dict(self.cfg.goals)
         self.metrics_cfg = class_to_dict(self.cfg.metrics)
 
@@ -31,12 +34,10 @@ class BaseGauge:
         self.goal_idx = 0
         self.goals: List[BaseGoal] = []
         self.metrics: List[function] = []
-        self.info = {
-            'goal': [],
-            'metric': [],
-        }
+        self.info = {'goal': [], 'metric': []}
+        self.results = {}  # {'goal/sub_goal': {'metric': result}}
 
-        log_str = "Initialized Gauge with Goals:\n"
+        log_str = "Initialized Gauge with Goals and Metrics:\n"
         for name, kwargs in self.goals_cfg.items():
             if not kwargs['enabled']: continue
             if name == 'max_velocity':
@@ -47,11 +48,17 @@ class BaseGauge:
             self.info['goal'].append(name)
         for name, enabled in self.metrics_cfg.items():
             if not enabled: continue
+            if name in ['metric_dt']: continue
             metric_func = eval(f"{name}_metric")
             self.metrics.append(partial(metric_func, robot_cfg=robot_cfg, **self.metrics_cfg[name]))
             log_str += f"  - Metric: {name}\n"
             self.info['metric'].append(name)
         logger.info(log_str.strip())
+
+        if len(self.goals) == 0:
+            logger.warning("No goals have been configured for the Gauge. Exiting.")
+        else:
+            self.create_new_goal_logger()
     
     def is_reset(self, sim_data: SimData) -> bool:
         if self.goal_idx >= len(self.goals):
@@ -60,8 +67,18 @@ class BaseGauge:
     
     def is_done(self) -> bool:
         if self.goal_idx >= len(self.goals):
+            self.save_results()
             return True
         return False
+
+    def create_new_goal_logger(self):
+        """ Create a new logger for new goal to metrics. """
+        if self.goal_idx >= len(self.goals): return
+        logger.create_tensorboard(
+            self.robot_cfg.robot_name,
+            Path(self.robot_cfg.control.model_path).stem,
+            self.goals[self.goal_idx].name
+        )
     
     def get_goal(self, sim_data: SimData) -> GoalData:
         # goal = GoalData(
@@ -73,23 +90,37 @@ class BaseGauge:
         if self.goal_idx >= len(self.goals):
             logger.error("All goals have been exhausted.")
             return None
-        goal_instance = self.goals[self.goal_idx]
-        goal = goal_instance.get_goal(sim_data)
-        if goal is None:
+        goal_obj = self.goals[self.goal_idx]
+        goal = goal_obj.get_goal(sim_data)
+
+        if goal is None:  # goal obj finished
+            self.results[str(goal_obj)] = goal_obj.sub_goal_mean_metrics
+            self.results[goal_obj.name] = goal_obj.goal_mean_metrics
             self.goal_idx += 1
+            self.create_new_goal_logger()
             return None
 
-        now_goal_str = str(goal_instance)
-        if now_goal_str != self.goal_str:
+        now_goal_str = str(goal_obj)
+        if now_goal_str != self.goal_str:  # sub goal changed
+            if self.goal_str != "":
+                self.results[self.goal_str] = goal_obj.sub_goal_mean_metrics
             self.goal_str = now_goal_str
-            logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_instance.count+1}/{goal_instance.total}]: {self.goal_str}")
+            logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
     
     def update_metrics(self, sim_data: SimData):
-        if sim_data.n_step % int(0.1 / sim_data.sim_dt) != 0:
+        if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt) != 0:
             return
-        for i in range(len(sim_data.proprio.joint.force)):
-            logger.log(sim_data.proprio.joint.force[i], f'dof/force_{i}', step=sim_data.n_step)
-        for metric_func in self.metrics:
-            metric_func(sim_data)
-    
+        metrics_results = {}
+        for metric_name, metric_func in zip(self.info['metric'], self.metrics):
+            val = metric_func(sim_data)
+            if metric_name not in ['visualization']:
+                metrics_results[metric_name] = val
+        self.goals[self.goal_idx].update_metrics(metrics_results)
+
+    def save_results(self):
+        """ Save the results to a yaml file. """
+        save_path = Path(logger.log_dir) / "results.yaml"
+        with open(save_path, 'w') as file:
+            yaml.dump(self.results, file)
+        logger.info(f"Saved metric results to {save_path}")

@@ -25,9 +25,9 @@ class BaseRobot:
         self.control_type = cfg.control.control_type
         self.p_gains = np.array(cfg.control.p_gains)
         self.d_gains = np.array(cfg.control.d_gains)
-        script_model_path = parse_path(cfg.control.torch_script_model_path)
-        logger.info(f"Loading robot model from '{script_model_path}'")
-        self.model = torch.jit.load(script_model_path).to(self.device)
+        model_path = parse_path(cfg.control.model_path)
+        logger.info(f"Loading robot model from '{model_path}'")
+        self.model = torch.jit.load(model_path).to(self.device)
         self.model.eval()
     
     def build_observation(self, sim_data: SimData, goal_data: GoalData) -> np.ndarray:

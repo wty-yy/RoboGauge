@@ -18,6 +18,9 @@ class MujocoConfig(Config):
     class viewer:
         headless = False
         block_rendering = True  # Whether to block rendering in the viewer loop.
+        camera_distance = 2.0
+        camera_elevation = -20.0
+        camera_azimuth = 60.0
     
     class render:
         save_video = False

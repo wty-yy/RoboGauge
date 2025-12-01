@@ -7,11 +7,14 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Base Pipeline for Robogauge
 '''
-import traceback
+import yaml
+from pathlib import Path
+
 from robogauge.utils.logger import logger
 from robogauge.tasks.simulator import MujocoSimulator, MujocoConfig
 from robogauge.tasks.robots import BaseRobot, RobotConfig, Go2Config, Go2
 from robogauge.tasks.gauge import BaseGauge, BaseGaugeConfig
+from robogauge.utils.helpers import class_to_dict
 
 class BasePipeline:
     def __init__(self, 
@@ -29,13 +32,20 @@ class BasePipeline:
         self.robot: BaseRobot = eval(robot_cfg.robot_class)(robot_cfg)
         self.gauge: BaseGauge = eval(gauge_cfg.gauge_class)(gauge_cfg, robot_cfg)
     
+        # save configs
+        cfg = {}
+        for name in ['simulator_cfg', 'robot_cfg', 'gauge_cfg']:
+            obj = getattr(self, name)
+            obj_dict = class_to_dict(obj)
+            cfg.update({name: obj_dict})
+        with open(Path(logger.log_dir) / "configs.yaml", 'w') as file:
+            yaml.dump(cfg, file)
+    
     def load(self):
-        logger.create_tensorboard(self.run_name)
         self.sim.load(
             self.gauge_cfg.assets.terrain_xml,
             self.robot_cfg.assets.robot_xml,
-            self.gauge_cfg.assets.terrain_spawn_xy,
-            self.robot_cfg.assets.robot_spawn_height,
+            self.gauge_cfg.assets.terrain_spawn_pos,
             self.robot_cfg.control.default_dof_pos
         )
     
@@ -61,5 +71,6 @@ class BasePipeline:
                     sim_data = self.sim.step()
         finally:
             self.sim.close_viewer()
+            self.sim.close_video_writer()
             logger.info("Pipeline execution finished.")
             logger.info(f"Logging saved at: {logger.log_dir}")

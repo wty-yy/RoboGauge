@@ -11,6 +11,7 @@ from typing_extensions import Literal
 from robogauge.tasks.robots import RobotConfig
 
 class Go2Config(RobotConfig):
+    robot_name = 'go2'
     robot_class = 'Go2'
 
     class assets:
@@ -19,8 +20,8 @@ class Go2Config(RobotConfig):
 
     class control(RobotConfig.control):
         device = 'cpu'
-        torch_script_model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
-        # torch_script_model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_cmd-1,1_38k.pt"
+        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
+        # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_cmd-1,1_38k.pt"
         control_dt = 0.02  # 50 Hz
         control_type = 'P'  # Position control
 

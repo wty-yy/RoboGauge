@@ -13,7 +13,7 @@
 import time
 import logging
 from pathlib import Path
-from robogauge import ROBOGAUGE_ROOT_DIR
+from robogauge import ROBOGAUGE_LOGS_DIR
 from torch.utils.tensorboard import SummaryWriter
 
 class LogColor:
@@ -56,6 +56,7 @@ class Logger:
 
     def create(self,
         experiment_name,
+        run_name,
         console_output=True, color_output=True,
         log_level=logging.DEBUG, save_file_mode='a'
     ):
@@ -75,6 +76,9 @@ class Logger:
         self.logger = logging.getLogger(experiment_name + "_logger")
         self.logger.setLevel(log_level)
         self.logger.propagate = False
+        self.time_tag = time.strftime("%Y%m%d-%H-%M-%S")
+        self.tag = f"{self.time_tag}_{run_name}"
+        self.experiment_name = experiment_name
 
         console_formatter = ColorFormatter(    # console output format
             fmt="%(asctime)s - %(color_level)s - %(filename)s:%(lineno)d - %(message)s",
@@ -91,19 +95,21 @@ class Logger:
             sh.setFormatter(console_formatter)
             self.logger.addHandler(sh)
 
-        self.log_dir = Path(ROBOGAUGE_ROOT_DIR) / "logs" / experiment_name / time.strftime("%Y%m%d-%H-%M-%S")
+        self.log_dir = Path(ROBOGAUGE_LOGS_DIR) / experiment_name / self.tag
         self.log_dir.mkdir(parents=True, exist_ok=True)
         path_log_file = self.log_dir / "stdout.log"
         if path_log_file:
             fh = logging.FileHandler(path_log_file, mode=save_file_mode, encoding='utf-8')
             fh.setFormatter(file_formatter)
             self.logger.addHandler(fh)
+        self.info(f"Logs saved at: {path_log_file}")
     
-    def create_tensorboard(self, run_name: str):
+    def create_tensorboard(self, robot_name: str, model_name: str, goal_name: str):
         if self.writer is not None:
             self.writer.close()
-        self.writer = SummaryWriter(str(self.log_dir / run_name))
-        self.info(f"Tensorboard writer created at: {self.log_dir / run_name}")
+        data_path = Path(ROBOGAUGE_LOGS_DIR) / self.experiment_name / 'data' / robot_name / model_name / goal_name / self.tag
+        self.writer = SummaryWriter(str(data_path))
+        self.info(f"Tensorboard writer created at: {data_path}")
 
     def debug(self, msg, *args, **kwargs):
         self.logger.debug(msg, *args, **kwargs, stacklevel=2)

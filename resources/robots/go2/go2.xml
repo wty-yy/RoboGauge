@@ -13,10 +13,12 @@
       </default>
       <default class="hip">
         <default class="front_hip">
-          <joint range="-1.5708 3.4907"/>
+          <!-- <joint range="-1.5708 3.4907"/> -->
+          <joint range="-1.5708 1.5708"/>
         </default>
         <default class="back_hip">
-          <joint range="-0.5236 4.5379"/>
+          <!-- <joint range="-0.5236 4.5379"/> -->
+          <joint range="-0.5236 1.5708"/>
         </default>
       </default>
       <default class="knee">

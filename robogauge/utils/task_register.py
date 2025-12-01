@@ -7,6 +7,8 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Task Registration Utility
 '''
+from robogauge.utils.helpers import parse_args
+
 class TaskRegister():
     def __init__(self):
         self.pipeline_classes = {}
@@ -33,8 +35,10 @@ class TaskRegister():
         robot_cfg = self.robot_cfgs[name]
         return sim_cfg, gauger_cfg, robot_cfg
     
-    def make_pipeline(self, name, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None, run_name='0'):
-        default_cfgs = self.get_cfgs(name)
+    def make_pipeline(self, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None):
+        if args is None:
+            args = parse_args()
+        default_cfgs = self.get_cfgs(args.task_name)
         if sim_cfg is None:
             sim_cfg = default_cfgs[0]
         if gauger_cfg is None:
@@ -43,10 +47,12 @@ class TaskRegister():
             robot_cfg = default_cfgs[2]
         if args is not None:
             self.update_args_to_cfg(sim_cfg, gauger_cfg, robot_cfg, args)
-        pipeline_class = self.get_pipeline_class(name)
-        return pipeline_class(run_name, sim_cfg, robot_cfg, gauger_cfg)
+        pipeline_class = self.get_pipeline_class(args.task_name)
+        return pipeline_class(args.run_name, sim_cfg, robot_cfg, gauger_cfg)
 
     def update_args_to_cfg(self, sim_cfg, gauger_cfg, robot_cfg, args):
+        if args.model_path is not None:
+            robot_cfg.control.model_path = args.model_path
         if args.headless is not None:
             sim_cfg.viewer.headless = args.headless
         if args.save_video is not None:

@@ -15,8 +15,8 @@ class VelocityGoal:
         s = ""
         for field in self.__dataclass_fields__:
             if getattr(self, field) != 0.0:
-                s += f"{field}={getattr(self, field):.1f}, "
-        return s[:-2] if s else "stance"
+                s += f"{field}={getattr(self, field):.1f}_"
+        return s[:-1] if s else "stance"
 
 @dataclass
 class PositionGoal:

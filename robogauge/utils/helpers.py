@@ -10,6 +10,7 @@
 - Class to dict conversion
 - Path parsing
 '''
+import yaml
 from argparse import ArgumentParser
 from pathlib import Path
 from robogauge import ROBOGAUGE_ROOT_DIR
@@ -49,6 +50,8 @@ def parse_args():
     parameters = [
         {"name": "--task-name", "type": str, "default": "base", "help": "Name of the task to run."},
         {"name": "--experiment-name", "type": str, "help": "Name of the experiment to run."},
+        {"name": "--run-name", "type": str, "default": "run1", "help": "Name of the run."},
+        {"name": "--model-path", "type": str, "help": "Path to the model file."},
         {"name": "--headless", "action": "store_true", "default": False, "help": "Run in headless mode."},
         {"name": "--save-video", "action": "store_true", "default": False, "help": "Save video output."},
     ]
@@ -56,5 +59,5 @@ def parse_args():
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})
     args = parser.parse_args()
     if args.experiment_name is None:
-        args.experiment_name = f"{args.task_name}_exp"
+        args.experiment_name = f"exp"
     return args

@@ -14,20 +14,21 @@ class BaseGaugeConfig(Config):
 
     class assets:
         terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/flat.xml'
-        terrain_spawn_xy = [0, 0]  # x y [m]
+        terrain_spawn_pos = [0, 0, 0]  # x y z [m], robot freejoint spawn position on the terrain
     
     class goals:
         class max_velocity:  # goal with maximum velocity
             enabled = True
-            cmd_duration = 3.0  # duration for each velocity command [s]
+            cmd_duration = 5.0  # duration for each velocity command [s]
 
     class metrics:
+        metric_dt = 0.1  # [s], frequency to compute metrics
         class dof_limits:
             enabled = True
             soft_dof_limit_ratio = 0.9
-    
-    class commands:
-        stance = True
-        max_lin_vel = True
-        diagonal_lin_vel = True
-    
+            dof_names = None  # List of DOF names to monitor, None for all
+        
+        class visualization:
+            enabled = True
+            dof_force = True
+            dof_pos = True
