@@ -58,6 +58,8 @@ def parse_args():
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})
     args = parser.parse_args()
-    if args.experiment_name is None:
-        args.experiment_name = f"exp"
+    if args.experiment_name is not None:
+        args.experiment_name = f"{args.task_name}_{args.experiment_name}"
+    else:
+        args.experiment_name = args.task_name
     return args

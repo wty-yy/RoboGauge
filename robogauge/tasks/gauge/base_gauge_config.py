@@ -19,10 +19,14 @@ class BaseGaugeConfig(Config):
     class goals:
         class max_velocity:  # goal with maximum velocity
             enabled = True
-            cmd_duration = 5.0  # duration for each velocity command [s]
+            cmd_duration = 5.0  # [s] duration for each velocity command
+
+        class diagonal_velocity:  # goal with diagonal velocity changes
+            enabled = True
+            cmd_duration = 6.0  # [s] duration for a pair of diagonal velocity commands
 
     class metrics:
-        metric_dt = 0.1  # [s], frequency to compute metrics
+        metric_dt = 0.1  # [s] frequency to compute metrics
         class dof_limits:
             enabled = True
             soft_dof_limit_ratio = 0.9

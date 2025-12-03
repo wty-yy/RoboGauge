@@ -17,6 +17,16 @@ class VelocityGoal:
             if getattr(self, field) != 0.0:
                 s += f"{field}={getattr(self, field):.1f}_"
         return s[:-1] if s else "stance"
+    
+    def invert(self):
+        return VelocityGoal(
+            lin_vel_x = -self.lin_vel_x,
+            lin_vel_y = -self.lin_vel_y,
+            lin_vel_z = -self.lin_vel_z,
+            ang_vel_roll = -self.ang_vel_roll,
+            ang_vel_pitch = -self.ang_vel_pitch,
+            ang_vel_yaw = -self.ang_vel_yaw,
+        )
 
 @dataclass
 class PositionGoal:

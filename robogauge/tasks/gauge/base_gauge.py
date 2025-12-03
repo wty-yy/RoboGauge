@@ -20,7 +20,7 @@ from robogauge.tasks.gauge.base_gauge_config import BaseGaugeConfig
 from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal, PositionGoal
 from robogauge.tasks.simulator.sim_data import SimData
 
-from robogauge.tasks.gauge.goals import BaseGoal, MaxVelocityGoal
+from robogauge.tasks.gauge.goals import BaseGoal, MaxVelocityGoal, DiagonalVelocityGoal
 from robogauge.tasks.gauge.metrics import *
 
 class BaseGauge:
@@ -43,6 +43,9 @@ class BaseGauge:
             if name == 'max_velocity':
                 self.goals.append(MaxVelocityGoal(robot_cfg.commands, **kwargs))
                 log_str += f"  - Max Velocity Goal: {kwargs}\n"
+            elif name == 'diagonal_velocity':
+                self.goals.append(DiagonalVelocityGoal(robot_cfg.commands, **kwargs))
+                log_str += f"  - Diagonal Velocity Goal: {kwargs}\n"
             else:
                 raise NotImplementedError(f"Goal '{name}' is not implemented in BaseGauge.")
             self.info['goal'].append(name)
@@ -94,7 +97,6 @@ class BaseGauge:
         goal = goal_obj.get_goal(sim_data)
 
         if goal is None:  # goal obj finished
-            self.results[str(goal_obj)] = goal_obj.sub_goal_mean_metrics
             self.results[goal_obj.name] = goal_obj.goal_mean_metrics
             self.goal_idx += 1
             self.create_new_goal_logger()
@@ -102,8 +104,6 @@ class BaseGauge:
 
         now_goal_str = str(goal_obj)
         if now_goal_str != self.goal_str:  # sub goal changed
-            if self.goal_str != "":
-                self.results[self.goal_str] = goal_obj.sub_goal_mean_metrics
             self.goal_str = now_goal_str
             logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
@@ -123,4 +123,10 @@ class BaseGauge:
         save_path = Path(logger.log_dir) / "results.yaml"
         with open(save_path, 'w') as file:
             yaml.dump(self.results, file)
+            yaml_str = yaml.dump(self.results)
+        logger.info(
+            f"""\n{'='*20} Goals and Metrics results {'='*20}\n"""
+            f"""{yaml_str}"""
+            f"""{'='*68}"""
+        )
         logger.info(f"Saved metric results to {save_path}")

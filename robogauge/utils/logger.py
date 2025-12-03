@@ -104,10 +104,15 @@ class Logger:
             self.logger.addHandler(fh)
         self.info(f"Logs saved at: {path_log_file}")
     
+    def get_data_path(self, robot_name: str, model_name: str, goal_name: str) -> Path:
+        data_path = Path(ROBOGAUGE_LOGS_DIR) / self.experiment_name / 'data' / robot_name / model_name / goal_name / self.tag
+        data_path.mkdir(parents=True, exist_ok=True)
+        return data_path
+    
     def create_tensorboard(self, robot_name: str, model_name: str, goal_name: str):
         if self.writer is not None:
             self.writer.close()
-        data_path = Path(ROBOGAUGE_LOGS_DIR) / self.experiment_name / 'data' / robot_name / model_name / goal_name / self.tag
+        data_path = self.get_data_path(robot_name, model_name, goal_name)
         self.writer = SummaryWriter(str(data_path))
         self.info(f"Tensorboard writer created at: {data_path}")
 

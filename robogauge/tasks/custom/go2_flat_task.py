@@ -12,3 +12,7 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
         class max_velocity(FlatGaugeConfig.goals.max_velocity):
             enabled = True
             cmd_duration = 5.0
+        
+        class diagonal_velocity(FlatGaugeConfig.goals.diagonal_velocity):
+            enabled = True
+            cmd_duration = 6.0

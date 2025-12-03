@@ -21,9 +21,7 @@ class BaseGoal:
         self.total = 0
         self.sub_name = None
 
-        self._goal_mean_metrics = defaultdict(Average)
-        self.last_sub_name = None
-        self._sub_goal_mean_metrics = defaultdict(Average)
+        self._goal_mean_metrics = defaultdict(list)
 
     def is_done(self) -> bool:
         raise NotImplementedError
@@ -40,22 +38,25 @@ class BaseGoal:
         return f"{self.name}/{self.sub_name}"
     
     def update_metrics(self, metrics: dict):
-        """ Update step metrics for the current goal and sub-goal."""
-        if self.last_sub_name is None or self.last_sub_name != self.sub_name:
-            self.last_sub_name = self.sub_name
-            self._sub_goal_mean_metrics = defaultdict(Average)
+        """ Update step metrics for the current goal."""
         for metric_name, value in metrics.items():
-            self._goal_mean_metrics[metric_name].update(value)
-            self._sub_goal_mean_metrics[metric_name].update(value)
+            self._goal_mean_metrics[metric_name].append(value)
     
     @property
     def goal_mean_metrics(self):
         """ Get the mean metrics for the current goal. """
-        return {k: float(v.mean) for k, v in self._goal_mean_metrics.items()}
-    
-    @property
-    def sub_goal_mean_metrics(self):
-        """ Get the mean metrics for the current sub-goal. """
-        if len(self._sub_goal_mean_metrics) == 0:
-            return {}
-        return {k: float(v.mean) for k, v in self._sub_goal_mean_metrics.items()}
+        return {k: self._analysis_metrics(v) for k, v in self._goal_mean_metrics.items()}
+
+    @staticmethod
+    def _analysis_metrics(metrics: list):
+        result = {'mean': 0}
+        for i in [25, 50]:
+            result[f'mean@{i}'] = 0
+        if len(metrics) == 0:
+            return result
+        metrics.sort()
+        result['mean'] = float(sum(metrics) / len(metrics))
+        for i in [25, 50]:
+            count = max(1, int(len(metrics) * i / 100))
+            result[f'mean@{i}'] = float(sum(metrics[:count]) / count)
+        return result
