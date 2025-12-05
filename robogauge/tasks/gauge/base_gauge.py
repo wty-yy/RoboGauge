@@ -13,7 +13,7 @@ from pathlib import Path
 from functools import partial
 
 from robogauge.utils.logger import logger
-from robogauge.utils.helpers import class_to_dict
+from robogauge.utils.helpers import class_to_dict, snake_to_pascal
 
 from robogauge.tasks.robots import RobotConfig
 from robogauge.tasks.gauge.base_gauge_config import BaseGaugeConfig
@@ -52,10 +52,11 @@ class BaseGauge:
         for name, enabled in self.metrics_cfg.items():
             if not enabled: continue
             if name in ['metric_dt']: continue
-            metric_func = eval(f"{name}_metric")
-            self.metrics.append(partial(metric_func, robot_cfg=robot_cfg, **self.metrics_cfg[name]))
+            metric_class_name = f"{snake_to_pascal(name)}Metric"
+            metric_class = eval(metric_class_name)
+            self.metrics.append(metric_class(robot_cfg=robot_cfg, **self.metrics_cfg[name]))
             log_str += f"  - Metric: {name}\n"
-            self.info['metric'].append(name)
+            self.info['metric'].append(metric_class_name)
         logger.info(log_str.strip())
 
         if len(self.goals) == 0:
@@ -112,8 +113,8 @@ class BaseGauge:
         if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt) != 0:
             return
         metrics_results = {}
-        for metric_name, metric_func in zip(self.info['metric'], self.metrics):
-            val = metric_func(sim_data)
+        for metric_name, metric_obj in zip(self.info['metric'], self.metrics):
+            val = metric_obj(sim_data)
             if metric_name not in ['visualization']:
                 metrics_results[metric_name] = val
         self.goals[self.goal_idx].update_metrics(metrics_results)

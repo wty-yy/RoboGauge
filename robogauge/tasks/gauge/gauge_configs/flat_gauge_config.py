@@ -24,7 +24,8 @@ class FlatGaugeConfig(BaseGaugeConfig):
         class diagonal_velocity:  # goal with diagonal velocity changes
             enabled = True
             cmd_duration = 6.0  # [s] duration for a pair of diagonal velocity commands
-    class metrics:
+
+    class metrics(BaseGaugeConfig.metrics):
         metric_dt = 0.1  # [s] frequency to compute metrics
         class dof_limits:
             enabled = True
@@ -35,3 +36,9 @@ class FlatGaugeConfig(BaseGaugeConfig):
             enabled = True
             dof_force = True
             dof_pos = True
+
+        class lin_vel_err:
+            enabled = True
+        
+        class ang_vel_err:
+            enabled = True

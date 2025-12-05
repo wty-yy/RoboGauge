@@ -52,3 +52,8 @@ class RobotConfig(Config):
         ang_vel_roll = None  # min max [rad/s]
         ang_vel_pitch = None  # min max [rad/s]
         ang_vel_yaw = [-1, 1]  # min max [rad/s]
+
+if __name__ == '__main__':
+    cfg = RobotConfig()
+    print(getattr(cfg.commands, 'lin_vel_x'))
+    print(cfg.commands.lin_vel_x)

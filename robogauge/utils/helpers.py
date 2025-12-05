@@ -63,3 +63,8 @@ def parse_args():
     else:
         args.experiment_name = args.task_name
     return args
+
+def snake_to_pascal(s: str) -> str:
+    """ 'snake_case' to 'PascalCase' conversion """
+    parts = [p for p in s.split('_') if p]
+    return ''.join(p[0].upper() + p[1:] if p else '' for p in parts)

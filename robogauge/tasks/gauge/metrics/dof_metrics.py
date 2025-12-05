@@ -1,0 +1,50 @@
+import numpy as np
+
+from robogauge.tasks.robots import RobotConfig
+from robogauge.tasks.simulator.sim_data import SimData
+from robogauge.tasks.gauge.metrics.base_metric import BaseMetric
+
+from robogauge.utils.logger import logger
+
+
+class DofLimitsMetric(BaseMetric):
+    """ Metric to log DOF limit violations. """
+    name = 'dof_limits_metric'
+
+    def __init__(self,
+        robot_cfg: RobotConfig,
+        soft_dof_limit_ratio: float = 0.9,
+        dof_names: list = None,
+        **kwargs
+    ):
+        super().__init__(robot_cfg)
+        self.soft_dof_limit_ratio = soft_dof_limit_ratio
+        self.calc_dof_names = dof_names
+    
+    def __call__(self, sim_data: SimData) -> float:
+        values = []
+        for i in range(len(sim_data.proprio.joint.limits)):
+            lower_limit = sim_data.proprio.joint.limits[i, 0]
+            upper_limit = sim_data.proprio.joint.limits[i, 1]
+            dof_range = upper_limit - lower_limit
+            soft_lower_limit = lower_limit + (1 - self.soft_dof_limit_ratio) * dof_range
+            soft_upper_limit = upper_limit - (1 - self.soft_dof_limit_ratio) * dof_range
+
+            pos = sim_data.proprio.joint.pos[i]
+            dof_name = sim_data.proprio.joint.names[i]
+            value = 0
+            if pos < soft_lower_limit:
+                value = soft_lower_limit - pos
+            elif pos > soft_upper_limit:
+                value = pos - soft_upper_limit
+            value /= dof_range  # Normalize by DOF range
+            logger.log(value, f'dof_limits/{dof_name}', step=sim_data.n_step)
+            if self.calc_dof_names is not None:
+                for use_name in self.calc_dof_names:
+                    if use_name in dof_name:
+                        values.append(value)
+            else:
+                values.append(value)
+        rms_value = 1 - np.sqrt(np.mean(np.square(values)))
+        logger.log(1 - rms_value, f'dof_limits/rms', step=sim_data.n_step)
+        return rms_value

@@ -1,4 +1,7 @@
 # UPDATE
+## 20251203
+### v0.1.6.1
+1. 加入lin_vel, ang_vel err指标
 ## 20251202
 ### v0.1.6
 1. 加入新目标`diagonal_velocity`, 记录的信息中仅保留总goal的metrics信息, metrics加入@25, @50两个后25%和50%的平均值

@@ -36,3 +36,9 @@ class BaseGaugeConfig(Config):
             enabled = True
             dof_force = True
             dof_pos = True
+        
+        class lin_vel_err:
+            enabled = True
+        
+        class ang_vel_err:
+            enabled = True
