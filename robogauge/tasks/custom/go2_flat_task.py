@@ -1,4 +1,4 @@
-from robogauge.tasks.robots import Go2Config
+from robogauge.tasks.robots import Go2Config, Go2MoEConfig
 from robogauge.tasks.gauge import FlatGaugeConfig
 
 class Go2FlatGaugeConfig(FlatGaugeConfig):
@@ -16,3 +16,19 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
         class diagonal_velocity(FlatGaugeConfig.goals.diagonal_velocity):
             enabled = True
             cmd_duration = 6.0
+
+class Go2FlatConfig(Go2Config):
+    class commands(Go2Config.commands):
+        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
+        lin_vel_y = [-2.0, 2.0]  # min max [m/s]
+        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
+
+class Go2MoEFlatConfig(Go2MoEConfig):
+    class commands(Go2Config.commands):
+        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
+        lin_vel_y = [-2.0, 2.0]  # min max [m/s]
+        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
+
+    class control(Go2Config.control):
+        # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"
+        model_path = "/home/xfy/Coding/kaiwu2025/rob_finals/sim2real/models/v6-2_106503/kaiwu_script_v6-2_106503.pt"

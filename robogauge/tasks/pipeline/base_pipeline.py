@@ -12,7 +12,9 @@ from pathlib import Path
 
 from robogauge.utils.logger import logger
 from robogauge.tasks.simulator import MujocoSimulator, MujocoConfig
-from robogauge.tasks.robots import BaseRobot, RobotConfig, Go2Config, Go2
+from robogauge.tasks.robots import (
+    BaseRobot, RobotConfig, Go2Config, Go2, Go2MoEConfig, Go2MoE
+)
 from robogauge.tasks.gauge import BaseGauge, BaseGaugeConfig
 from robogauge.utils.helpers import class_to_dict
 
