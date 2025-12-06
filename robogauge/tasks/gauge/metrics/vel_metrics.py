@@ -1,11 +1,10 @@
 import numpy as np
 
 from robogauge.tasks.robots import RobotConfig
-from robogauge.tasks.simulator.sim_data import SimData
-from robogauge.tasks.gauge.metrics.base_metric import BaseMetric
-from robogauge.tasks.gauge.goals.base_goal import GoalData
+from robogauge.tasks.gauge.metrics.base_metric import BaseMetric, SimData, GoalData
 
 from robogauge.utils.logger import logger
+from robogauge.utils.helpers import class_to_dict
 
 
 class LinVelErrMetric(BaseMetric):
@@ -15,13 +14,11 @@ class LinVelErrMetric(BaseMetric):
     def __init__(self, robot_cfg: RobotConfig, **kwargs):
         super().__init__(robot_cfg)
         max_ranges = []
+        cfg_commands = class_to_dict(robot_cfg.commands)
         for name in ['lin_vel_x', 'lin_vel_y', 'lin_vel_z']:
-            max_ranges.append(
-                max(
-                    abs(getattr(robot_cfg.commands, name)[0]),
-                    abs(getattr(robot_cfg.commands, name)[1])
-                )
-            )
+            cmds = cfg_commands.get(name)
+            if cmds is not None:
+                max_ranges.append(max(abs(cmds[0]), abs(cmds[1])))
         self.norm_vel = np.linalg.norm(max_ranges)
     
     def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
@@ -41,16 +38,11 @@ class AngVelErrMetric(BaseMetric):
     def __init__(self, robot_cfg: RobotConfig, **kwargs):
         super().__init__(robot_cfg)
         max_ranges = []
+        cfg_commands = class_to_dict(robot_cfg.commands)
         for name in ['ang_vel_roll', 'ang_vel_pitch', 'ang_vel_yaw']:
-            cmd_range = getattr(robot_cfg.commands, name)
-            if cmd_range is None:
-                cmd_range = [0, 0]
-            max_ranges.append(
-                max(
-                    abs(cmd_range[0]),
-                    abs(cmd_range[1])
-                )
-            )
+            cmds = cfg_commands.get(name)
+            if cmds is not None:
+                max_ranges.append(max(abs(cmds[0]), abs(cmds[1])))
         self.norm_vel = np.linalg.norm(max_ranges)
     
     def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:

@@ -7,7 +7,9 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Task Registration Utility
 '''
-from robogauge.utils.helpers import parse_args
+from robogauge import ROBOGAUGE_ROOT_DIR
+from robogauge.utils.logger import logger
+from robogauge.utils.helpers import parse_args, set_seed
 
 class TaskRegister():
     def __init__(self):
@@ -29,13 +31,13 @@ class TaskRegister():
     
     def get_cfgs(self, name):
         if name not in self.sim_cfgs:
-            raise ValueError(f"Task '{name}' is not registered.")
+            raise ValueError(f"Task '{name}' is not registered, checkout '{ROBOGAUGE_ROOT_DIR}/robogauge/tasks/__init__.py'.")
         sim_cfg = self.sim_cfgs[name]
         gauger_cfg = self.gauger_cfgs[name]
         robot_cfg = self.robot_cfgs[name]
         return sim_cfg, gauger_cfg, robot_cfg
     
-    def make_pipeline(self, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None):
+    def make_pipeline(self, args=None, sim_cfg=None, gauger_cfg=None, robot_cfg=None, create_logger=True):
         if args is None:
             args = parse_args()
         default_cfgs = self.get_cfgs(args.task_name)
@@ -48,7 +50,11 @@ class TaskRegister():
         if args is not None:
             self.update_args_to_cfg(sim_cfg, gauger_cfg, robot_cfg, args)
         pipeline_class = self.get_pipeline_class(args.task_name)
-        return pipeline_class(args.run_name, sim_cfg, robot_cfg, gauger_cfg)
+        set_seed(args.seed)
+        run_name = args.run_name + f'_{args.seed}'
+        if create_logger:
+            logger.create(args.experiment_name, run_name)
+        return pipeline_class(run_name, sim_cfg, robot_cfg, gauger_cfg)
 
     def update_args_to_cfg(self, sim_cfg, gauger_cfg, robot_cfg, args):
         if args.model_path is not None:

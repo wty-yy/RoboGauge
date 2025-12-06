@@ -1,6 +1,5 @@
 from robogauge.tasks.robots import RobotConfig
-from robogauge.tasks.simulator.sim_data import SimData
-from robogauge.tasks.gauge.metrics.base_metric import BaseMetric
+from robogauge.tasks.gauge.metrics.base_metric import BaseMetric, SimData, GoalData
 
 from robogauge.utils.logger import logger
 
@@ -18,7 +17,7 @@ class VisualizationMetric(BaseMetric):
         self.dof_force = dof_force
         self.dof_pos = dof_pos
 
-    def __call__(self, sim_data: SimData) -> float:
+    def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
         for i in range(len(sim_data.proprio.joint.force)):
             name = sim_data.proprio.joint.names[i]
             if self.dof_force:

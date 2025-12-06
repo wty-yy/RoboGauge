@@ -1,0 +1,9 @@
+### Support using '#' as the starting comments ###
+### Uncommented lines provide the path to evaluated model ###
+
+/path/to/your/eval_model1.pt
+/path/to/your/eval_model2.pt
+/path/to/your/eval_model3.pt
+
+# /path/to/your/uneval_model1.pt
+# /path/to/your/uneval_model2.pt

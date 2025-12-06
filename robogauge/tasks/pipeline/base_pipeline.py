@@ -8,10 +8,12 @@
 @Desc    : Base Pipeline for Robogauge
 '''
 import yaml
+import random
+from copy import deepcopy
 from pathlib import Path
 
 from robogauge.utils.logger import logger
-from robogauge.tasks.simulator import MujocoSimulator, MujocoConfig
+from robogauge.tasks.simulator import MujocoSimulator, MujocoConfig, SimData
 from robogauge.tasks.robots import (
     BaseRobot, RobotConfig, Go2Config, Go2, Go2MoEConfig, Go2MoE
 )
@@ -26,7 +28,7 @@ class BasePipeline:
         gauge_cfg: BaseGaugeConfig
     ):
         self.run_name = run_name
-        self.simulator_cfg = simulator_cfg
+        self.sim_cfg = simulator_cfg
         self.robot_cfg = robot_cfg
         self.gauge_cfg = gauge_cfg
 
@@ -36,7 +38,7 @@ class BasePipeline:
     
         # save configs
         cfg = {}
-        for name in ['simulator_cfg', 'robot_cfg', 'gauge_cfg']:
+        for name in ['sim_cfg', 'robot_cfg', 'gauge_cfg']:
             obj = getattr(self, name)
             obj_dict = class_to_dict(obj)
             cfg.update({name: obj_dict})
@@ -52,27 +54,54 @@ class BasePipeline:
         )
     
     def run(self):
+        logger.info(f"🚀 Starting single run: {self.run_name}")
         try:
             self.load()
             sim_data = self.sim.step()
-            frame_skip = int(self.robot_cfg.control.control_dt / self.simulator_cfg.physics.simulation_dt)
-            logger.info(f"Sim FPS: {1.0 / self.simulator_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
+            frame_skip = int(self.robot_cfg.control.control_dt / self.sim_cfg.physics.simulation_dt)
+            logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
             logger.info("Running pipeline...")
             while not self.gauge.is_done():
-                goal = self.gauge.get_goal(sim_data)
-                if goal is None:
+                goal_data = self.gauge.get_goal(sim_data)
+                if goal_data is None:
                     continue
-                obs = self.robot.build_observation(sim_data, goal)
+                obs = self.robot.build_observation(self.add_noise(sim_data), goal_data)
                 action, p_gains, d_gains, control_type = self.robot.get_action(obs)
-                self.sim.setup_action(action, p_gains, d_gains, control_type)
-                for _ in range(frame_skip):
+
+                if self.sim_cfg.domain_rand.action_delay:
+                    actions_start_decimation = random.randint(0, frame_skip)
+                else:
+                    self.sim.setup_action(action, p_gains, d_gains, control_type)
+                for i in range(frame_skip):
+                    if self.sim_cfg.domain_rand.action_delay and i == actions_start_decimation:
+                        self.sim.setup_action(action, p_gains, d_gains, control_type)
                     sim_data = self.sim.step()
-                    self.gauge.update_metrics(sim_data)
+                    self.gauge.update_metrics(sim_data, goal_data)
                 if self.gauge.is_reset(sim_data):
                     self.sim.reset()
                     sim_data = self.sim.step()
         finally:
             self.sim.close_viewer()
             self.sim.close_video_writer()
-            logger.info("Pipeline execution finished.")
-            logger.info(f"Logging saved at: {logger.log_dir}")
+            logger.info("✅ Pipeline execution finished.")
+            logger.info(f"📁 Logging saved at: {logger.log_dir}")
+        
+        return logger.log_dir
+
+    def add_noise(self, sim_data: SimData):
+        sim_data = deepcopy(sim_data)
+        noise_cfg = self.sim_cfg.noise
+        if not noise_cfg.enabled:
+            return sim_data
+        proprio = sim_data.proprio
+        def add_uniform_noise(data, noise_level):
+            for i in range(len(data)):
+                noise = random.uniform(-noise_level, noise_level)
+                data[i] += noise
+        add_uniform_noise(proprio.joint.pos, noise_cfg.joint_pos)
+        add_uniform_noise(proprio.joint.vel, noise_cfg.joint_vel)
+        add_uniform_noise(proprio.base.lin_vel, noise_cfg.lin_vel)
+        add_uniform_noise(proprio.base.ang_vel, noise_cfg.ang_vel)
+        add_uniform_noise(proprio.imu.lin_vel, noise_cfg.lin_vel)
+        add_uniform_noise(proprio.imu.ang_vel, noise_cfg.ang_vel)
+        return sim_data

@@ -14,7 +14,7 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
             cmd_duration = 5.0
         
         class diagonal_velocity(FlatGaugeConfig.goals.diagonal_velocity):
-            enabled = True
+            enabled = False
             cmd_duration = 6.0
 
 class Go2FlatConfig(Go2Config):

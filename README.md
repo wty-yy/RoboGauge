@@ -27,7 +27,7 @@
 | 参数名称 | 变量名 | 范围 |
 | - | - | - |
 | 电机动作执行随机延迟 | `action delay` | `<= RL控制间隔` |
-| base负重 | `base mass` | `(-1, 5) kg` |
+| base负重 | `base mass` | `-1, 0, 1, 2, 3 kg` |
 
 #### 地形
 1. 支持legged_gym中的部分地形, 包括: `wave, slope, rough_slope, stairs up, stairs down, obstacles, flat`, 除`flat`地形外其他地形可进行难度系数提升

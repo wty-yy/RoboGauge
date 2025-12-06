@@ -1,4 +1,9 @@
 # UPDATE
+## 20251206
+### v0.1.8
+1. 加入run_eval_models.sh多模型评估bash脚本
+2. 加入域随机化, `action delay`, 基于配置修改的`base mass`, `friction`
+3. 加入MultiPipeline支持多种seeds, frictions, base masses并行评估
 ## 20251205
 ### v0.1.7
 1. 加入moe模型的测试, 及moe模型, 平地的指令最大范围开到2

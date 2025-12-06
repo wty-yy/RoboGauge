@@ -11,13 +11,18 @@ import os
 os.environ['MUJOCO_GL'] = 'glfw'  # avoid mujoco.Renderer EGL context error
 
 from robogauge.tasks import *
+from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
+
 from robogauge.utils.task_register import task_register
 from robogauge.utils.helpers import parse_args
 from robogauge.utils.logger import logger
 
+
 if __name__ == '__main__':
     args = parse_args()
-    logger.create(args.experiment_name, args.run_name)
-    logger.info(f"Starting experiment: {args.experiment_name}")
-    pipeline: BasePipeline = task_register.make_pipeline(args=args)
-    pipeline.run()
+    if not args.multi:
+        pipeline: BasePipeline = task_register.make_pipeline(args=args)
+        pipeline.run()
+    else:
+        multi_pipeline = MultiPipeline(args)
+        multi_pipeline.run()

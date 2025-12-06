@@ -27,3 +27,19 @@ class MujocoConfig(Config):
         video_fps = 30
         height = 480
         width = 640
+    
+    class domain_rand:
+        # With randomization
+        action_delay = True  # [0, control_dt]
+
+        # Setup by config file, ensure evaluation coverage
+        base_mass = 0.0  # [kg], {-1, 0, 1, 2, 3}
+        friction = 1.0  # [N.s/m], {0.4, 0.7, 1.0, 1.3, 1.6}
+
+    class noise:
+        # Uniform noise
+        enabled = True
+        lin_vel = 0.05      # [m/s]
+        ang_vel = 0.8       # [rad/s]
+        joint_pos = 0.01    # [rad]
+        joint_vel = 3.0    # [rad/s]

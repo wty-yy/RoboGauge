@@ -38,6 +38,21 @@ def class_to_dict(obj) -> dict:
         result[key] = element
     return result
 
+def set_seed(seed: int):
+    import os
+    import torch
+    import random
+    import numpy as np
+    assert seed >= 0, "Seed must be non-negative."
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -48,12 +63,21 @@ def str2bool(v):
 def parse_args():
     parser = ArgumentParser()
     parameters = [
+        # Single run parameters
         {"name": "--task-name", "type": str, "default": "base", "help": "Name of the task to run."},
         {"name": "--experiment-name", "type": str, "help": "Name of the experiment to run."},
-        {"name": "--run-name", "type": str, "default": "run1", "help": "Name of the run."},
+        {"name": "--run-name", "type": str, "default": "run", "help": "Name of the run."},
         {"name": "--model-path", "type": str, "help": "Path to the model file."},
         {"name": "--headless", "action": "store_true", "default": False, "help": "Run in headless mode."},
         {"name": "--save-video", "action": "store_true", "default": False, "help": "Save video output."},
+        {"name": "--seed", "type": int, "default": 42, "help": "Random seed."},
+
+        # Multiprocessing parameters, with different seeds
+        {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
+        {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes."},
+        {"name": "--seeds", "type": int, "nargs": "+", "default": [0], "help": "List of random seeds for multiple runs."},
+        {"name": "--base-masses", "type": float, "nargs": "+", "default": [-1, 0, 1], "help": "List of base masses for the model."},
+        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.5, 1.0, 1.5], "help": "List of friction coefficients for the model."}
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})

@@ -1,8 +1,7 @@
 import numpy as np
 
 from robogauge.tasks.robots import RobotConfig
-from robogauge.tasks.simulator.sim_data import SimData
-from robogauge.tasks.gauge.metrics.base_metric import BaseMetric
+from robogauge.tasks.gauge.metrics.base_metric import BaseMetric, GoalData, SimData
 
 from robogauge.utils.logger import logger
 
@@ -21,7 +20,7 @@ class DofLimitsMetric(BaseMetric):
         self.soft_dof_limit_ratio = soft_dof_limit_ratio
         self.calc_dof_names = dof_names
     
-    def __call__(self, sim_data: SimData) -> float:
+    def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
         values = []
         for i in range(len(sim_data.proprio.joint.limits)):
             lower_limit = sim_data.proprio.joint.limits[i, 0]

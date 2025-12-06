@@ -86,14 +86,29 @@ class MujocoSimulator:
         self.mj_model.opt.timestep = self.cfg.physics.simulation_dt
         self.sim_dt = self.cfg.physics.simulation_dt
         self.mj_data.qpos[7:] = default_dof_pos
+
+        # Domain randomization: base mass
+        base_body_name = f'{Path(self.robot_xml).stem}/base_link'
+        body_id = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, base_body_name)
+        assert body_id != -1, f"Body '{base_body_name}' not found in the model."
+        if self.cfg.domain_rand.base_mass != 0.0:
+            original_mass = self.mj_model.body_mass[body_id]
+            new_mass = max(0.01, original_mass + self.cfg.domain_rand.base_mass)
+            self.mj_model.body_mass[body_id] = new_mass
+            logger.info(f"Randomized base mass: {original_mass:.3f} -> {new_mass:.3f} kg")
+        
+        # Domain randomization: friction
+        if self.cfg.domain_rand.friction != 1.0:
+            for i in range(self.mj_model.ngeom):
+                # Both change robot friction and terrain friction, usually robot friction < 1.0
+                # Mujoco friction calculation takes the *max* between two contacting geoms
+                geom_friction = self.mj_model.geom_friction[i]
+                geom_friction[0] *= self.cfg.domain_rand.friction
+                self.mj_model.geom_friction[i] = geom_friction
+            logger.info(f"Scaled geom friction by factor: {self.cfg.domain_rand.friction:.3f}")
         mujoco.mj_forward(self.mj_model, self.mj_data)
 
         # Setup offscreen camera
-        base_body_name = f'{Path(self.robot_xml).stem}/base_link'
-        body_id = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, base_body_name)
-        if body_id == -1:
-            body_id = 1
-            logger.warning(f"Body '{base_body_name}' not found, tracking body ID 1 instead.")
         self.offscreen_cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
         self.offscreen_cam.trackbodyid = body_id
         self.offscreen_cam.distance = self.cfg.viewer.camera_distance

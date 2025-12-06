@@ -11,7 +11,9 @@ import yaml
 from typing import List
 from pathlib import Path
 from functools import partial
+from collections import defaultdict
 
+import numpy as np
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import class_to_dict, snake_to_pascal
 
@@ -56,7 +58,7 @@ class BaseGauge:
             metric_class = eval(metric_class_name)
             self.metrics.append(metric_class(robot_cfg=robot_cfg, **self.metrics_cfg[name]))
             log_str += f"  - Metric: {name}\n"
-            self.info['metric'].append(metric_class_name)
+            self.info['metric'].append(name)
         logger.info(log_str.strip())
 
         if len(self.goals) == 0:
@@ -109,22 +111,36 @@ class BaseGauge:
             logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
     
-    def update_metrics(self, sim_data: SimData):
+    def update_metrics(self, sim_data: SimData, goal_data: GoalData):
         if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt) != 0:
             return
         metrics_results = {}
         for metric_name, metric_obj in zip(self.info['metric'], self.metrics):
-            val = metric_obj(sim_data)
+            val = metric_obj(sim_data, goal_data)
             if metric_name not in ['visualization']:
                 metrics_results[metric_name] = val
         self.goals[self.goal_idx].update_metrics(metrics_results)
 
     def save_results(self):
         """ Save the results to a yaml file. """
+        metrics = defaultdict(lambda: defaultdict(list))
+        for goal in self.results:
+            for metric_name, quantiles in self.results[goal].items():
+                for quantile, val in quantiles.items():
+                    metrics[metric_name][quantile].append(val)
+        self.results['summary'] = {}
+        for metric_name, quantiles in metrics.items():
+            if metric_name not in self.results['summary']:
+                self.results['summary'][metric_name] = {}
+            for quantile, vals in quantiles.items():
+                mean = float(np.mean(vals))
+                std = float(np.std(vals))
+                self.results['summary'][metric_name][quantile] = f"{mean:.4f} ± {std:.4f}"
+
         save_path = Path(logger.log_dir) / "results.yaml"
         with open(save_path, 'w') as file:
-            yaml.dump(self.results, file)
-            yaml_str = yaml.dump(self.results)
+            yaml.dump(self.results, file, allow_unicode=True)
+            yaml_str = yaml.dump(self.results, allow_unicode=True)
         logger.info(
             f"""\n{'='*20} Goals and Metrics results {'='*20}\n"""
             f"""{yaml_str}"""
