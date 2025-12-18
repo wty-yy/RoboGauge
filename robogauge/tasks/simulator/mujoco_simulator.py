@@ -145,7 +145,7 @@ class MujocoSimulator:
                 vid_path,
                 fps=self.cfg.render.video_fps,
             )
-            self.vid_frame_skip = int(1 / (self.cfg.render.video_fps * self.sim_dt * 2))
+            self.vid_frame_skip = int(1 / (self.cfg.render.video_fps * self.sim_dt))
             logger.info(f"Simulation video saved at: {vid_path}")
             self.vid_count += 1
 

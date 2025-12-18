@@ -63,5 +63,9 @@ class TaskRegister():
             sim_cfg.viewer.headless = args.headless
         if args.save_video is not None:
             sim_cfg.render.save_video = args.save_video
+        if hasattr(args, 'friction') and args.friction is not None:
+            sim_cfg.domain_rand.friction = args.friction
+        if hasattr(args, 'base_mass') and args.base_mass is not None:
+            sim_cfg.domain_rand.base_mass = args.base_mass
 
 task_register = TaskRegister()

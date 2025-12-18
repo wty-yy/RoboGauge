@@ -20,38 +20,47 @@ from robogauge.utils.logger import logger
 class BaseVelocityGoal(BaseGoal):
     name = "base_velocity_goal"
 
-    def __init__(self, cmd_duration: float = 5, **kwargs):
+    def __init__(self, control_dt: float, cmd_duration: float = 5, **kwargs):
         super().__init__()
+        self.control_dt = control_dt
         self.cmd_duration = cmd_duration
-        self.goal_start_time = None
+        self.goal_runtime = 0.0
+        self.first_goal_after_reset = True
         self.last_reset_time = 0.0
         self.goals = []
 
     def is_reset(self, sim_data: SimData) -> bool:
         if sim_data.sim_time - self.last_reset_time >= self.cmd_duration:
             self.last_reset_time = sim_data.sim_time
+            self.first_goal_after_reset = True
             return True
         return False
 
-    def get_goal(self, sim_data: SimData) -> Optional[GoalData]:
-        if self.goal_start_time is None:
-            self.goal_start_time = sim_data.sim_time
-        self.count = int((sim_data.sim_time - self.goal_start_time) / self.cmd_duration)
-        if self.count >= self.total:
-            return None
-        self.current_goal = self.goals[self.count]
-        self.sub_name = str(self.current_goal)
-        return GoalData(
-            goal_type='velocity',
-            velocity_goal=self.current_goal
-        )
+    def update_runtime_count(self, sim_data: SimData):
+        if self.first_goal_after_reset:
+            self.last_reset_time = sim_data.sim_time  # update last reset time (stance after reset)
+            self.first_goal_after_reset = False
+        self.goal_runtime += self.control_dt
+        self.count = int(self.goal_runtime / self.cmd_duration)
 
 class MaxVelocityGoal(BaseVelocityGoal):
     name = "max_velocity"
 
     """ Goal class for maximizing velocity commands. """
-    def __init__(self, max_velocity: RobotConfig.commands, cmd_duration: float = 5, **kwargs):
-        super().__init__(cmd_duration=cmd_duration)
+    def __init__(self,
+        control_dt: float,
+        max_velocity: RobotConfig.commands,
+        move_duration: float = 5,
+        end_stance: bool = True,
+        stance_duration: float = 2.0,
+        **kwargs
+    ):
+        cmd_duration = move_duration + (stance_duration if end_stance else 0)
+        super().__init__(control_dt=control_dt, cmd_duration=cmd_duration)
+        self.move_duration = move_duration
+        self.end_stance = end_stance
+        self.stance_duration = stance_duration
+
         kwargs.pop('enabled', None)
         if kwargs:
             logger.warning(f"Unused kwargs in MaxVelocityGoal: {kwargs}")
@@ -72,16 +81,35 @@ class MaxVelocityGoal(BaseVelocityGoal):
             return
         self.sub_name = str(self.goals[0])
 
+    def get_goal(self, sim_data: SimData) -> Optional[GoalData]:
+        self.update_runtime_count(sim_data)
+        if self.count >= self.total:
+            return None
+        self.current_goal = self.goals[self.count]
+        if self.end_stance and self.goal_runtime - self.count * self.cmd_duration >= self.move_duration:
+            self.current_goal = VelocityGoal()  # zero velocity
+        self.sub_name = str(self.current_goal)
+        return GoalData(
+            goal_type='velocity',
+            velocity_goal=self.current_goal
+        )
+
 class DiagonalVelocityGoal(BaseVelocityGoal):
     name = "diagonal_velocity"
 
-    def __init__(self, max_velocity: RobotConfig.commands, cmd_duration: float = 6, **kwargs):
+    def __init__(self,
+        control_dt: float,
+        max_velocity: RobotConfig.commands,
+        cmd_duration: float = 6,
+        **kwargs
+    ):
         """ Goal class for diagonal velocity changes.
         Args:
+            control_dt (float): Control timestep.
             max_velocity (RobotConfig.commands): Maximum velocity commands.
             cmd_duration (float, optional): Duration for a pair of diagonal commands.
         """
-        super().__init__(cmd_duration=cmd_duration)
+        super().__init__(control_dt=control_dt, cmd_duration=cmd_duration)
         kwargs.pop('enabled', None)
         if kwargs:
             logger.warning(f"Unused kwargs in DiagonalVelocityGoal: {kwargs}")
@@ -108,13 +136,11 @@ class DiagonalVelocityGoal(BaseVelocityGoal):
         self.sub_name = str(self.goals[0])
 
     def get_goal(self, sim_data: SimData) -> Optional[GoalData]:
-        if self.goal_start_time is None:
-            self.goal_start_time = sim_data.sim_time
-        self.count = int((sim_data.sim_time - self.goal_start_time) / self.cmd_duration)
+        self.update_runtime_count(sim_data)
         if self.count >= self.total:
             return None
         self.current_goal = self.goals[self.count]
-        if sim_data.sim_time - self.count * self.cmd_duration >= self.cmd_duration / 2:
+        if self.goal_runtime - self.count * self.cmd_duration >= self.cmd_duration / 2:
             self.current_goal = self.current_goal.invert()
         self.sub_name = str(self.current_goal)
         return GoalData(

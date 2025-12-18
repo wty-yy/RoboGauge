@@ -1,5 +1,6 @@
 from robogauge.tasks.robots import Go2Config, Go2MoEConfig
 from robogauge.tasks.gauge import FlatGaugeConfig
+from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 
 class Go2FlatGaugeConfig(FlatGaugeConfig):
     class metrics(FlatGaugeConfig.metrics):
@@ -11,10 +12,12 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
     class goals(FlatGaugeConfig.goals):
         class max_velocity(FlatGaugeConfig.goals.max_velocity):
             enabled = True
-            cmd_duration = 5.0
+            move_duration = 5.0
+            end_stance = True
+            stance_duration = 2.0
         
         class diagonal_velocity(FlatGaugeConfig.goals.diagonal_velocity):
-            enabled = False
+            enabled = True
             cmd_duration = 6.0
 
 class Go2FlatConfig(Go2Config):
@@ -32,3 +35,8 @@ class Go2MoEFlatConfig(Go2MoEConfig):
     class control(Go2Config.control):
         # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"
         model_path = "/home/xfy/Coding/kaiwu2025/rob_finals/sim2real/models/v6-2_106503/kaiwu_script_v6-2_106503.pt"
+
+class Go2MoEFlatMujocoConfig(MujocoConfig):
+    class domain_rand(MujocoConfig.domain_rand):
+        base_mass = 0.0
+        friction = 1.0

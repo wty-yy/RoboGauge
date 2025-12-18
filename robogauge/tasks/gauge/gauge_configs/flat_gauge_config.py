@@ -19,7 +19,9 @@ class FlatGaugeConfig(BaseGaugeConfig):
     class goals:
         class max_velocity:  # goal with maximum velocity
             enabled = True
-            cmd_duration = 5.0  # [s] duration for each velocity command
+            move_duration = 5.0  # [s] duration for each velocity command
+            end_stance = True  # whether to end with zero velocity command
+            standce_duration = 2.0  # [s] duration for the ending stance command
         
         class diagonal_velocity:  # goal with diagonal velocity changes
             enabled = True

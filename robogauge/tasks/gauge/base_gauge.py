@@ -43,10 +43,10 @@ class BaseGauge:
         for name, kwargs in self.goals_cfg.items():
             if not kwargs['enabled']: continue
             if name == 'max_velocity':
-                self.goals.append(MaxVelocityGoal(robot_cfg.commands, **kwargs))
+                self.goals.append(MaxVelocityGoal(robot_cfg.control.control_dt, robot_cfg.commands, **kwargs))
                 log_str += f"  - Max Velocity Goal: {kwargs}\n"
             elif name == 'diagonal_velocity':
-                self.goals.append(DiagonalVelocityGoal(robot_cfg.commands, **kwargs))
+                self.goals.append(DiagonalVelocityGoal(robot_cfg.control.control_dt, robot_cfg.commands, **kwargs))
                 log_str += f"  - Diagonal Velocity Goal: {kwargs}\n"
             else:
                 raise NotImplementedError(f"Goal '{name}' is not implemented in BaseGauge.")

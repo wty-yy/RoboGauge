@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Tuple
 
 @dataclass
 class VelocityGoal:
@@ -31,10 +31,10 @@ class VelocityGoal:
 @dataclass
 class PositionGoal:
     # relative to robot's current position
-    target_pos: List[float]  # x, y, z [m], z is ignored for ground robots
+    target_pos: Tuple[float, float, float] = (0.0, 0.0, 0.0)  # x, y, z [m], z is ignored for ground robots
     # reach target orientation
-    target_quat: List[float]  # x, y, z, w quaternion
-    tolerance: float  # [m] position tolerance to consider goal reached
+    target_quat: Tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)  # x, y, z, w quaternion
+    tolerance: float = 0.01  # [m] position tolerance to consider goal reached
 
 @dataclass
 class GoalData:

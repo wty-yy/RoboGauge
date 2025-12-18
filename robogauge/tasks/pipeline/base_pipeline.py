@@ -9,8 +9,9 @@
 '''
 import yaml
 import random
-from copy import deepcopy
+import numpy as np
 from pathlib import Path
+from copy import deepcopy
 
 from robogauge.utils.logger import logger
 from robogauge.tasks.simulator import MujocoSimulator, MujocoConfig, SimData
@@ -18,6 +19,7 @@ from robogauge.tasks.robots import (
     BaseRobot, RobotConfig, Go2Config, Go2, Go2MoEConfig, Go2MoE
 )
 from robogauge.tasks.gauge import BaseGauge, BaseGaugeConfig
+from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal, PositionGoal
 from robogauge.utils.helpers import class_to_dict
 
 class BasePipeline:
@@ -35,6 +37,8 @@ class BasePipeline:
         self.sim: MujocoSimulator = eval(simulator_cfg.simulator_class)(simulator_cfg)
         self.robot: BaseRobot = eval(robot_cfg.robot_class)(robot_cfg)
         self.gauge: BaseGauge = eval(gauge_cfg.gauge_class)(gauge_cfg, robot_cfg)
+
+        self.last_reset_time = 0.0
     
         # save configs
         cfg = {}
@@ -52,17 +56,31 @@ class BasePipeline:
             self.gauge_cfg.assets.terrain_spawn_pos,
             self.robot_cfg.control.default_dof_pos
         )
-    
+
     def run(self):
         logger.info(f"🚀 Starting single run: {self.run_name}")
         try:
             self.load()
+            first_reset = True
             sim_data = self.sim.step()
             frame_skip = int(self.robot_cfg.control.control_dt / self.sim_cfg.physics.simulation_dt)
+            assert frame_skip * self.sim_cfg.physics.simulation_dt == self.robot_cfg.control.control_dt, \
+                "Control dt must be multiple of simulation dt."
             logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
             logger.info("Running pipeline...")
             while not self.gauge.is_done():
-                goal_data = self.gauge.get_goal(sim_data)
+                if first_reset:  # wait for robot to be still
+                    goal_data = GoalData(
+                        goal_type=self.robot_cfg.control.support_goal,
+                        velocity_goal=VelocityGoal(),  # zero velocity
+                        position_goal=PositionGoal(),  # current position
+                    )
+                    lin_vel = np.linalg.norm(sim_data.proprio.base.lin_vel)
+                    # print(lin_vel, sim_data.sim_time - self.last_reset_time)
+                    if np.linalg.norm(sim_data.proprio.base.lin_vel) < 0.05 and sim_data.sim_time - self.last_reset_time > 0.1:
+                        first_reset = False
+                else:
+                    goal_data = self.gauge.get_goal(sim_data)
                 if goal_data is None:
                     continue
                 obs = self.robot.build_observation(self.add_noise(sim_data), goal_data)
@@ -79,13 +97,15 @@ class BasePipeline:
                     self.gauge.update_metrics(sim_data, goal_data)
                 if self.gauge.is_reset(sim_data):
                     self.sim.reset()
+                    first_reset = True
+                    self.last_reset_time = sim_data.sim_time
                     sim_data = self.sim.step()
         finally:
             self.sim.close_viewer()
             self.sim.close_video_writer()
             logger.info("✅ Pipeline execution finished.")
             logger.info(f"📁 Logging saved at: {logger.log_dir}")
-        
+
         return logger.log_dir
 
     def add_noise(self, sim_data: SimData):

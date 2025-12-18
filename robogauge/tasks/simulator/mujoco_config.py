@@ -25,8 +25,10 @@ class MujocoConfig(Config):
     class render:
         save_video = False
         video_fps = 30
-        height = 480
         width = 640
+        height = 480
+        # width = 1920
+        # height = 1080
     
     class domain_rand:
         # With randomization

@@ -8,7 +8,7 @@
 @Desc    : Base Robot Configuration
 '''
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Literal
 from robogauge.utils.config import Config
 
 class RobotConfig(Config):
@@ -24,6 +24,7 @@ class RobotConfig(Config):
         model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
         control_dt = 0.02  # 50 Hz
         control_type = 'P'  # Position control
+        support_goal: Literal['velocity', 'position'] = 'velocity'
 
         # Mujoco joint PD gains
         p_gains = [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0]  # [N*m/rad]

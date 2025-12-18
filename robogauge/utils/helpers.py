@@ -76,8 +76,8 @@ def parse_args():
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
         {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes."},
         {"name": "--seeds", "type": int, "nargs": "+", "default": [0], "help": "List of random seeds for multiple runs."},
-        {"name": "--base-masses", "type": float, "nargs": "+", "default": [-1, 0, 1], "help": "List of base masses for the model."},
-        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.5, 1.0, 1.5], "help": "List of friction coefficients for the model."}
+        {"name": "--base-masses", "type": float, "nargs": "+", "default": [0], "help": "List of base masses for the model."},
+        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.4, 0.7, 1.0, 1.3, 1.6], "help": "List of friction coefficients for the model."}
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})

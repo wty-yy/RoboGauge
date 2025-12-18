@@ -1,4 +1,10 @@
 # UPDATE
+## 20251218
+### v0.1.9
+1. 在`MaxVelocityGoal`基础上加入`end_stance`, 最终保持站立姿态
+2. 在开始goal控制前, 先等机器人落地, 通过线速度小于0.05阈值判断静止后, 执行goal
+3. 支持1920x1080录像保存
+Fix Bugs: 修复Video frame skip过大问题
 ## 20251206
 ### v0.1.8
 1. 加入run_eval_models.sh多模型评估bash脚本
