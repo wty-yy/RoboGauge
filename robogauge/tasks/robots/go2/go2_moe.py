@@ -10,12 +10,7 @@
 import torch
 import numpy as np
 
-from robogauge.tasks.robots.base_robot import BaseRobot, get_projected_gravity
-from robogauge.tasks.robots.go2.go2_config import Go2Config
 from robogauge.tasks.robots.go2.go2 import Go2
-from robogauge.tasks.simulator.sim_data import SimData
-from robogauge.tasks.gauge.goal_data import GoalData
-from robogauge.utils.logger import logger
 
 class Go2MoE(Go2):
     def get_action(self, obs: np.ndarray):

@@ -100,6 +100,9 @@ class BasePipeline:
                     first_reset = True
                     self.last_reset_time = sim_data.sim_time
                     sim_data = self.sim.step()
+        except Exception as e:
+            logger.error(f"❌ Pipeline execution failed with error: {e}")
+            raise e
         finally:
             self.sim.close_viewer()
             self.sim.close_video_writer()

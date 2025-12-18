@@ -1,5 +1,12 @@
 # UPDATE
+TODO: 在模型崩溃时也记录下最后的gauge信息
 ## 20251218
+### v0.1.10
+1. 加入`--write-tensorboard`参数, 默认为`False`即不记录`gauge`的日志信息
+2. 指令系数改为1.8 (比2.0稳定点)
+3. 完成全部指标, 新增`dof_power, orientation_stability, torque_smoothness`
+4. 加入雷达图绘图
+Fix Bugs: 日志记录重复的问题
 ### v0.1.9
 1. 在`MaxVelocityGoal`基础上加入`end_stance`, 最终保持站立姿态
 2. 在开始goal控制前, 先等机器人落地, 通过线速度小于0.05阈值判断静止后, 执行goal

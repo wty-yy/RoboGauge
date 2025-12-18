@@ -76,6 +76,13 @@ class Logger:
         self.logger = logging.getLogger(experiment_name + "_logger")
         self.logger.setLevel(log_level)
         self.logger.propagate = False
+
+        # Clear existing handlers to prevent duplicate logging
+        if self.logger.hasHandlers():
+            for handler in self.logger.handlers[:]:
+                handler.close()
+                self.logger.removeHandler(handler)
+
         self.time_tag = time.strftime("%Y%m%d-%H-%M-%S")
         self.tag = f"{self.time_tag}_{run_name}"
         self.experiment_name = experiment_name
@@ -141,8 +148,8 @@ class Logger:
         """
         if self.writer is not None:
             self.writer.add_scalar(tag, value, step)
-        else:
-            self.warning("Tensorboard writer is not initialized, skipping log.")
+        # else:
+        #     self.warning("Tensorboard writer is not initialized, skipping log.")
 
 logger = Logger()
 

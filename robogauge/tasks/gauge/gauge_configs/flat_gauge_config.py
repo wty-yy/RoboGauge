@@ -36,7 +36,7 @@ class FlatGaugeConfig(BaseGaugeConfig):
         
         class visualization:
             enabled = True
-            dof_force = True
+            dof_torque = True
             dof_pos = True
 
         class lin_vel_err:

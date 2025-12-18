@@ -28,9 +28,10 @@
 | - | - | - |
 | 电机动作执行随机延迟 | `action delay` | `<= RL控制间隔` |
 | base负重 | `base mass` | `-1, 0, 1, 2, 3 kg` |
+| 地面摩擦力 | `friction` | `0.4, 0.7, 1.0, 1.3, 1.6` |
 
 #### 地形
-1. 支持legged_gym中的部分地形, 包括: `wave, slope, rough_slope, stairs up, stairs down, obstacles, flat`, 除`flat`地形外其他地形可进行难度系数提升
+1. 支持legged_gym中的部分地形, 包括: `wave, slope, stairs up, stairs down, obstacles, flat`, 除`flat`地形外其他地形可进行难度系数提升
 2. 地面类型 (影响接触摩擦系数, 弹性摩擦系数), 包括: 橡胶地, 木地板, 瓷砖地
 
 ### 指标
@@ -41,8 +42,9 @@
 | 1 | `dof_limits` | 关节超出软关节范围的大小 | 软关节范围阈值 | 总关节变化范围 | `1-x` |
 | 2 | `lin_vel_err` | 线速度L2误差 | NA | 总线速度指令范围 | `1-x` |
 | 3 | `ang_vel_err` | 角速度L2误差 | NA | 总角速度指令范围 | `1-x` |
-| 4 | `base_height_std` | base高度变化方差 | NA | NA | `1-x` |
-| 5 | `dof_power` | 电机耗能 | NA | 10 | `1-x` |
+| 4 | `dof_power` | 电机耗能 | 缩放系数 | 100 | `1-x` |
+| 5 | `orientation_stability` | 机身姿态稳定性 (Roll) | NA | NA | `1-x` |
+| 6 | `torque_smoothness` | 力矩平滑度 | 缩放系数 | 30 | `1-x` |
 
 ### 速度追踪目标
 针对在虚实迁移中发现的问题, 整理指标 (metrics) 内容如下:
@@ -58,6 +60,7 @@
 总结速度最总目标 (goals) 如下:
 
 | # | 目标名称 Goals | 描述 | reset条件 | 最大reset次数 |
+| - | - | - | - | - |
 | 1 | `max_velocity` | 单一维度的最大线/角速度 | 每次执行一个方向的指令, 再急停 | 6 |
 | 2 | `diagonal_velocity` | 对角线速度变化 | 每次执行一对对角指令 | 8 |
 

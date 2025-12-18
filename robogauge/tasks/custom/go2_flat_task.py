@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : go2_flat_task.py
+@Time    : 2025/12/18 20:19:25
+@Author  : wty-yy
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : Go2 Flat Task Configuration
+'''
 from robogauge.tasks.robots import Go2Config, Go2MoEConfig
 from robogauge.tasks.gauge import FlatGaugeConfig
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
@@ -22,15 +31,15 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
 
 class Go2FlatConfig(Go2Config):
     class commands(Go2Config.commands):
-        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
-        lin_vel_y = [-2.0, 2.0]  # min max [m/s]
-        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
+        lin_vel_x = [-1.8, 1.8]  # min max [m/s]
+        lin_vel_y = [-1.8, 1.8]  # min max [m/s]
+        ang_vel_yaw = [-1.8, 1.8]  # min max [rad/s]
 
 class Go2MoEFlatConfig(Go2MoEConfig):
     class commands(Go2Config.commands):
-        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
-        lin_vel_y = [-2.0, 2.0]  # min max [m/s]
-        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
+        lin_vel_x = [-1.8, 1.8]  # min max [m/s]
+        lin_vel_y = [-1.8, 1.8]  # min max [m/s]
+        ang_vel_yaw = [-1.8, 1.8]  # min max [rad/s]
 
     class control(Go2Config.control):
         # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"

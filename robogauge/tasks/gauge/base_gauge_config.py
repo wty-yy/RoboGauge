@@ -11,6 +11,7 @@ from robogauge.utils.config import Config
 
 class BaseGaugeConfig(Config):
     gauge_class = 'BaseGauge'
+    write_tensorboard = False  # Whether to write tensorboard logs
 
     class assets:
         terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/flat.xml'
@@ -34,7 +35,7 @@ class BaseGaugeConfig(Config):
         
         class visualization:
             enabled = True
-            dof_force = True
+            dof_torque = True
             dof_pos = True
         
         class lin_vel_err:
@@ -42,3 +43,14 @@ class BaseGaugeConfig(Config):
         
         class ang_vel_err:
             enabled = True
+        
+        class dof_power:
+            enabled = True
+            scaling_factor = 100.0  # [W] scaling factor for power metric
+        
+        class orientation_stability:
+            enabled = True
+        
+        class torque_smoothness:
+            enabled = True
+            scaling_factor = 30.0  # [Nm] scaling factor for torque smoothness metric

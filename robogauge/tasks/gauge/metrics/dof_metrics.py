@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : dof_metrics.py
+@Time    : 2025/12/18 20:18:24
+@Author  : wty-yy
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : DOF Limits Metric Implementation
+'''
 import numpy as np
 
 from robogauge.tasks.robots import RobotConfig
@@ -47,3 +56,29 @@ class DofLimitsMetric(BaseMetric):
         rms_value = 1 - np.sqrt(np.mean(np.square(values)))
         logger.log(1 - rms_value, f'dof_limits/rms', step=sim_data.n_step)
         return rms_value
+
+class DofPowerMetric(BaseMetric):
+    """ Metric to log DOF power efficiency. """
+    name = 'dof_power_metric'
+
+    def __init__(self,
+        robot_cfg: RobotConfig,
+        scaling_factor: float = 100.0,
+        **kwargs
+    ):
+        super().__init__(robot_cfg)
+        self.scaling_factor = scaling_factor
+    
+    def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
+        values = []
+        for i in range(len(sim_data.proprio.joint.torque)):
+            torque = sim_data.proprio.joint.torque[i]
+            velocity = sim_data.proprio.joint.vel[i]
+            power = abs(torque * velocity)
+            values.append(power)
+            dof_name = sim_data.proprio.joint.names[i]
+            logger.log(power, f'dof_power/{dof_name}', step=sim_data.n_step)
+        rms_power = np.sqrt(np.mean(np.square(values)))
+        metric_power = 1 - rms_power / self.scaling_factor
+        logger.log(rms_power, f'dof_power/rms', step=sim_data.n_step)
+        return metric_power

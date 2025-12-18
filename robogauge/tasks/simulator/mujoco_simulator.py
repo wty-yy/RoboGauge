@@ -200,7 +200,7 @@ class MujocoSimulator:
             joint=JointState(
                 pos=self.get_sensor_data('joint_pos'),
                 vel=self.get_sensor_data('joint_vel'),
-                force=self.get_sensor_data('joint_eff'),
+                torque=self.get_sensor_data('joint_eff'),
                 limits=self.dof_limits,
                 names=self.dof_names,
             ),
@@ -389,7 +389,7 @@ class MujocoSimulator:
         logger.info("Proprioception shapes:")
         logger.info(f"  joint.pos: { _shape(jp.pos) }")
         logger.info(f"  joint.vel: { _shape(jp.vel) }")
-        logger.info(f"  joint.force: { _shape(jp.force) }")
+        logger.info(f"  joint.torque: { _shape(jp.torque) }")
 
         logger.info(f"  base.pos: { _shape(bs.pos) }")
         logger.info(f"  base.quat: { _shape(bs.quat) }")

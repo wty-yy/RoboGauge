@@ -144,7 +144,7 @@ class MultiPipeline:
         
         save_path = logger.log_dir / "aggregated_results.yaml"
         with open(save_path, 'w') as file:
-            yaml.dump(summary, file, allow_unicode=True)
+            yaml.dump(summary, file, allow_unicode=True, sort_keys=False)
         logger.info("✅ Aggregated execution finished.")
         logger.info(f"📁 Aggregated results saved to: {save_path}")
 

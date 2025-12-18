@@ -26,7 +26,10 @@ from robogauge.tasks.gauge.goals import BaseGoal, MaxVelocityGoal, DiagonalVeloc
 from robogauge.tasks.gauge.metrics import *
 
 class BaseGauge:
-    def __init__(self, cfg: BaseGaugeConfig, robot_cfg: RobotConfig):
+    def __init__(self,
+            cfg: BaseGaugeConfig,
+            robot_cfg: RobotConfig,
+        ):
         self.cfg = cfg
         self.robot_cfg = robot_cfg
         self.goals_cfg = class_to_dict(self.cfg.goals)
@@ -79,7 +82,8 @@ class BaseGauge:
 
     def create_new_goal_logger(self):
         """ Create a new logger for new goal to metrics. """
-        if self.goal_idx >= len(self.goals): return
+        if self.goal_idx >= len(self.goals) or not self.cfg.write_tensorboard:
+            return
         logger.create_tensorboard(
             self.robot_cfg.robot_name,
             Path(self.robot_cfg.control.model_path).stem,

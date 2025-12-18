@@ -15,7 +15,7 @@ MODELS_FILE="$SCRIPT_DIR/evaluate_models.txt"
 RUN_PY="$SCRIPT_DIR/run.py"
 
 ### Default Configure ###
-EXP_NAME="go2_moe_flat"     # Experiment name [-n]
+EXP_NAME=""     # Experiment name [-n]
 TASK_NAME="go2_moe_flat"    # Task name [-t]
 SAVE_VIDEO=false            # Whether to save video [-s]
 
@@ -53,10 +53,14 @@ if [ ${#models_paths[@]} -eq 0 ]; then
 fi
 
 ### Run Evaluation Scripts ###
-base_args="--task $TASK_NAME --headless --experiment-name $EXP_NAME"
+base_args="--task $TASK_NAME --headless"
 
 if [ "$SAVE_VIDEO" = true ]; then
     base_args="$base_args --save-video"
+fi
+
+if [ -n "$EXP_NAME" ]; then
+    base_args="$base_args --exp-name $EXP_NAME"
 fi
 
 echo "================ Run Settings ================"

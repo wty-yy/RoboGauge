@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : vel_metrics.py
+@Time    : 2025/12/18 20:18:56
+@Author  : wty-yy
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : Velocity Metrics Implementation
+'''
 import numpy as np
 
 from robogauge.tasks.robots import RobotConfig

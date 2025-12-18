@@ -71,6 +71,8 @@ def parse_args():
         {"name": "--headless", "action": "store_true", "default": False, "help": "Run in headless mode."},
         {"name": "--save-video", "action": "store_true", "default": False, "help": "Save video output."},
         {"name": "--seed", "type": int, "default": 42, "help": "Random seed."},
+        {"name": "--write-tensorboard", "action": "store_true", "default": False, "help": "Write tensorboard logs."},
+        {"name": "--plot-radar", "action": "store_true", "default": False, "help": "Plot radar charts for metrics."},
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
