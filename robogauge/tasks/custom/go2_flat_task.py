@@ -29,21 +29,30 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
             enabled = True
             cmd_duration = 6.0
 
+        class target_pos_velocity(FlatGaugeConfig.goals.target_pos_velocity):  # goal to reach a target position by velocity command, config target at assets.target_pos
+            enabled = True
+            target_pos = [2, 2, 0]  # x y z [m], target position in the environment, used for target position goal
+            lin_vel_x = 1.0  # +/- m/s
+            lin_vel_y = 1.0  # +/- m/s
+            ang_vel_yaw = 1.5  # +/- rad/s
+            max_cmd_duration = 10.0  # [s] maximum duration to reach the target position
+            reach_threshold = 0.1  # [m] distance threshold to consider the target reached
+
 class Go2FlatConfig(Go2Config):
     class commands(Go2Config.commands):
         lin_vel_x = [-1.8, 1.8]  # min max [m/s]
         lin_vel_y = [-1.8, 1.8]  # min max [m/s]
-        ang_vel_yaw = [-1.8, 1.8]  # min max [rad/s]
+        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
 
 class Go2MoEFlatConfig(Go2MoEConfig):
     class commands(Go2Config.commands):
         lin_vel_x = [-1.8, 1.8]  # min max [m/s]
         lin_vel_y = [-1.8, 1.8]  # min max [m/s]
-        ang_vel_yaw = [-1.8, 1.8]  # min max [rad/s]
+        ang_vel_yaw = [-2.0, 2.0]  # min max [rad/s]
 
     class control(Go2Config.control):
-        # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"
-        model_path = "/home/xfy/Coding/kaiwu2025/rob_finals/sim2real/models/v6-2_106503/kaiwu_script_v6-2_106503.pt"
+        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"
+        # model_path = "/home/xfy/Coding/kaiwu2025/rob_finals/sim2real/models/v6-2_106503/kaiwu_script_v6-2_106503.pt"
 
 class Go2MoEFlatMujocoConfig(MujocoConfig):
     class domain_rand(MujocoConfig.domain_rand):

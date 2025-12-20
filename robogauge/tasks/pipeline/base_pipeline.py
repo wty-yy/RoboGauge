@@ -38,6 +38,7 @@ class BasePipeline:
         self.robot: BaseRobot = eval(robot_cfg.robot_class)(robot_cfg)
         self.gauge: BaseGauge = eval(gauge_cfg.gauge_class)(gauge_cfg, robot_cfg)
 
+        self.first_reset = True
         self.last_reset_time = 0.0
     
         # save configs
@@ -61,7 +62,6 @@ class BasePipeline:
         logger.info(f"🚀 Starting single run: {self.run_name}")
         try:
             self.load()
-            first_reset = True
             sim_data = self.sim.step()
             frame_skip = int(self.robot_cfg.control.control_dt / self.sim_cfg.physics.simulation_dt)
             assert frame_skip * self.sim_cfg.physics.simulation_dt == self.robot_cfg.control.control_dt, \
@@ -69,20 +69,26 @@ class BasePipeline:
             logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
             logger.info("Running pipeline...")
             while not self.gauge.is_done():
-                if first_reset:  # wait for robot to be still
+                if self.first_reset:  # wait for robot to be still
                     goal_data = GoalData(
                         goal_type=self.robot_cfg.control.support_goal,
                         velocity_goal=VelocityGoal(),  # zero velocity
                         position_goal=PositionGoal(),  # current position
                     )
-                    lin_vel = np.linalg.norm(sim_data.proprio.base.lin_vel)
-                    # print(lin_vel, sim_data.sim_time - self.last_reset_time)
                     if np.linalg.norm(sim_data.proprio.base.lin_vel) < 0.05 and sim_data.sim_time - self.last_reset_time > 0.1:
-                        first_reset = False
+                        self.first_reset = False
                 else:
                     goal_data = self.gauge.get_goal(sim_data)
-                if goal_data is None:
+
+                if goal_data is None:  # Change goal
+                    sim_data = self.reset_sim(sim_data)
                     continue
+
+                if goal_data.visualization_pos is not None:
+                    self.sim.set_target_pos(goal_data.visualization_pos)
+                else:
+                    self.sim.set_target_pos(None)
+
                 obs = self.robot.build_observation(self.add_noise(sim_data), goal_data)
                 action, p_gains, d_gains, control_type = self.robot.get_action(obs)
 
@@ -96,10 +102,7 @@ class BasePipeline:
                     sim_data = self.sim.step()
                     self.gauge.update_metrics(sim_data, goal_data)
                 if self.gauge.is_reset(sim_data):
-                    self.sim.reset()
-                    first_reset = True
-                    self.last_reset_time = sim_data.sim_time
-                    sim_data = self.sim.step()
+                    sim_data = self.reset_sim(sim_data)
         except Exception as e:
             logger.error(f"❌ Pipeline execution failed with error: {e}")
             raise e
@@ -110,6 +113,13 @@ class BasePipeline:
             logger.info(f"📁 Logging saved at: {logger.log_dir}")
 
         return logger.log_dir
+    
+    def reset_sim(self, sim_data: SimData):
+        self.sim.reset()
+        self.last_reset_time = sim_data.sim_time
+        self.first_reset = True
+        sim_data = self.sim.step()
+        return sim_data
 
     def add_noise(self, sim_data: SimData):
         sim_data = deepcopy(sim_data)

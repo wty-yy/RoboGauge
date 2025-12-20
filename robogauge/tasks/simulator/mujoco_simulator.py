@@ -42,6 +42,7 @@ class MujocoSimulator:
         self._pause = True
         self.n_step = 0
         self.sim_time = 0.0
+        self.target_pos = None
 
     def load(
         self,
@@ -167,6 +168,9 @@ class MujocoSimulator:
             self._pause = not self._pause
             logger.info(f"Pause toggled: {self._pause}")
     
+    def set_target_pos(self, pos):
+        self.target_pos = pos
+
     def step(self) -> SimData:
         """ Simulation step, pause will block thread. """
         while self._pause:
@@ -177,6 +181,17 @@ class MujocoSimulator:
         # Viewer sync
         if self.viewer is not None:
             if self.viewer.is_running():
+                if self.target_pos is not None:
+                    self.viewer.user_scn.ngeom = 0
+                    mujoco.mjv_initGeom(
+                        self.viewer.user_scn.geoms[0],
+                        type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                        size=[0.1, 0, 0],
+                        pos=self.target_pos,
+                        mat=np.eye(3).flatten(),
+                        rgba=[1, 0, 0, 1]
+                    )
+                    self.viewer.user_scn.ngeom = 1
                 self.viewer.sync()
                 time_untile_next_render = self.cfg.physics.simulation_dt - (
                     time.time() - self.last_render_time
@@ -193,6 +208,18 @@ class MujocoSimulator:
             render_cam = self.viewer.cam if self.viewer is not None else self.offscreen_cam
             # mujoco.mjv_updateCamera(render_cam)
             self.renderer.update_scene(self.mj_data, camera=render_cam)
+            
+            if self.target_pos is not None:
+                self.renderer.scene.ngeom += 1
+                mujoco.mjv_initGeom(
+                    self.renderer.scene.geoms[self.renderer.scene.ngeom - 1],
+                    type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                    size=[0.1, 0, 0],
+                    pos=self.target_pos,
+                    mat=np.eye(3).flatten(),
+                    rgba=[1, 0, 0, 1]
+                )
+
             frame = self.renderer.render()
             self.vid_writer.append_data(frame)
 

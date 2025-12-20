@@ -17,13 +17,13 @@ class BaseGoal:
     name = 'base_goal'
 
     def __init__(self):
-        self.count = 0
-        self.total = 0
+        self.count = 0  # current task index
+        self.total = 0  # total tasks
         self.sub_name = None
 
         self._goal_mean_metrics = defaultdict(list)
 
-    def is_done(self) -> bool:
+    def pre_get_goal(self) -> bool:
         raise NotImplementedError
 
     def is_reset(self, sim_data: SimData) -> bool:

@@ -22,7 +22,7 @@ from robogauge.tasks.gauge.base_gauge_config import BaseGaugeConfig
 from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal, PositionGoal
 from robogauge.tasks.simulator.sim_data import SimData
 
-from robogauge.tasks.gauge.goals import BaseGoal, MaxVelocityGoal, DiagonalVelocityGoal
+from robogauge.tasks.gauge.goals import *
 from robogauge.tasks.gauge.metrics import *
 
 class BaseGauge:
@@ -40,7 +40,8 @@ class BaseGauge:
         self.goals: List[BaseGoal] = []
         self.metrics: List[function] = []
         self.info = {'goal': [], 'metric': []}
-        self.results = {}  # {'goal/sub_goal': {'metric': result}}
+        self.results = {
+        }  # {'goal/sub_goal': {'metric': result}}
 
         log_str = "Initialized Gauge with Goals and Metrics:\n"
         for name, kwargs in self.goals_cfg.items():
@@ -51,6 +52,9 @@ class BaseGauge:
             elif name == 'diagonal_velocity':
                 self.goals.append(DiagonalVelocityGoal(robot_cfg.control.control_dt, robot_cfg.commands, **kwargs))
                 log_str += f"  - Diagonal Velocity Goal: {kwargs}\n"
+            elif name == 'target_pos_velocity':
+                self.goals.append(TargetPosVelocityGoal(robot_cfg.control.control_dt,**kwargs))
+                log_str += f"  - Target Position Velocity Goal: {kwargs}\n"
             else:
                 raise NotImplementedError(f"Goal '{name}' is not implemented in BaseGauge.")
             self.info['goal'].append(name)
@@ -97,21 +101,23 @@ class BaseGauge:
         #         ang_vel_yaw=-5.0,
         #     )
         # )
-        if self.goal_idx >= len(self.goals):
-            logger.error("All goals have been exhausted.")
-            return None
         goal_obj = self.goals[self.goal_idx]
-        goal = goal_obj.get_goal(sim_data)
+        if goal_obj.pre_get_goal(sim_data):
+            metrics = goal_obj.goal_mean_metrics
+            if hasattr(goal_obj, 'success'):  # target position goal
+                metrics['success'] = {'mean': float(goal_obj.success)}
+            
+            key = f"{goal_obj.name}"
+            self.results[key] = metrics
 
-        if goal is None:  # goal obj finished
-            self.results[goal_obj.name] = goal_obj.goal_mean_metrics
             self.goal_idx += 1
             self.create_new_goal_logger()
             return None
+        goal = goal_obj.get_goal(sim_data)
 
         now_goal_str = str(goal_obj)
-        if now_goal_str != self.goal_str:  # sub goal changed
-            self.goal_str = now_goal_str
+        if f"{goal_obj.count+1}_{now_goal_str}" != self.goal_str:  # sub goal changed
+            self.goal_str = f"{goal_obj.count+1}_{now_goal_str}"
             logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
     
@@ -142,9 +148,10 @@ class BaseGauge:
                 self.results['summary'][metric_name][quantile] = f"{mean:.4f} ± {std:.4f}"
 
         save_path = Path(logger.log_dir) / "results.yaml"
+        self.results["terrain"] = f"{self.cfg.assets.terrain_name}"
         with open(save_path, 'w') as file:
-            yaml.dump(self.results, file, allow_unicode=True)
-            yaml_str = yaml.dump(self.results, allow_unicode=True)
+            yaml.dump(self.results, file, allow_unicode=True, sort_keys=False)
+            yaml_str = yaml.dump(self.results, allow_unicode=True, sort_keys=False)
         logger.info(
             f"""\n{'='*20} Goals and Metrics results {'='*20}\n"""
             f"""{yaml_str}"""

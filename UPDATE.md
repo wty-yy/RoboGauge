@@ -1,5 +1,14 @@
 # UPDATE
 TODO: 在模型崩溃时也记录下最后的gauge信息
+## 20251220
+### v0.1.11
+1. 加入`os.environ["OMP_NUM_THREADS"] = "2"; os.environ["MKL_NUM_THREADS"] = "2"`避免并行时cpu线程爆炸, `--multi`模式能稳定提高速度了
+2. 完成target_position_goal, 超参数包含: 目标点位置, 最大线速度角速度, 最长追踪时间, 追踪到达阈值范围; 并在mujoco中绘制红色目标点, result.yaml中记录当前terrain和success
+3. 修改goal的reset逻辑
+    旧版: 在sub_goal开始时通过实现类中的get_goal异常返回None判断当前goals全部结束, 并且goals全部结束也不reset环境;
+    新版: 加入goal.pre_get_goal, 判断当前系列goals是否全部结束, 并根据sim_data更新当前的sub_goal索引, 实现类中无需考虑异常处理, 并且goals全部结束时判断为change goal执行一次reset环境, 保证新的goal可以直接无缝衔接上
+4. 添加vscode python debug启动配置文件, 支持参数输入调试
+Fix Bugs: 修复sub_goal重名, 日志info不显示的问题
 ## 20251218
 ### v0.1.10
 1. 加入`--write-tensorboard`参数, 默认为`False`即不记录`gauge`的日志信息

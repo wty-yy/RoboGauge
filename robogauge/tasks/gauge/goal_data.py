@@ -41,3 +41,4 @@ class GoalData:
     goal_type: Literal['velocity', 'position']
     velocity_goal: Optional[VelocityGoal] = None
     position_goal: Optional[PositionGoal] = None
+    visualization_pos: Optional[Tuple[float, float, float]] = None

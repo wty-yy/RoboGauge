@@ -9,6 +9,8 @@
 '''
 import os
 os.environ['MUJOCO_GL'] = 'glfw'  # avoid mujoco.Renderer EGL context error
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
 
 from robogauge.tasks import *
 from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
