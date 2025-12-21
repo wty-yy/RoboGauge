@@ -105,14 +105,16 @@ class BasePipeline:
                     sim_data = self.reset_sim(sim_data)
         except Exception as e:
             logger.error(f"❌ Pipeline execution failed with error: {e}")
-            raise e
+            self.gauge.switch_to_next_goal()  # save current goal metrics
+            self.gauge.save_results()
+            return logger.log_dir, e
         finally:
             self.sim.close_viewer()
             self.sim.close_video_writer()
             logger.info("✅ Pipeline execution finished.")
             logger.info(f"📁 Logging saved at: {logger.log_dir}")
 
-        return logger.log_dir
+        return logger.log_dir, None
     
     def reset_sim(self, sim_data: SimData):
         self.sim.reset()

@@ -36,19 +36,20 @@ def run_single_process(args, data):
         console_output=False
     )
     pipeline = task_register.make_pipeline(args=local_args, create_logger=False)
-    try:
-        log_dir = pipeline.run()
+    log_dir, error = pipeline.run()
+    if error is None:
         ret = {
             'status': 'success',
             'log_dir': log_dir,
             'model_path': pipeline.robot_cfg.control.model_path,
         }
-    except Exception as e:
-        logger.error(f"❌ Process with seed={seed}, base_mass={base_mass}, friction={friction} failed with error: {e}")
+    else:
+        logger.error(f"❌ Process with seed={seed}, base_mass={base_mass}, friction={friction} failed with error: {error}")
         ret = {
             'status': 'error',
+            'log_dir': log_dir,
             'data': data,
-            'error_msg': str(e),
+            'error_msg': str(error),
             'traceback': traceback.format_exc()
         }
     return ret
@@ -76,8 +77,9 @@ class MultiPipeline:
             iterator = pool.imap_unordered(worker_func, workers_data)
             for results in tqdm(iterator, total=len(workers_data), desc="Evaluation"):
                 success_flags.append(results['status'] == 'success')
+
+                result_log_dirs.append(results['log_dir'])
                 if results['status'] == 'success':
-                    result_log_dirs.append(results['log_dir'])
                     if self.model_path is None:
                         self.model_path = results['model_path']
                     else:

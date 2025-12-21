@@ -2,7 +2,6 @@
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe_flat \
-    --model-path /home/xfy/Coding/robot_gauge/mytest/models/kaiwu/kaiwu_script_v6-2_124004.pt \
     --experiment-name debug \
     --headless
 ```
@@ -11,17 +10,24 @@ python robogauge/scripts/run.py \
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe_flat \
-    --model-path /home/xfy/Coding/robot_gauge/mytest/models/kaiwu/kaiwu_script_v6-2_124004.pt \
     --experiment-name debug \
     --multi \
-    --num-processes 1 \
+    --num-processes 3 \
     --headless
 
 python robogauge/scripts/run.py \
     --task go2_moe_flat \
-    --model-path /home/xfy/Coding/robot_gauge/mytest/models/kaiwu/kaiwu_script_v6-2_102003.pt \
     --experiment-name debug \
     --multi \
-    --num-processes 1 \
+    --num-processes 3 \
     --headless
+```
+
+# Radar Plot
+将Multi Run结果绘制在雷达图中
+```bash
+python robogauge/utils/radar_plot.py \
+    aggregated_results_1.yaml \
+    aggregated_results_2.yaml \
+    --out logs/go2_flat_vs_moe_flat.png
 ```

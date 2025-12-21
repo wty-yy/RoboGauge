@@ -54,6 +54,7 @@ class BaseGoal:
             result[f'mean@{i}'] = 0
         if len(metrics) == 0:
             return result
+        metrics = [max(0.0, min(1.0, m)) for m in metrics]
         metrics.sort()
         result['mean'] = float(sum(metrics) / len(metrics))
         for i in [25, 50]:

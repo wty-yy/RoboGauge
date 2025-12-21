@@ -1,5 +1,8 @@
 # UPDATE
 TODO: 在模型崩溃时也记录下最后的gauge信息
+## 20251221
+### v0.1.12
+1. 在模型崩溃时也记录下最后的gauge信息, 修改single/multi pipeline逻辑
 ## 20251220
 ### v0.1.11
 1. 加入`os.environ["OMP_NUM_THREADS"] = "2"; os.environ["MKL_NUM_THREADS"] = "2"`避免并行时cpu线程爆炸, `--multi`模式能稳定提高速度了

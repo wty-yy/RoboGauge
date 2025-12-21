@@ -40,8 +40,7 @@ class BaseGauge:
         self.goals: List[BaseGoal] = []
         self.metrics: List[function] = []
         self.info = {'goal': [], 'metric': []}
-        self.results = {
-        }  # {'goal/sub_goal': {'metric': result}}
+        self.results = {}  # {'goal/sub_goal': {'metric': result}}
 
         log_str = "Initialized Gauge with Goals and Metrics:\n"
         for name, kwargs in self.goals_cfg.items():
@@ -102,16 +101,8 @@ class BaseGauge:
         #     )
         # )
         goal_obj = self.goals[self.goal_idx]
-        if goal_obj.pre_get_goal(sim_data):
-            metrics = goal_obj.goal_mean_metrics
-            if hasattr(goal_obj, 'success'):  # target position goal
-                metrics['success'] = {'mean': float(goal_obj.success)}
-            
-            key = f"{goal_obj.name}"
-            self.results[key] = metrics
-
-            self.goal_idx += 1
-            self.create_new_goal_logger()
+        if goal_obj.pre_get_goal(sim_data):  # goal finished
+            self.switch_to_next_goal()
             return None
         goal = goal_obj.get_goal(sim_data)
 
@@ -120,6 +111,19 @@ class BaseGauge:
             self.goal_str = f"{goal_obj.count+1}_{now_goal_str}"
             logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
+    
+    def switch_to_next_goal(self):
+        """ Switch to the next goal and log the metrics of the current goal. """
+        goal_obj = self.goals[self.goal_idx]
+        metrics = goal_obj.goal_mean_metrics
+        if hasattr(goal_obj, 'success'):  # target position goal
+            metrics['success'] = {'mean': float(goal_obj.success)}
+        
+        key = f"{goal_obj.name}"
+        self.results[key] = metrics
+
+        self.goal_idx += 1
+        self.create_new_goal_logger()
     
     def update_metrics(self, sim_data: SimData, goal_data: GoalData):
         if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt) != 0:
