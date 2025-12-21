@@ -1,8 +1,9 @@
 # UPDATE
-TODO: 在模型崩溃时也记录下最后的gauge信息
+TODO: 即使模型崩溃也要继续测完后续的goals
 ## 20251221
 ### v0.1.12
 1. 在模型崩溃时也记录下最后的gauge信息, 修改single/multi pipeline逻辑
+2. 添加slope全等级地形, 关系式: 斜率$0.1+0.47d$，角度范围$5.7\sim29.7^\circ$, 发现29.7度在2.4摩擦系数下可以稳定通过
 ## 20251220
 ### v0.1.11
 1. 加入`os.environ["OMP_NUM_THREADS"] = "2"; os.environ["MKL_NUM_THREADS"] = "2"`避免并行时cpu线程爆炸, `--multi`模式能稳定提高速度了

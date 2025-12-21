@@ -9,6 +9,7 @@
 '''
 import yaml
 import random
+import traceback
 import numpy as np
 from pathlib import Path
 from copy import deepcopy
@@ -104,7 +105,7 @@ class BasePipeline:
                 if self.gauge.is_reset(sim_data):
                     sim_data = self.reset_sim(sim_data)
         except Exception as e:
-            logger.error(f"❌ Pipeline execution failed with error: {e}")
+            logger.error(f"❌ Pipeline execution failed with error: {e},\n{traceback.format_exc()}")
             self.gauge.switch_to_next_goal()  # save current goal metrics
             self.gauge.save_results()
             return logger.log_dir, e

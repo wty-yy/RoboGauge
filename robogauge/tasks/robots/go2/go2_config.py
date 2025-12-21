@@ -20,7 +20,7 @@ class Go2Config(RobotConfig):
 
     class control(RobotConfig.control):
         device = 'cpu'
-        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_83501.pt"
+        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_max2_100k.pt"
         # model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_cts_cmd-1,1_38k.pt"
         control_dt = 0.02  # 50 Hz
         control_type = 'P'  # Position control
@@ -47,8 +47,8 @@ class Go2Config(RobotConfig):
             cmd = [2.0, 2.0, 0.25]
 
     class commands(RobotConfig.commands):
-        lin_vel_x = [-1.5, 1.5]  # min max [m/s]
-        lin_vel_y = [-1, 1]  # min max [m/s]
+        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
+        lin_vel_y = [-1.0, 1.0]  # min max [m/s]
         lin_vel_z = None  # min max [m/s]
         ang_vel_roll = None  # min max [rad/s]
         ang_vel_pitch = None  # min max [rad/s]

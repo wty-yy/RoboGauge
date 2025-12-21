@@ -20,18 +20,19 @@ class BaseGaugeConfig(Config):
     
     class goals:
         class max_velocity:  # goal with maximum velocity
-            enabled = True
+            enabled = False
             cmd_duration = 5.0  # [s] duration for each velocity command
 
         class diagonal_velocity:  # goal with diagonal velocity changes
-            enabled = True
+            enabled = False
             cmd_duration = 6.0  # [s] duration for a pair of diagonal velocity commands
 
         class target_pos_velocity:  # goal to reach a target position by velocity command
-            enabled = True
+            enabled = False
             target_pos = [5, 0, 0]  # x y z [m], target position in the environment, used for target position goal
             lin_vel_x = 1.0  # +/- m/s
-            ang_vel_yaw = 1.0  # +/- rad/s
+            lin_vel_y = 1.0  # +/- m/s
+            ang_vel_yaw = 1.5  # +/- rad/s
             max_cmd_duration = 10.0  # [s] maximum duration to reach the target position
             reach_threshold = 0.1
 

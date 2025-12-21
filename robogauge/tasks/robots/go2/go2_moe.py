@@ -15,7 +15,12 @@ from robogauge.tasks.robots.go2.go2 import Go2
 class Go2MoE(Go2):
     def get_action(self, obs: np.ndarray):
         obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(self.device)
-        action, weights = self.model(obs_tensor)
+        action, results = self.model(obs_tensor)
+        if isinstance(results, tuple):
+            weights, latent = results
+            latent = latent.detach().cpu().numpy().squeeze(0)
+        else:
+            weights = results
         action = action.detach().cpu().numpy().squeeze(0)[self.model2mj_idx]
         weights = weights.detach().cpu().numpy().squeeze(0)
         self.last_action = action
