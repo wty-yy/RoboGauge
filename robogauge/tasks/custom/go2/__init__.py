@@ -8,3 +8,4 @@
 '''
 from .go2_flat_task import Go2FlatGaugeConfig
 from .go2_slope_task import Go2SlopeGaugeConfig, Go2SlopeMujocoConfig
+from .go2_wave_task import Go2WaveGaugeConfig

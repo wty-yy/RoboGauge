@@ -42,7 +42,7 @@ class BaseGauge:
         self.info = {'goal': [], 'metric': []}
         self.results = {}  # {'goal/sub_goal': {'metric': result}}
 
-        log_str = "Initialized Gauge with Goals and Metrics:\n"
+        log_str = "Initialized Gauge with Goals 🎯 and Metrics 📊:\n"
         for name, kwargs in self.goals_cfg.items():
             if not kwargs['enabled']: continue
             if name == 'max_velocity':

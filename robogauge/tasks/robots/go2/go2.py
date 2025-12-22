@@ -53,6 +53,10 @@ class Go2(BaseRobot):
             raise NotImplementedError(f"Goal type '{goal_data.goal_type}' not implemented in Go2 robot.")
         return obs
     
+    def reset(self):
+        self.last_action = np.zeros(self.num_action, dtype=np.float32)
+        self.model.reset()  # reset history
+
     def get_action(self, obs: np.ndarray):
         obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(self.device)
         action = self.model(obs_tensor).detach().cpu().numpy().squeeze(0)[self.model2mj_idx]

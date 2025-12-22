@@ -45,3 +45,6 @@ class BaseRobot:
         action = np.zeros(self.num_action, dtype=np.float32)
         return action, self.p_gains, self.d_gains, self.control_type
 
+    def reset(self):
+        """ Reset model state/history if needed """
+        pass

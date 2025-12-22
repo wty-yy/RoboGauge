@@ -1,5 +1,7 @@
 # UPDATE
-TODO: 即使模型崩溃也要继续测完后续的goals
+## 20251222
+### v0.1.13
+1. 即使模型崩溃也要继续测完后续的goals, 但是跳过当前的sub goals
 ## 20251221
 ### v0.1.12
 1. 在模型崩溃时也记录下最后的gauge信息, 修改single/multi pipeline逻辑

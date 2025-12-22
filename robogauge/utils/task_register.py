@@ -65,9 +65,9 @@ class TaskRegister():
             sim_cfg.render.save_video = args.save_video
         if args.write_tensorboard is not None:
             gauger_cfg.write_tensorboard = args.write_tensorboard
-        if hasattr(args, 'friction') and args.friction is not None:
+        if args.friction is not None:
             sim_cfg.domain_rand.friction = args.friction
-        if hasattr(args, 'base_mass') and args.base_mass is not None:
+        if args.base_mass is not None:
             sim_cfg.domain_rand.base_mass = args.base_mass
 
 task_register = TaskRegister()

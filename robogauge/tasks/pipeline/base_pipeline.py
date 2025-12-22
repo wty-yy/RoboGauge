@@ -61,15 +61,16 @@ class BasePipeline:
 
     def run(self):
         logger.info(f"🚀 Starting single run: {self.run_name}")
-        try:
-            self.load()
-            sim_data = self.sim.step()
-            frame_skip = int(self.robot_cfg.control.control_dt / self.sim_cfg.physics.simulation_dt)
-            assert frame_skip * self.sim_cfg.physics.simulation_dt == self.robot_cfg.control.control_dt, \
-                "Control dt must be multiple of simulation dt."
-            logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
-            logger.info("Running pipeline...")
-            while not self.gauge.is_done():
+        self.load()
+        sim_data = self.sim.step()
+        frame_skip = int(self.robot_cfg.control.control_dt / self.sim_cfg.physics.simulation_dt)
+        assert frame_skip * self.sim_cfg.physics.simulation_dt == self.robot_cfg.control.control_dt, \
+            "Control dt must be multiple of simulation dt."
+        logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
+        logger.info("Running pipeline...")
+        error = None
+        while not self.gauge.is_done():
+            try:
                 if self.first_reset:  # wait for robot to be still
                     goal_data = GoalData(
                         goal_type=self.robot_cfg.control.support_goal,
@@ -82,7 +83,7 @@ class BasePipeline:
                     goal_data = self.gauge.get_goal(sim_data)
 
                 if goal_data is None:  # Change goal
-                    sim_data = self.reset_sim(sim_data)
+                    sim_data = self.reset_sim_and_robot(sim_data)
                     continue
 
                 if goal_data.visualization_pos is not None:
@@ -103,25 +104,27 @@ class BasePipeline:
                     sim_data = self.sim.step()
                     self.gauge.update_metrics(sim_data, goal_data)
                 if self.gauge.is_reset(sim_data):
-                    sim_data = self.reset_sim(sim_data)
-        except Exception as e:
-            logger.error(f"❌ Pipeline execution failed with error: {e},\n{traceback.format_exc()}")
-            self.gauge.switch_to_next_goal()  # save current goal metrics
-            self.gauge.save_results()
-            return logger.log_dir, e
-        finally:
-            self.sim.close_viewer()
-            self.sim.close_video_writer()
-            logger.info("✅ Pipeline execution finished.")
-            logger.info(f"📁 Logging saved at: {logger.log_dir}")
+                    sim_data = self.reset_sim_and_robot(sim_data)
+            except Exception as e:
+                error = e
+                logger.error(f"❌ Goal '{self.gauge.goal_str}' failed with error: {e},\n{traceback.format_exc()}")
+                self.gauge.switch_to_next_goal()  # save current goal metrics
+                sim_data = self.reset_sim_and_robot(sim_data)
+                logger.info("⏩ Pipeline recovered from error and continued next goal 🎯.")
 
-        return logger.log_dir, None
+        self.sim.close_viewer()
+        self.sim.close_video_writer()
+        logger.info("✅ Pipeline execution finished.")
+        logger.info(f"📁 Logging saved at: {logger.log_dir}")
+
+        return logger.log_dir, error
     
-    def reset_sim(self, sim_data: SimData):
+    def reset_sim_and_robot(self, sim_data: SimData):
         self.sim.reset()
         self.last_reset_time = sim_data.sim_time
         self.first_reset = True
         sim_data = self.sim.step()
+        self.robot.reset()
         return sim_data
 
     def add_noise(self, sim_data: SimData):

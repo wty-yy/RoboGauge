@@ -73,6 +73,8 @@ def parse_args():
         {"name": "--seed", "type": int, "default": 42, "help": "Random seed."},
         {"name": "--write-tensorboard", "action": "store_true", "default": False, "help": "Write tensorboard logs."},
         {"name": "--plot-radar", "action": "store_true", "default": False, "help": "Plot radar charts for metrics."},
+        {"name": "--base-mass", "type": float, "default": 0.0, "help": "Set the base mass of the robot."},
+        {"name": "--friction", "type": float, "default": 1.0, "help": "Set the ground friction coefficient."},
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},

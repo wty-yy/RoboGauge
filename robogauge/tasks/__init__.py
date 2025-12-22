@@ -11,3 +11,5 @@ task_register.register('go2_flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfi
 task_register.register('go2_moe_flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfig, Go2MoEConfig)
 task_register.register('go2_slope', BasePipeline, Go2SlopeMujocoConfig, Go2SlopeGaugeConfig, Go2Config)
 task_register.register('go2_moe_slope', BasePipeline, Go2SlopeMujocoConfig, Go2SlopeGaugeConfig, Go2MoEConfig)
+task_register.register('go2_wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2Config)
+task_register.register('go2_moe_wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2MoEConfig)
