@@ -20,6 +20,7 @@ from typing import Literal
 
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_path
+from robogauge.utils.math_utils import get_projected_gravity
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 from robogauge.tasks.simulator.sim_data import (
     SimData,
@@ -261,7 +262,14 @@ class MujocoSimulator:
 
         self.n_step += 1
         self.sim_time = self.n_step * self.sim_dt
+        self.check_truncation(sim_data)
         return sim_data
+    
+    def check_truncation(self, sim_data: SimData):
+        if self.cfg.truncation.enabled:
+            projected_gravity = get_projected_gravity(sim_data.proprio.base.quat)
+            if -projected_gravity[2] < np.cos(self.cfg.truncation.projected_gravity_rad):
+                raise RuntimeError(f"Episode truncated due to excessive projected gravity, angle: {np.arccos(-projected_gravity[2]):.3f} rad, projected: {projected_gravity}")
     
     def reset(self):
         """ Reset the simulator to initial state. """

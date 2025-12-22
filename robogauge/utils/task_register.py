@@ -10,6 +10,7 @@
 from robogauge import ROBOGAUGE_ROOT_DIR
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_args, set_seed
+from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainLevelsConfig
 
 class TaskRegister():
     def __init__(self):
@@ -69,5 +70,15 @@ class TaskRegister():
             sim_cfg.domain_rand.friction = args.friction
         if args.base_mass is not None:
             sim_cfg.domain_rand.base_mass = args.base_mass
+        if args.level is not None:
+            gauger_cfg.assets.terrain_level = args.level
+            levels_cfg = TerrainLevelsConfig()
+            cfg = getattr(levels_cfg, gauger_cfg.assets.terrain_name)
+            assert cfg is not None, f"Level {args.level} configuration not found in TerrainLevelsConfig."
+            assert args.level in cfg.levels, f"Level must be in {cfg.levels}."
+            gauger_cfg.goals.target_pos_velocity.target_pos = cfg.targets[cfg.levels.index(args.level)]
+            xml = gauger_cfg.assets.terrain_xml
+            xml = xml.rsplit('/', 1)[0] + f"/{gauger_cfg.assets.terrain_name}_{args.level}.xml"
+            gauger_cfg.assets.terrain_xml = xml
 
 task_register = TaskRegister()

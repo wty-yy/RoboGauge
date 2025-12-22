@@ -90,6 +90,7 @@ class MultiPipeline:
 
         logger.info("✅ Multi-Process Evaluation Completed.")
         self.aggregate_results(result_log_dirs, success_flags, workers_data)
+        return logger.log_dir
     
     def aggregate_results(self, log_dirs, success_flags, workers_data):
         """ Process results.yaml from each log_dir """

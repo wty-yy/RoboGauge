@@ -13,14 +13,15 @@ class SlopeGaugeConfig(BaseGaugeConfig):
     gauge_class = 'BaseGauge'
 
     class assets(BaseGaugeConfig.assets):
-        terrain_name = "slope_5"  # {type}_{level}
+        terrain_name = "slope"
+        terrain_level = 10  # 1-10
         terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/slope/slope_10.xml'
         terrain_spawn_pos = [0, 0, 0]  # x y z [m], robot freejoint spawn position on the terrain
     
-    class goals:
+    class goals(BaseGaugeConfig.goals):
         class target_pos_velocity:  # goal to reach a target position by velocity command
             enabled = True
-            target_pos = [4, 0, 2.0]  # x y z [m], target position in the environment, used for target position goal
+            target_pos = [5, 0, 2.28]  # x y z [m], target position in the environment, used for target position goal
             lin_vel_x = 1.0  # +/- m/s
             lin_vel_y = 1.0  # +/- m/s
             ang_vel_yaw = 1.5  # +/- rad/s

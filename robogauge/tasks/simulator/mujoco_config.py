@@ -45,3 +45,7 @@ class MujocoConfig(Config):
         ang_vel = 0.8       # [rad/s]
         joint_pos = 0.01    # [rad]
         joint_vel = 3.0    # [rad/s]
+
+    class truncation:
+        enabled = True
+        projected_gravity_rad = 2.5  # [rad], if gravity projection angle exceeds this value, truncate episode

@@ -152,7 +152,9 @@ class BaseGauge:
                 self.results['summary'][metric_name][quantile] = f"{mean:.4f} ± {std:.4f}"
 
         save_path = Path(logger.log_dir) / "results.yaml"
-        self.results["terrain"] = f"{self.cfg.assets.terrain_name}"
+        self.results["terrain_name"] = self.cfg.assets.terrain_name
+        self.results["terrain_level"] = self.cfg.assets.terrain_level
+
         with open(save_path, 'w') as file:
             yaml.dump(self.results, file, allow_unicode=True, sort_keys=False)
             yaml_str = yaml.dump(self.results, allow_unicode=True, sort_keys=False)

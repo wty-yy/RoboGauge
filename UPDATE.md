@@ -1,7 +1,11 @@
 # UPDATE
+TODO: 处理LevelPipeline返回的result信息
 ## 20251222
 ### v0.1.13
 1. 即使模型崩溃也要继续测完后续的goals, 但是跳过当前的sub goals
+2. 加入当翻滚角>2.5rad时认为崩溃, 自动切换为下一个goal
+3. 初步完成二分查找level等级, 细节如下
+    LevelPipeline: 一种二分查找当前域随机化(friction, base_mass)下的最大成功terrain等级, 每次测试中采用三个seeds, 调用MultiPipeline同时测试三个seeds, 如果同时全部成功, 则判定为通过
 ## 20251221
 ### v0.1.12
 1. 在模型崩溃时也记录下最后的gauge信息, 修改single/multi pipeline逻辑

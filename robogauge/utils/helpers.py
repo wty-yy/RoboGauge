@@ -75,13 +75,17 @@ def parse_args():
         {"name": "--plot-radar", "action": "store_true", "default": False, "help": "Plot radar charts for metrics."},
         {"name": "--base-mass", "type": float, "default": 0.0, "help": "Set the base mass of the robot."},
         {"name": "--friction", "type": float, "default": 1.0, "help": "Set the ground friction coefficient."},
+        {"name": "--level", "type": int, "help": "Set the difficulty level of the environment, range 1-10 (flat is 0)."},
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
         {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes."},
         {"name": "--seeds", "type": int, "nargs": "+", "default": [0], "help": "List of random seeds for multiple runs."},
         {"name": "--base-masses", "type": float, "nargs": "+", "default": [0], "help": "List of base masses for the model."},
-        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.4, 0.7, 1.0, 1.3, 1.6], "help": "List of friction coefficients for the model."}
+        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.4, 0.7, 1.0, 1.3, 1.6], "help": "List of friction coefficients for the model."},
+
+        # Level pipeline parameters
+        {"name": "--search-max-level", "action": "store_true", "default": False, "help": "Use level pipeline to search maximum level."},
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})

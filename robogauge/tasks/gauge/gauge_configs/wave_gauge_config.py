@@ -13,7 +13,8 @@ class WaveGaugeConfig(BaseGaugeConfig):
     gauge_class = 'BaseGauge'
 
     class assets(BaseGaugeConfig.assets):
-        terrain_name = "wave_1"  # {type}_{level}
+        terrain_name = "wave"
+        terrain_level = 1  # 1-10
         terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wave/wave_1.xml'
         terrain_spawn_pos = [1.5, 0, 1]  # x y z [m], robot freejoint spawn position on the terrain
     
