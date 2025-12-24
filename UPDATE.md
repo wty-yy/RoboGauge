@@ -1,5 +1,9 @@
 # UPDATE
-TODO: 处理LevelPipeline返回的result信息
+## 20251224
+### v0.1.14
+1. 处理LevelPipeline返回的result信息, 保存最高等级可通过地形返回的aggregated_results和level等级
+2. 完成wave地形的LevelPipeline支持
+3. 各种Pipeline的run直接返回dict信息, 不再是路径
 ## 20251222
 ### v0.1.13
 1. 即使模型崩溃也要继续测完后续的goals, 但是跳过当前的sub goals

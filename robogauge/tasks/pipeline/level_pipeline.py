@@ -16,7 +16,6 @@ class LevelPipeline:
     def __init__(self, args):
         self.args = args
         self.seeds = args.seeds
-        self.model_path = None
         logger.create(args.experiment_name+'_level', args.run_name)
     
     def run(self):
@@ -25,30 +24,39 @@ class LevelPipeline:
 
         # binary search levels
         l, r = 0, 10
+        all_level_results = {}
         while l < r:
             level = (l + r + 1) // 2
-            if self.test_level(level):
+            all_success, results = self.test_level(level)
+            all_level_results[level] = results
+            if all_success:
                 l = level
             else:
                 r = level - 1
-        if l >= 1:
-            logger.info(f"🏆 Found maximum level: {l}")
+        level = l
+        level_results = all_level_results.get(l, {
+            'model_path': results['model_path'],
+            'terrain_name': results['terrain_name'],
+            'terrain_level': 0,
+        })
+        if level >= 1:
+            logger.info(f"🏆 Found maximum level: {level}")
         else:
             logger.info(f"❌ No valid level found [1-10].")
+        with open(logger.log_dir / "level_search_results.yaml", 'w') as f:
+            yaml.dump(level_results, f, allow_unicode=True, sort_keys=False)
+        return level, level_results
+        
     
     def test_level(self, level: int) -> bool:
         logger.info(f"🔍 Testing level {level}...")
         self.args.level = level
         multi_pipeline = MultiPipeline(self.args)
-        log_dir = multi_pipeline.run()
-        # load results.yaml
-        with open(log_dir / "aggregated_results.yaml", 'r') as f:
-            results = yaml.safe_load(f)
-        self.model_path = results['model_path']
-        success_mean = float(results['success']['mean'].split(' ')[0])
+        aggregated_results = multi_pipeline.run()
+        success_mean = float(aggregated_results['success']['mean'].split(' ')[0])
         all_success = success_mean == 1.0
         if all_success:
             logger.info(f"✅ Level {level} passed all tests.")
         else:
             logger.info(f"❌ Level {level} failed some tests.")
-        return all_success
+        return all_success, aggregated_results

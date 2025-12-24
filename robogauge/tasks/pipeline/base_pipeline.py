@@ -117,7 +117,7 @@ class BasePipeline:
         logger.info("✅ Pipeline execution finished.")
         logger.info(f"📁 Logging saved at: {logger.log_dir}")
 
-        return logger.log_dir, error
+        return self.gauge.results, error
     
     def reset_sim_and_robot(self, sim_data: SimData):
         self.sim.reset()

@@ -36,18 +36,19 @@ def run_single_process(args, data):
         console_output=False
     )
     pipeline = task_register.make_pipeline(args=local_args, create_logger=False)
-    log_dir, error = pipeline.run()
+    results, error = pipeline.run()
     if error is None:
         ret = {
             'status': 'success',
-            'log_dir': log_dir,
+            'results': results,
             'model_path': pipeline.robot_cfg.control.model_path,
         }
     else:
         logger.error(f"❌ Process with seed={seed}, base_mass={base_mass}, friction={friction} failed with error: {error}")
         ret = {
             'status': 'error',
-            'log_dir': log_dir,
+            'results': results,
+            'model_path': pipeline.robot_cfg.control.model_path,
             'data': data,
             'error_msg': str(error),
             'traceback': traceback.format_exc()
@@ -61,8 +62,14 @@ class MultiPipeline:
         self.frictions = args.frictions
         self.base_masses = args.base_masses
         self.num_processes = args.num_processes
-        self.model_path = None
+        self.static_info = {}
         logger.create(args.experiment_name+'_multi', args.run_name+'_multi')
+    
+    def add_static_info(self, key: str, value):
+        if key not in self.static_info:
+            self.static_info[key] = value
+        else:
+            assert self.static_info[key] == value, f"Static info key '{key}' has conflicting values: {self.static_info[key]} vs {value}"
 
     def run(self):
         logger.info(f"🚀 Starting Multi-Process Evaluation with {self.num_processes} processes.")
@@ -71,32 +78,30 @@ class MultiPipeline:
         workers_data = list(product(self.seeds, self.base_masses, self.frictions))
         ctx = multiprocessing.get_context('spawn')
         worker_func = functools.partial(run_single_process, self.args)
-        result_log_dirs = []
+        results_list = []
         success_flags = []
         with ctx.Pool(processes=self.num_processes) as pool:
             iterator = pool.imap_unordered(worker_func, workers_data)
             for results in tqdm(iterator, total=len(workers_data), desc="Evaluation"):
                 success_flags.append(results['status'] == 'success')
 
-                result_log_dirs.append(results['log_dir'])
-                if results['status'] == 'success':
-                    if self.model_path is None:
-                        self.model_path = results['model_path']
-                    else:
-                        assert self.model_path == results['model_path'], "Model paths do not match across runs."
-                else:
+                results_list.append(results['results'])
+                self.add_static_info('model_path', results['model_path'])
+                self.add_static_info('terrain_name', results['results']['terrain_name'])
+                self.add_static_info('terrain_level', results['results']['terrain_level'])
+                if results['status'] != 'success':
                     data = results['data']
                     logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")
 
         logger.info("✅ Multi-Process Evaluation Completed.")
-        self.aggregate_results(result_log_dirs, success_flags, workers_data)
-        return logger.log_dir
+        aggregated_results = self.aggregate_results(results_list, success_flags, workers_data)
+        return aggregated_results
     
-    def aggregate_results(self, log_dirs, success_flags, workers_data):
-        """ Process results.yaml from each log_dir """
+    def aggregate_results(self, all_results, success_flags, workers_data):
+        """ Process results from all processes and aggregate them. """
         logger.info("📊 Aggregating Results from all runs...")
 
-        summary = {'model_path': self.model_path, 'success': {}}
+        summary = {'success': {}, **self.static_info}
         finish_msg = (
             f"""\n{'='*20} Run Finish Summary {'='*20}\n"""
             f"""{'Seed':^10}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
@@ -109,27 +114,9 @@ class MultiPipeline:
         finish_msg += f"""{'='*88}"""
         logger.info(finish_msg)
 
-        all_results = []
-        all_yaml_paths = []
-        for path in log_dirs:
-            yaml_path = Path(path) / "results.yaml"
-            if not yaml_path.exists():
-                logger.warning(f"Results file not found: {yaml_path}, skipping.")
-                continue
-            with open(yaml_path, 'r') as file:
-                data = yaml.safe_load(file)
-                if data:
-                    all_results.append(data)
-                    all_yaml_paths.append(yaml_path)
         if not all_results:
             logger.error("No results to aggregate.")
             return
-        yaml_paths_str = '\n'.join([str(p) for p in all_yaml_paths])
-        logger.info(
-            f"""\n{'='*20} Results Files {'='*20}\n"""
-            f"""{yaml_paths_str}\n"""
-            f"""{'='*56}"""
-        )
         
         value_collections = defaultdict(lambda: defaultdict(list))
         for result in all_results:
@@ -156,3 +143,4 @@ class MultiPipeline:
             f"""{yaml.dump(summary, allow_unicode=True)}"""
             f"""{'='*60}"""
         )
+        return summary

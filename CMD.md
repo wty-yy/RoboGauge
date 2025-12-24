@@ -1,4 +1,4 @@
-# Single Run
+# Single Pipeline
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe_flat \
@@ -6,7 +6,7 @@ python robogauge/scripts/run.py \
     --headless
 ```
 
-# Multi Run
+# Multi Pipeline
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe_flat \
@@ -21,6 +21,16 @@ python robogauge/scripts/run.py \
     --multi \
     --num-processes 3 \
     --headless
+```
+
+# Level Pipeline
+```bash
+python robogauge/scripts/run.py \
+    --task go2_slope \
+    --experiment-name debug \
+    --seed 0 \
+    --headless \
+    --search-max-level --seeds 0 1 2 --frictions 1
 ```
 
 # Radar/Bar Plot

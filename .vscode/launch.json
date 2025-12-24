@@ -5,16 +5,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python 调试程序: run.py",
+            "name": "go2 moe flat single pipeline",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/robogauge/scripts/run.py",
             "args": [
                 "--task", "go2_moe_flat",
                 "--experiment-name", "debug",
+                "--seed", "0",
+                "--friction", "1.6",
                 "--headless"
             ],
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "go2 moe slope level pipeline",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/robogauge/scripts/run.py",
+            "args": [
+                "--task", "go2_moe_slope",
+                "--experiment-name", "debug",
+                "--seed", "0",
+                "--search-max-level",
+                "--seeds", "0", "1", "2",
+                "--frictions", "1",
+                "--headless"
+            ],
+            "console": "integratedTerminal"
+        },
     ]
 }
