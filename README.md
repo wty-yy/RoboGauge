@@ -63,6 +63,7 @@
 | - | - | - | - | - |
 | 1 | `max_velocity` | 单一维度的最大线/角速度 | 每次执行一个方向的指令, 再急停 | 6 |
 | 2 | `diagonal_velocity` | 对角线速度变化 | 每次执行一对对角指令 | 8 |
+| 3 | `target_pos_velocity` | 比例差分控制到达目标位置 | 到达目标位置或超时 | 1 |
 
 ## 创建新任务
 评测任务注册在[`tasks/__init__.py`](./robogauge/tasks/__init__.py)中完成, 包含四个部分:
@@ -81,3 +82,17 @@
 ### 导入新机器人/控制模型
 1. 在Robot中创建新的机器人xml文件时, 需包含力矩控制`actuator`, 传感器`sensor - jointpos, jointvel, imu (framequat, gyro, accelerometer)`, 参考[`go2.xml`](resources/robots/go2/go2.xml), **注意: actuator的顺序需要和joint顺序一致, 该顺序称为mujoco关节顺序**
 2. 控制模型相关位置位于[`RobotConfig.control`](robogauge/tasks/robots/base_robot_config.py)中, 不同仿真中关节顺序可能不同, 需保证`mj2model_dof_indices`从mujoco映射到模型训练的关节次序配置正确 (IsaacGym次序和Mujoco相同), 其他模型配置需保持一致
+
+## 代码架构
+### Pipeline逻辑
+
+[BasePipeline](./robogauge/tasks/pipeline/base_pipeline.py)用于管理仿真`sim`, 度量器(控制指令, 指标计算)`gauge`, 机器人运控模型`robot`三者的调度, 并包含异常处理, 域随机化, 观测噪声的添加.
+
+![robogauge_basepipeline](./assets/robogauge_basepipeline.png)
+
+[MultiPipeline](./robogauge/tasks/pipeline/multi_pipeline.py)用于多进程启动不同seed, 域随机化参数下的`BasePipeline`, 并合并结果文件.
+
+[LevelPipeline](./robogauge/tasks/pipeline/level_pipeline.py)对于当前的环境配置, 找到环境地形下模型能稳定通过(三个seed均通过)的最高地形难度.
+
+![robogauge_levelpipeline](./assets/robogauge_levelpipeline.png)
+
