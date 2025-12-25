@@ -46,15 +46,14 @@ class LevelPipeline:
         with open(logger.log_dir / "level_search_results.yaml", 'w') as f:
             yaml.dump(level_results, f, allow_unicode=True, sort_keys=False)
         return level, level_results
-        
-    
+
     def test_level(self, level: int) -> bool:
         logger.info(f"🔍 Testing level {level}...")
         self.args.level = level
         multi_pipeline = MultiPipeline(self.args)
         aggregated_results = multi_pipeline.run()
         success_mean = float(aggregated_results['success']['mean'].split(' ')[0])
-        all_success = success_mean == 1.0
+        all_success = success_mean >= 0.8
         if all_success:
             logger.info(f"✅ Level {level} passed all tests.")
         else:

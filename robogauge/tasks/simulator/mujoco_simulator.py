@@ -16,7 +16,7 @@ import time
 import imageio
 import numpy as np
 from pathlib import Path
-from typing import Literal
+from typing import Literal, List
 
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_path
@@ -30,7 +30,7 @@ from robogauge.tasks.simulator.sim_data import (
 class MujocoSimulator:
     def __init__(self, sim_cfg: MujocoConfig):
         self.cfg = sim_cfg
-        self.terrain_xml = None
+        self.terrain_xmls = None
         self.robot_xml = None
         self.terrain_spawn_pos = None
         self.robot_spawn_height = None
@@ -47,14 +47,14 @@ class MujocoSimulator:
 
     def load(
         self,
-        terrain_xml: str = None,
+        terrain_xmls: List[str] = None,
         robot_xml: str = None,
         terrain_spawn_pos: list = None,
         default_dof_pos: list = None,
     ):
         """ Load terrain and robot into the simulator, support re-loading. """
-        if terrain_xml is not None:
-            self.terrain_xml = parse_path(terrain_xml)
+        if terrain_xmls is not None:
+            self.terrain_xmls = [parse_path(xml) for xml in terrain_xmls]
         if robot_xml is not None:
             self.robot_xml = parse_path(robot_xml)
         if terrain_spawn_pos is not None:
@@ -62,17 +62,20 @@ class MujocoSimulator:
         if default_dof_pos is not None:
             self.default_dof_pos = default_dof_pos
 
-        terrain_xml = self.terrain_xml
+        terrain_xmls = self.terrain_xmls
         robot_xml = self.robot_xml
         terrain_spawn_pos = self.terrain_spawn_pos
-        if terrain_xml is None or robot_xml is None:
+        if terrain_xmls is None or robot_xml is None:
             raise ValueError("Terrain and robot XML paths must be provided.")
         if default_dof_pos is None:
             raise ValueError("Default DOF positions must be provided.")
         
         # Create MJCF models
         robot_mjcf = mjcf.from_path(robot_xml)
-        terrain_mjcf = mjcf.from_path(terrain_xml)
+        terrain_mjcf = mjcf.from_path(terrain_xmls[0])
+        for path in terrain_xmls[1:]:
+            next_terrain = mjcf.from_path(path)
+            terrain_mjcf.attach(next_terrain)
         for j in robot_mjcf.find_all('joint'):
             if j.tag == 'freejoint':
                 j.remove()
@@ -265,11 +268,24 @@ class MujocoSimulator:
         self.check_truncation(sim_data)
         return sim_data
     
+    def check_penetration(self, threshold: float = -0.02):
+        for i in range(self.mj_data.ncon):
+            contact = self.mj_data.contact[i]
+            if contact.dist < threshold:
+                geom1_name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom1)
+                geom2_name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom2)
+                return True, geom1_name, geom2_name, contact.dist
+        return False, None, None, None
+    
     def check_truncation(self, sim_data: SimData):
         if self.cfg.truncation.enabled:
             projected_gravity = get_projected_gravity(sim_data.proprio.base.quat)
             if -projected_gravity[2] < np.cos(self.cfg.truncation.projected_gravity_rad):
-                raise RuntimeError(f"Episode truncated due to excessive projected gravity, angle: {np.arccos(-projected_gravity[2]):.3f} rad, projected: {projected_gravity}")
+                raise RuntimeError(f"[Roll Error] Episode truncated due to excessive projected gravity, angle: {np.arccos(-projected_gravity[2]):.3f} rad, projected: {projected_gravity}")
+
+            # is_penetrated, geom1, geom2, dist = self.check_penetration(self.cfg.truncation.penetration_threshold)
+            # if is_penetrated:
+            #     raise RuntimeError(f"[Penetration Error] Episode truncated: Penetration ({geom1} <-> {geom2}), distance: {dist}")
     
     def reset(self):
         """ Reset the simulator to initial state. """

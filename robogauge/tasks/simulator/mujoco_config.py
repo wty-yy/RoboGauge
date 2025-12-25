@@ -49,3 +49,4 @@ class MujocoConfig(Config):
     class truncation:
         enabled = True
         projected_gravity_rad = 2.5  # [rad], if gravity projection angle exceeds this value, truncate episode
+        penetration_threshold = -0.05  # [m], if any contact penetration depth is below this threshold, truncate episode

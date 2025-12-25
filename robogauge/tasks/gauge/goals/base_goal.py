@@ -25,6 +25,9 @@ class BaseGoal:
 
     def pre_get_goal(self) -> bool:
         raise NotImplementedError
+    
+    def reset_goal(self):
+        raise NotImplementedError
 
     def is_reset(self, sim_data: SimData) -> bool:
         raise NotImplementedError

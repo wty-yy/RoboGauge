@@ -1,0 +1,14 @@
+<mujoco model="10x10_wall">
+  <default>
+    <default class="wall">
+      <geom rgba="0.8 0.1 0.1 0.5"/>
+      <!-- <geom rgba="0 0 0 0"/> -->
+    </default>
+  </default>
+  <worldbody>
+    <geom name="wall_left" type="box" pos="-0.25 0 5" size="0.25 5.5 5" class="wall"/>
+    <geom name="wall_right" type="box" pos="10.25 0 5" size="0.25 5.5 5" class="wall"/>
+    <geom name="wall_top" type="box" pos="5 5.25 5" size="5 0.25 5" class="wall"/>
+    <geom name="wall_bottom" type="box" pos="5 -5.25 5" size="5 0.25 5" class="wall"/>
+  </worldbody>
+</mujoco>

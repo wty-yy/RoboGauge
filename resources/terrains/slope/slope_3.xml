@@ -1,5 +1,5 @@
 <mujoco model="slope_3">
-  <!-- Terrain Type: slope, Level: 3 Slope angle (degrees): 13.5499 -->
+  <!-- Terrain Type: slope, Level: 3, Slope angle (degrees): 13.5499 -->
   <statistic center="0 0 0.1" extent="0.8" />
   <visual>
     <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0" />
@@ -14,6 +14,6 @@
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true" />
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" />
-    <geom pos="5.117146033713849 0.0 0.47791687255664406" type="box" size="4.114522572547148 3.0 0.5" quat="0.9930171838610629 0.0 -0.11796979510300111 0.0" />
+    <geom pos="5.117146033713849 0.0 0.7189168725566442" type="box" size="5.143153215683935 5.0 0.5" quat="0.9930171838610629 0.0 -0.11796979510300112 0.0" />
   </worldbody>
 </mujoco>

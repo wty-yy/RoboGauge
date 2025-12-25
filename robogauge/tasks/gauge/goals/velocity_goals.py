@@ -33,10 +33,15 @@ class BaseVelocityGoal(BaseGoal):
         super().__init__()
         self.control_dt = control_dt
         self.cmd_duration = cmd_duration
+        self.goals = []
         self.goal_runtime = 0.0
         self.first_goal_after_reset = True
         self.last_reset_time = -1
-        self.goals = []
+    
+    def reset_goal(self):
+        self.goal_runtime = 0.0
+        self.first_goal_after_reset = True
+        self.last_reset_time = -1
 
     def is_reset(self, sim_data: SimData) -> bool:
         if self.last_reset_time == -1:
@@ -188,6 +193,11 @@ class TargetPosVelocityGoal(BaseVelocityGoal):
         self.sub_name = None
         self.count = 0
         self.total = 1  # only one task
+        self.done = False
+        self.success = False
+    
+    def reset_goal(self):
+        super().reset_goal()
         self.done = False
         self.success = False
 

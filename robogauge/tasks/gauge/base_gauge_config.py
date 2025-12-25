@@ -16,7 +16,7 @@ class BaseGaugeConfig(Config):
     class assets:
         terrain_name = "flat"
         terrain_level = 0
-        terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/flat.xml'
+        terrain_xmls = ['{ROBOGAUGE_ROOT_DIR}/resources/terrains/flat.xml']
         terrain_spawn_pos = [0, 0, 0]  # x y z [m], robot freejoint spawn position on the terrain
     
     class goals:

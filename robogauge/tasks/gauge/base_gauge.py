@@ -112,6 +112,13 @@ class BaseGauge:
             logger.info(f"New Goal [{self.goal_idx+1}/{len(self.goals)}] [{goal_obj.count+1}/{goal_obj.total}]: {self.goal_str}")
         return goal
     
+    def reset_current_goal(self):
+        """ Reset the current goal """
+        if self.goal_idx >= len(self.goals):
+            return
+        goal_obj = self.goals[self.goal_idx]
+        goal_obj.reset_goal()
+    
     def switch_to_next_goal(self):
         """ Switch to the next goal and log the metrics of the current goal. """
         goal_obj = self.goals[self.goal_idx]

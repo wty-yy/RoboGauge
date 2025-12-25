@@ -13,3 +13,7 @@ task_register.register('go2_slope', BasePipeline, Go2SlopeMujocoConfig, Go2Slope
 task_register.register('go2_moe_slope', BasePipeline, Go2SlopeMujocoConfig, Go2SlopeGaugeConfig, Go2MoEConfig)
 task_register.register('go2_wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2Config)
 task_register.register('go2_moe_wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2MoEConfig)
+task_register.register('go2_stairs_up', BasePipeline, MujocoConfig, Go2StairsUpGaugeConfig, Go2Config)
+task_register.register('go2_moe_stairs_up', BasePipeline, MujocoConfig, Go2StairsUpGaugeConfig, Go2MoEConfig)
+task_register.register('go2_stairs_down', BasePipeline, MujocoConfig, Go2StairsDownGaugeConfig, Go2Config)
+task_register.register('go2_moe_stairs_down', BasePipeline, MujocoConfig, Go2StairsDownGaugeConfig, Go2MoEConfig)

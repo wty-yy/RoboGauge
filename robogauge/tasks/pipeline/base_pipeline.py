@@ -53,7 +53,7 @@ class BasePipeline:
     
     def load(self):
         self.sim.load(
-            self.gauge_cfg.assets.terrain_xml,
+            self.gauge_cfg.assets.terrain_xmls,
             self.robot_cfg.assets.robot_xml,
             self.gauge_cfg.assets.terrain_spawn_pos,
             self.robot_cfg.control.default_dof_pos
@@ -68,7 +68,7 @@ class BasePipeline:
             "Control dt must be multiple of simulation dt."
         logger.info(f"Sim FPS: {1.0 / self.sim_cfg.physics.simulation_dt:.2f}, Control FPS: {1.0 / self.robot_cfg.control.control_dt:.2f}, Frame Skip: {frame_skip:d}")
         logger.info("Running pipeline...")
-        error = None
+        warning, error = None, None
         while not self.gauge.is_done():
             try:
                 if self.first_reset:  # wait for robot to be still
@@ -77,7 +77,10 @@ class BasePipeline:
                         velocity_goal=VelocityGoal(),  # zero velocity
                         position_goal=PositionGoal(),  # current position
                     )
-                    if np.linalg.norm(sim_data.proprio.base.lin_vel) < 0.05 and sim_data.sim_time - self.last_reset_time > 0.1:
+                    if (
+                        (np.linalg.norm(sim_data.proprio.base.lin_vel) < 0.05 and sim_data.sim_time - self.last_reset_time > 0.1) or  # robot is still
+                        (sim_data.sim_time - self.last_reset_time) > 3.0  # wait max 3s
+                    ):
                         self.first_reset = False
                 else:
                     goal_data = self.gauge.get_goal(sim_data)
@@ -106,18 +109,24 @@ class BasePipeline:
                 if self.gauge.is_reset(sim_data):
                     sim_data = self.reset_sim_and_robot(sim_data)
             except Exception as e:
-                error = e
-                logger.error(f"❌ Goal '{self.gauge.goal_str}' failed with error: {e},\n{traceback.format_exc()}")
-                self.gauge.switch_to_next_goal()  # save current goal metrics
+                if str(e).startswith("[Penetration Error]"):
+                    warning = e
+                    logger.warning(f"⚠️ Penetration detected! Reset current goal and continue..., error: {e}")
+                    self.gauge.reset_current_goal()
+                    logger.info("⏩ Pipeline recovered from penetration and continued current goal 🎯.")
+                else:
+                    error = e
+                    logger.error(f"❌ Goal '{self.gauge.goal_str}' failed with error: {e},\n{traceback.format_exc()}")
+                    self.gauge.switch_to_next_goal()  # skip to next goal
+                    logger.info("⏩ Pipeline recovered from error and continued next goal 🎯.")
                 sim_data = self.reset_sim_and_robot(sim_data)
-                logger.info("⏩ Pipeline recovered from error and continued next goal 🎯.")
 
         self.sim.close_viewer()
         self.sim.close_video_writer()
         logger.info("✅ Pipeline execution finished.")
         logger.info(f"📁 Logging saved at: {logger.log_dir}")
 
-        return self.gauge.results, error
+        return self.gauge.results, warning, error
     
     def reset_sim_and_robot(self, sim_data: SimData):
         self.sim.reset()

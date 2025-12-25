@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-'''
-@File    : go2_wave_task.py
-@Time    : 2025/12/22 11:02:23
-@Author  : wty-yy
-@Version : 1.0
-@Blog    : https://wty-yy.github.io/
-@Desc    : Go2 Wave Task Configuration
-'''
+
 from robogauge.tasks.robots import Go2Config, Go2MoEConfig
 from robogauge.tasks.gauge import WaveGaugeConfig
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig

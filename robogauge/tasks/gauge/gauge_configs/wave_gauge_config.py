@@ -15,13 +15,16 @@ class WaveGaugeConfig(BaseGaugeConfig):
     class assets(BaseGaugeConfig.assets):
         terrain_name = "wave"
         terrain_level = 10  # 1-10
-        terrain_xml = '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wave/wave_10.xml'
+        terrain_xmls = [
+            '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wave/wave_10.xml',
+            '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wall/10x10_wall.xml',
+        ]
         terrain_spawn_pos = [1.5, 1.25, 1.0]  # x y z [m], robot freejoint spawn position on the terrain
     
     class goals:
         class target_pos_velocity:  # goal to reach a target position by velocity command
             enabled = True
-            target_pos = [6.5, 0.0, 0.8]  # x y z [m], target position in the environment, used for target position goal
+            target_pos = [6.5, -2.65, 0.8]  # x y z [m], target position in the environment, used for target position goal
             lin_vel_x = 1.0  # +/- m/s
             lin_vel_y = 1.0  # +/- m/s
             ang_vel_yaw = 1.5  # +/- rad/s

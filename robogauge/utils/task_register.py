@@ -77,8 +77,10 @@ class TaskRegister():
             assert cfg is not None, f"Level {args.level} configuration not found in TerrainLevelsConfig."
             assert args.level in cfg.levels, f"Level must be in {cfg.levels}."
             gauger_cfg.goals.target_pos_velocity.target_pos = cfg.targets[cfg.levels.index(args.level)]
-            xml = gauger_cfg.assets.terrain_xml
+            if hasattr(cfg, 'spawns'):
+                gauger_cfg.assets.terrain_spawn_pos = cfg.spawns[cfg.levels.index(args.level)]
+            xml = gauger_cfg.assets.terrain_xmls[0]
             xml = xml.rsplit('/', 1)[0] + f"/{gauger_cfg.assets.terrain_name}_{args.level}.xml"
-            gauger_cfg.assets.terrain_xml = xml
+            gauger_cfg.assets.terrain_xmls[0] = xml
 
 task_register = TaskRegister()

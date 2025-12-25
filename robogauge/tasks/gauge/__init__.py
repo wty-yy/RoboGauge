@@ -3,3 +3,5 @@ from .base_gauge_config import BaseGaugeConfig
 from .gauge_configs.flat_gauge_config import FlatGaugeConfig
 from .gauge_configs.slope_gauge_config import SlopeGaugeConfig
 from .gauge_configs.wave_gauge_config import WaveGaugeConfig
+from .gauge_configs.stairs_up_gauge_config import StairsUpGaugeConfig
+from .gauge_configs.stairs_down_gauge_config import StairsDownGaugeConfig

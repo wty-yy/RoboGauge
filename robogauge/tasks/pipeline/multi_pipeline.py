@@ -36,13 +36,15 @@ def run_single_process(args, data):
         console_output=False
     )
     pipeline = task_register.make_pipeline(args=local_args, create_logger=False)
-    results, error = pipeline.run()
+    results, warning, error = pipeline.run()
     if error is None:
         ret = {
             'status': 'success',
             'results': results,
             'model_path': pipeline.robot_cfg.control.model_path,
         }
+        if warning is not None:
+            logger.warning(f"⚠️ Process with seed={seed}, base_mass={base_mass}, friction={friction} completed with warning: {warning}")
     else:
         logger.error(f"❌ Process with seed={seed}, base_mass={base_mass}, friction={friction} failed with error: {error}")
         ret = {
