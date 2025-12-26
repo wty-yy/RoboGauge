@@ -23,6 +23,7 @@ from robogauge.tasks.pipeline.base_pipeline import BasePipeline
 from robogauge.utils.task_register import task_register
 from robogauge.utils.logger import Logger
 from robogauge.utils.process_utils import NoDaemonPool
+from robogauge.utils.progress_monitor import report_progress, ProgressTypes, ProgressData
 
 multi_logger = Logger()  # MultiPipeline logger
 
@@ -63,11 +64,13 @@ def run_single_process(args, data):
     return ret
 
 class MultiPipeline:
-    def __init__(self, args, console_output: bool = True):
+    def __init__(self, args, console_output=True, progress_data: ProgressData = None):
         self.args = args
         self.seeds = args.seeds
         self.frictions = args.frictions
         self.base_masses = args.base_masses
+        self.console_output = console_output
+        self.progress_data = progress_data
         self.num_processes = args.num_processes
         self.static_info = {}
         multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi', console_output=console_output)
@@ -83,16 +86,22 @@ class MultiPipeline:
         multi_logger.info(f"🔢 Seeds: {self.seeds}, Frictions: {self.frictions}, Base masses: {self.base_masses}")
 
         workers_data = list(product(self.seeds, self.base_masses, self.frictions))
+        report_progress(self.progress_data, ProgressTypes.INIT, total=len(workers_data), desc="🚀 MultiPipeline Executing")
+
         ctx = multiprocessing.get_context('spawn')
         worker_func = functools.partial(run_single_process, self.args)
         results_list = []
         with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
             iterator = pool.imap_unordered(worker_func, workers_data)
-            for results in tqdm(iterator, total=len(workers_data), desc="Evaluation"):
+            bar = iterator
+            if self.console_output:
+                bar = tqdm(iterator, total=len(workers_data), desc="Evaluation")
+            for results in bar:
                 results_list.append(results)
                 self.add_static_info('model_path', results['model_path'])
                 self.add_static_info('terrain_name', results['results']['terrain_name'])
                 self.add_static_info('terrain_level', results['results']['terrain_level'])
+                report_progress(self.progress_data, ProgressTypes.UPDATE, value=1)
                 if results['status'] != 'success':
                     data = results['data']
                     multi_logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")

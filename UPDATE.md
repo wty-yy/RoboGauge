@@ -1,8 +1,9 @@
 # UPDATE
 ## 20251226
 ### v0.1.16
-1. 基本完成StressPipeline, 但是绘制进度信息还有问题
+1. 基本完成StressPipeline, 加入绘制进度条的线程, 其他进程通过Queue更新主进程的进度条
 2. wave地形的穿模判定非常容易触发, 加入最多穿模判定重启次数为1次, 超过该次数后穿模就不再自动重启了
+3. 当全部地形等级均失败时, 需要将全部metric都按0计算
 
 FIX Bugs: (level_results会存储到MultiPipeline下, 因为MultiPipeline不是子进程启动的, 会覆盖LevelPipeline的Logger冲突) 通过创建新的Logger实现
 ## 20251225

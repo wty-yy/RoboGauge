@@ -11,31 +11,36 @@ import yaml
 
 from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
 from robogauge.utils.logger import Logger
+from robogauge.utils.progress_monitor import report_progress, ProgressTypes, ProgressData
 
 level_logger = Logger()  # LevelPipeline logger
 
 class LevelPipeline:
-    def __init__(self, args, console_output: bool = True):
+    def __init__(self, args, console_output=True, progress_data: ProgressData = None):
         self.args = args
         self.seeds = args.seeds
         self.console_output = console_output
+        self.progress_data = progress_data
         level_logger.create(args.experiment_name+'_level', args.run_name, console_output=console_output)
     
     def run(self):
         level_logger.info(f"🚀 Starting Level Searcher for '{self.args.experiment_name}'.")
         level_logger.info(f"🔢 Seeds: {self.seeds}")
+        report_progress(self.progress_data, ProgressTypes.INIT, total=10, desc="🔍 Searching Max Level")
 
         # binary search levels
         l, r = 0, 10
         all_level_results = {}
         while l < r:
             level = (l + r + 1) // 2
+            report_progress(self.progress_data, ProgressTypes.DESC, desc=f"🔍 Testing Level {level}")
             all_success, results = self.test_level(level)
             all_level_results[level] = results
             if all_success:
                 l = level
             else:
                 r = level - 1
+            report_progress(self.progress_data, ProgressTypes.UPDATE, value=1)
         level = l
         level_results = all_level_results.get(l, {
             'model_path': results['model_path'],

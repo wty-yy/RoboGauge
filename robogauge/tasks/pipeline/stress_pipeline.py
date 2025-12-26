@@ -8,6 +8,7 @@
 @Desc    : Stress Pipeline for Robogauge
 '''
 import yaml
+import traceback
 import functools
 import numpy as np
 from tqdm import tqdm
@@ -18,45 +19,57 @@ from collections import defaultdict
 
 from robogauge.utils.logger import Logger
 from robogauge.utils.process_utils import NoDaemonPool
+from robogauge.utils.progress_monitor import report_progress, ProgressTypes, start_progress_monitor_thread, ProgressData
 from robogauge.tasks.pipeline import MultiPipeline, LevelPipeline
 from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
 
 stress_logger = Logger()  # StressPipeline logger
 
-def run_pipeline(args, data):
+def run_pipeline(args, progress_queue, data):
     args = deepcopy(args)
+    task_id = data['task_id']
     search = data['search_max_level']
+    task_label = f"[{data['terrain_name']}]"
+    progress_data = ProgressData(
+        task_id=task_id,
+        msg_prefix=task_label + ' ',
+        progress_queue=progress_queue
+    )
     if search is True:
+        task_label += f" M:{data['base_mass']} F:{data['friction']}"
+        progress_data.msg_prefix = task_label + ' '
         args.friction = data['friction']
         args.frictions = [data['friction']]
         args.base_mass = data['base_mass']
         args.base_masses = [data['base_mass']]
         args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
-        args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_baseMass{data['base_mass']}_friction{data['friction']}"
+        args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
+
+        level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
+        if level == 0:  # no valid level found
+            report_progress(progress_data, ProgressTypes.FINISH, desc=f"❌ Failed (Lv 0)")
+            results = {
+                'success': False,
+                'results': level_results,
+                'data': data,
+                'level': 0,
+            }
+            return results
+        
+        report_progress(progress_data, ProgressTypes.RESET, total=0, desc=f"✅ Found Lv {level} -> Running")
     else:
+        level = None  # flat terrain
         args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
         args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}"
         
-    level = None  # flat terrain
-    if search:
-        level, results = LevelPipeline(args, console_output=False).run()
-
-    if level == 0:  # no valid level found
-        results = {
-            'success': False,
-            'results': results,
-            'data': data,
-            'level': 0,
-        }
-    else:
-        args.level = level
-        results = {
-            'success': True,
-            'results': MultiPipeline(args, console_output=False).run(),
-            'data': data,
-            'level': level,
-        }
-
+    args.level = level
+    results = {
+        'success': True,
+        'results': MultiPipeline(args, console_output=False, progress_data=progress_data).run(),
+        'data': data,
+        'level': level,
+    }
+    report_progress(progress_data, ProgressTypes.FINISH, desc=f"✅ Done (Lv {level})")
     return results
 
 class StressPipeline:
@@ -80,9 +93,6 @@ class StressPipeline:
         stress_logger.info(f"🔢 Seeds: {self.seeds}")
         terrain_names = self.args.stress_terrain_names
         stress_logger.info(f"🌄 Stress Test Terrain Names: {terrain_names}")
-
-        ctx = multiprocessing.get_context('spawn')
-        worker_func = functools.partial(run_pipeline, self.args)
 
         ### Build worker data ###
         workers_data = []
@@ -109,13 +119,26 @@ class StressPipeline:
             else:
                 workers_data.append(data)
 
+        ### Start progress monitor ###
+        progress_queue, monitor_thread = start_progress_monitor_thread(len(workers_data))
+        for i, data in enumerate(workers_data):
+            data['task_id'] = i
+
         ### Run and collect results ###
+        ctx = multiprocessing.get_context('spawn')
+        worker_func = functools.partial(run_pipeline, self.args, progress_queue)
         results_list = []
-        with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
-            iterator = pool.imap_unordered(worker_func, workers_data)
-            for results in tqdm(iterator, total=len(workers_data), desc="Stress Benchmark"):
-                results_list.append(results)
-                self.add_static_info('model_path', results['results'].pop('model_path', None))
+        try:
+            with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
+                iterator = pool.imap_unordered(worker_func, workers_data)
+                for results in iterator:
+                    results_list.append(results)
+                    self.add_static_info('model_path', results['results'].pop('model_path', None))
+        except Exception as e:
+            stress_logger.error(f"❌ Stress benchmark encountered an error: {e}, {traceback.format_exc()}")
+        finally:
+            progress_queue.put(None)  # Stop the progress monitor thread
+            monitor_thread.join()
         
         stress_logger.info("✅ Stress Benchmark Completed.")
         stress_results = self.aggregate_results(results_list)
@@ -144,6 +167,7 @@ class StressPipeline:
 
         summary = {**self.static_info, 'summary': {}}
         value_collections = defaultdict(lambda: defaultdict(list))
+        zero_terrain_count = 0
         for result in all_results:
             terrain_name = result['data']['terrain_name']
             terrain_level = result['level']  # None, 0, 1, ..., 10
@@ -151,7 +175,11 @@ class StressPipeline:
             if terrain_level is not None:
                 key += f'_{terrain_level}'
                 key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
-            summary[key] = result['results'] if terrain_level != 0 else None
+            if terrain_level == 0:
+                summary[key] = None
+                zero_terrain_count += 1
+                continue
+            summary[key] = result['results']
 
             for metric, means in result['results']['summary'].items():
                 for mean_name, mean_value in means.items():
@@ -160,6 +188,7 @@ class StressPipeline:
         for metric, means in value_collections.items():
             summary['summary'][metric] = {}
             for mean_name, values in means.items():
+                values.extend([0.0] * zero_terrain_count)  # include zero terrains
                 summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
 
         save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"
