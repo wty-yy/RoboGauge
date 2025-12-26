@@ -44,6 +44,7 @@ class MujocoSimulator:
         self.n_step = 0
         self.sim_time = 0.0
         self.target_pos = None
+        self.penetration_reset_count = 0
 
     def load(
         self,
@@ -158,6 +159,7 @@ class MujocoSimulator:
         self._pause = False
         self.n_step = 0
         self.sim_time = 0.0
+        self.penetration_reset_count = 0
         self.load_dof_limits()
         self.preload_sensors()
 
@@ -269,6 +271,8 @@ class MujocoSimulator:
         return sim_data
     
     def check_penetration(self, threshold: float = -0.02):
+        if self.penetration_reset_count >= self.cfg.truncation.penetration_max_reset_num:
+            return False, None, None, None
         for i in range(self.mj_data.ncon):
             contact = self.mj_data.contact[i]
             if contact.dist < threshold:
@@ -285,16 +289,17 @@ class MujocoSimulator:
 
             is_penetrated, geom1, geom2, dist = self.check_penetration(self.cfg.truncation.penetration_threshold)
             if is_penetrated:
-                flat = True
+                is_err = True
                 if self.cfg.truncation.skip_penetration_geoms is not None and (
                     any(skip_geom in geom1.lower() for skip_geom in self.cfg.truncation.skip_penetration_geoms) or
                     any(skip_geom in geom2.lower() for skip_geom in self.cfg.truncation.skip_penetration_geoms)
                 ):
-                    flat = False
+                    is_err = False
                 if self.cfg.truncation.skip_self_penetration:
                     if geom1.split('/')[0] == geom2.split('/')[0]:
-                        flat = False
-                if flat:
+                        is_err = False
+                if is_err:
+                    self.penetration_reset_count += 1
                     raise RuntimeError(f"[Penetration Error] Episode truncated: Penetration ({geom1} <-> {geom2}), distance: {dist}")
     
     def reset(self):

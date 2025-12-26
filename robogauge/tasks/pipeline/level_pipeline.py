@@ -15,10 +15,11 @@ from robogauge.utils.logger import Logger
 level_logger = Logger()  # LevelPipeline logger
 
 class LevelPipeline:
-    def __init__(self, args):
+    def __init__(self, args, console_output: bool = True):
         self.args = args
         self.seeds = args.seeds
-        level_logger.create(args.experiment_name+'_level', args.run_name)
+        self.console_output = console_output
+        level_logger.create(args.experiment_name+'_level', args.run_name, console_output=console_output)
     
     def run(self):
         level_logger.info(f"🚀 Starting Level Searcher for '{self.args.experiment_name}'.")
@@ -52,9 +53,9 @@ class LevelPipeline:
     def test_level(self, level: int):
         level_logger.info(f"🔍 Testing level {level}...")
         self.args.level = level
-        multi_pipeline = MultiPipeline(self.args)
+        multi_pipeline = MultiPipeline(self.args, console_output=self.console_output)
         aggregated_results = multi_pipeline.run()
-        success_mean = float(aggregated_results['success']['mean'].split(' ')[0])
+        success_mean = float(aggregated_results['summary']['success']['mean'].split(' ')[0])
         all_success = success_mean >= 0.8
         if all_success:
             level_logger.info(f"✅ Level {level} passed all tests.")

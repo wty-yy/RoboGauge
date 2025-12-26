@@ -1,8 +1,10 @@
 # UPDATE
 ## 20251226
 ### v0.1.16
-Bugs: level_results会存储到MultiPipeline下, 因为MultiPipeline不是子进程启动的, 会覆盖LevelPipeline的Logger冲突
-1. 基本完成StressPipeline, 继续调试完毕
+1. 基本完成StressPipeline, 但是绘制进度信息还有问题
+2. wave地形的穿模判定非常容易触发, 加入最多穿模判定重启次数为1次, 超过该次数后穿模就不再自动重启了
+
+FIX Bugs: (level_results会存储到MultiPipeline下, 因为MultiPipeline不是子进程启动的, 会覆盖LevelPipeline的Logger冲突) 通过创建新的Logger实现
 ## 20251225
 ### v0.1.15
 1. 统一terrain的大小为10x10m, 某一边的中点在(0,0,0), 对全部的带等级的terrain都加上边界墙高度10m

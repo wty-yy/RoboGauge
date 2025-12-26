@@ -19,7 +19,7 @@ class WaveGaugeConfig(BaseGaugeConfig):
             '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wave/wave_10.xml',
             '{ROBOGAUGE_ROOT_DIR}/resources/terrains/wall/10x10_wall.xml',
         ]
-        terrain_spawn_pos = [1.5, 1.25, 1.0]  # x y z [m], robot freejoint spawn position on the terrain
+        terrain_spawn_pos = [1.5, 1.25, 0.0]  # x y z [m], robot freejoint spawn position on the terrain
     
     class goals:
         class target_pos_velocity:  # goal to reach a target position by velocity command

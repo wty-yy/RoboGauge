@@ -52,3 +52,4 @@ class MujocoConfig(Config):
         penetration_threshold = -0.035  # [m], if any contact penetration depth is below this threshold, truncate episode
         skip_penetration_geoms = ['wall', 'floor']  # Geometries to skip penetration check
         skip_self_penetration = True  # Whether to check self-penetration
+        penetration_max_reset_num = 1  # Max number of resets due to penetration per run

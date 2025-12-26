@@ -32,7 +32,16 @@ python robogauge/scripts/run.py \
 
 # Stress Pipeline
 ```bash
-
+python robogauge/scripts/run.py \
+    --task go2_moe \
+    --experiment-name debug \
+    --stress-benchmark \
+    --stress-terrain-names flat slope stairs_up stairs_down wave \
+    --stress-num-processes 2 \
+    --num-processes 3 \
+    --seeds 0 1 2 \
+    --frictions 0.5 1.0 1.5 2.0 2.5 \
+    --headless
 ```
 
 # Radar/Bar Plot

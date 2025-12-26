@@ -22,6 +22,7 @@ from robogauge.tasks.pipeline.base_pipeline import BasePipeline
 
 from robogauge.utils.task_register import task_register
 from robogauge.utils.logger import Logger
+from robogauge.utils.process_utils import NoDaemonPool
 
 multi_logger = Logger()  # MultiPipeline logger
 
@@ -62,14 +63,14 @@ def run_single_process(args, data):
     return ret
 
 class MultiPipeline:
-    def __init__(self, args):
+    def __init__(self, args, console_output: bool = True):
         self.args = args
         self.seeds = args.seeds
         self.frictions = args.frictions
         self.base_masses = args.base_masses
         self.num_processes = args.num_processes
         self.static_info = {}
-        multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi')
+        multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi', console_output=console_output)
     
     def add_static_info(self, key: str, value):
         if key not in self.static_info:
@@ -85,7 +86,7 @@ class MultiPipeline:
         ctx = multiprocessing.get_context('spawn')
         worker_func = functools.partial(run_single_process, self.args)
         results_list = []
-        with ctx.Pool(processes=self.num_processes) as pool:
+        with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
             iterator = pool.imap_unordered(worker_func, workers_data)
             for results in tqdm(iterator, total=len(workers_data), desc="Evaluation"):
                 results_list.append(results)
@@ -104,7 +105,7 @@ class MultiPipeline:
         """ Process results from all processes and aggregate them. """
         multi_logger.info("📊 Aggregating Results from all runs...")
 
-        summary = {'success': {}, **self.static_info}
+        summary = {'success': {}, **self.static_info, 'summary': {}}
         finish_msg = (
             f"""\n{'='*20} Run Finish Summary {'='*20}\n"""
             f"""{'Seed':^10}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
@@ -133,9 +134,9 @@ class MultiPipeline:
                         value_collections[metric][mean_name].append(float(mean_value.split(' ')[0]))
         
         for metric, means in value_collections.items():
-            summary[metric] = {}
+            summary['summary'][metric] = {}
             for mean_name, values in means.items():
-                summary[metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
+                summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
         
         save_path = multi_logger.log_dir / "aggregated_results.yaml"
         with open(save_path, 'w') as file:
@@ -143,9 +144,9 @@ class MultiPipeline:
         multi_logger.info("✅ Aggregated execution finished.")
         multi_logger.info(f"📁 Aggregated results saved to: {save_path}")
 
-        multi_logger.info(
-            f"""\n{'='*20} Multi-Run Summary {'='*20}\n"""
-            f"""{yaml.dump(summary, allow_unicode=True)}"""
-            f"""{'='*60}"""
-        )
+        # multi_logger.info(
+        #     f"""\n{'='*20} Multi-Run Summary {'='*20}\n"""
+        #     f"""{yaml.dump(summary, allow_unicode=True)}"""
+        #     f"""{'='*60}"""
+        # )
         return summary

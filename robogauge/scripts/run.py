@@ -13,8 +13,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
 from robogauge.tasks import *
-from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
-from robogauge.tasks.pipeline.level_pipeline import LevelPipeline
+from robogauge.tasks.pipeline import *
 
 from robogauge.utils.task_register import task_register
 from robogauge.utils.helpers import parse_args
@@ -23,7 +22,10 @@ from robogauge.utils.logger import logger
 
 if __name__ == '__main__':
     args = parse_args()
-    if args.multi:
+    if args.stress_benchmark:
+        stress_pipeline = StressPipeline(args)
+        stress_pipeline.run()
+    elif args.multi:
         multi_pipeline = MultiPipeline(args)
         multi_pipeline.run()
     elif args.search_max_level:

@@ -9,12 +9,15 @@
 '''
 import yaml
 import functools
+import numpy as np
 from tqdm import tqdm
 import multiprocessing
 from copy import deepcopy
 from itertools import product
+from collections import defaultdict
 
 from robogauge.utils.logger import Logger
+from robogauge.utils.process_utils import NoDaemonPool
 from robogauge.tasks.pipeline import MultiPipeline, LevelPipeline
 from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
 
@@ -36,20 +39,22 @@ def run_pipeline(args, data):
         
     level = None  # flat terrain
     if search:
-        level, results = LevelPipeline(args).run()
+        level, results = LevelPipeline(args, console_output=False).run()
 
     if level == 0:  # no valid level found
         results = {
             'success': False,
             'results': results,
             'data': data,
+            'level': 0,
         }
     else:
         args.level = level
         results = {
             'success': True,
-            'results': MultiPipeline(args).run(),
+            'results': MultiPipeline(args, console_output=False).run(),
             'data': data,
+            'level': level,
         }
 
     return results
@@ -95,19 +100,22 @@ class StressPipeline:
             }
             if search_max_level:
                 for friction, base_mass in product(self.args.frictions, self.args.base_masses):
-                    data.update({
+                    now_data = deepcopy(data)
+                    now_data.update({
                         'friction': friction,
                         'base_mass': base_mass,
                     })
-            workers_data.append(data)
+                    workers_data.append(now_data)
+            else:
+                workers_data.append(data)
 
         ### Run and collect results ###
         results_list = []
-        with ctx.Pool(processes=self.num_processes) as pool:
+        with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
             iterator = pool.imap_unordered(worker_func, workers_data)
             for results in tqdm(iterator, total=len(workers_data), desc="Stress Benchmark"):
                 results_list.append(results)
-                self.add_static_info('model_path', results['results']['model_path'])
+                self.add_static_info('model_path', results['results'].pop('model_path', None))
         
         stress_logger.info("✅ Stress Benchmark Completed.")
         stress_results = self.aggregate_results(results_list)
@@ -115,17 +123,48 @@ class StressPipeline:
 
     def aggregate_results(self, all_results):
         stress_logger.info("📊 Aggregating Stress Benchmark Results...")
-        summary = {}
         finish_msg = (
             f"""\n{'='*20} Stress Benchmark Summary {'='*20}\n"""
-            f"""{'Terrain Name':^20}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
+            f"""{'Seeds':^20}{str(self.seeds)}\n"""
+            f"""{'Terrain Name':^20}{'Base Mass':^15}{'Friction':^15}{'Max Level':^15}\n"""
         )
         all_results = sorted(all_results, key=lambda x: (x['data']['terrain_name'], x['data'].get('base_mass', 0), x['data'].get('friction', 0)))
         for result in all_results:
             terrain_name = result['data']['terrain_name']
             base_mass = result['data'].get('base_mass', self.args.base_masses)
             friction = result['data'].get('friction', self.args.frictions)
-            status = "✅" if result['success'] else "❌"
-            finish_msg += f"{terrain_name:^20}{str(base_mass):^15}{str(friction):^15}{status:^10}\n"
+            status = f"{result['level']}" if result['success'] else "❌"
+            finish_msg += f"{terrain_name:^20}{str(base_mass):^15}{str(friction):^15}{status:^15}\n"
         finish_msg += f"""{'='*66}"""
         stress_logger.info(finish_msg)
+
+        if not all_results:
+            stress_logger.error("No results to aggregate.")
+            return
+
+        summary = {**self.static_info, 'summary': {}}
+        value_collections = defaultdict(lambda: defaultdict(list))
+        for result in all_results:
+            terrain_name = result['data']['terrain_name']
+            terrain_level = result['level']  # None, 0, 1, ..., 10
+            key = terrain_name
+            if terrain_level is not None:
+                key += f'_{terrain_level}'
+                key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
+            summary[key] = result['results'] if terrain_level != 0 else None
+
+            for metric, means in result['results']['summary'].items():
+                for mean_name, mean_value in means.items():
+                    value_collections[metric][mean_name].append(float(mean_value.split(' ')[0]))
+
+        for metric, means in value_collections.items():
+            summary['summary'][metric] = {}
+            for mean_name, values in means.items():
+                summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
+
+        save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"
+        with open(save_path, 'w') as file:
+            yaml.dump(summary, file, allow_unicode=True, sort_keys=False)
+        stress_logger.info(f"✅ Stress benchmark aggregated execution finished.")
+        stress_logger.info(f"📁 Stress benchmark results saved to: {save_path}")
+        return summary
