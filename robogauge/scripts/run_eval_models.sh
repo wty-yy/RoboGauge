@@ -4,8 +4,8 @@
 #              specified in default ./evaluate_models.txt file.
 #
 # Usage: ./run_scripts.sh [-n EXP_NAME] [-t TASK_NAME] [-s]
-#   -n EXP_NAME     Experiment name (default: go2_moe_flat)
-#   -t TASK_NAME    Task name (default: go2_moe_flat)
+#   -n EXP_NAME     Experiment name (default: go2_moe.flat)
+#   -t TASK_NAME    Task name (default: go2_moe.flat)
 #   -s              Save video (default: false)
 #   -h              Show this help message
 
@@ -16,7 +16,7 @@ RUN_PY="$SCRIPT_DIR/run.py"
 
 ### Default Configure ###
 EXP_NAME=""     # Experiment name [-n]
-TASK_NAME="go2_moe_flat"    # Task name [-t]
+TASK_NAME="go2_moe.flat"    # Task name [-t]
 SAVE_VIDEO=false            # Whether to save video [-s]
 
 ### Parse Arguments ###

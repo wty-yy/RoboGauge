@@ -1,4 +1,8 @@
 # UPDATE
+## 20251226
+### v0.1.16
+Bugs: level_results会存储到MultiPipeline下, 因为MultiPipeline不是子进程启动的, 会覆盖LevelPipeline的Logger冲突
+1. 基本完成StressPipeline, 继续调试完毕
 ## 20251225
 ### v0.1.15
 1. 统一terrain的大小为10x10m, 某一边的中点在(0,0,0), 对全部的带等级的terrain都加上边界墙高度10m
@@ -10,6 +14,7 @@
     | mlp | 1 | 4 | 7 | 8 | 9 |
 
 3. 发现有穿模问题, 加入穿模判定0.035m, BaesPipeline新增一个warning穿模报错, 发生穿模重置当前goal并重置环境, 不计入失败
+    3.1. 穿模判定在斜坡上会有很大的问题, 对slope一侧加上0.8m的可供站立平地, 并取消关于wall和floor的穿模判定
 4. 发现可以通过同时增加台阶的宽度从而避免产生体积为0的接触点, 一定程度减少穿模问题
 5. 判定Level通过比例为0.8, 也就是5个种子有4个通过即可
 6. 完成stairs_down地形调试, 简单比较moe和mlp通过地形难度, 初始点和中点在y方向上有3m差距, 避免直接滚下去恰好通过

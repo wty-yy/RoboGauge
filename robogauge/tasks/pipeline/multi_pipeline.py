@@ -21,9 +21,12 @@ from collections import defaultdict
 from robogauge.tasks.pipeline.base_pipeline import BasePipeline
 
 from robogauge.utils.task_register import task_register
-from robogauge.utils.logger import logger
+from robogauge.utils.logger import Logger
+
+multi_logger = Logger()  # MultiPipeline logger
 
 def run_single_process(args, data):
+    from robogauge.utils.logger import logger
     seed, base_mass, friction = data
     local_args = deepcopy(args)
     local_args.seed = seed
@@ -41,6 +44,7 @@ def run_single_process(args, data):
         ret = {
             'status': 'success',
             'results': results,
+            'data': data,
             'model_path': pipeline.robot_cfg.control.model_path,
         }
         if warning is not None:
@@ -65,7 +69,7 @@ class MultiPipeline:
         self.base_masses = args.base_masses
         self.num_processes = args.num_processes
         self.static_info = {}
-        logger.create(args.experiment_name+'_multi', args.run_name+'_multi')
+        multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi')
     
     def add_static_info(self, key: str, value):
         if key not in self.static_info:
@@ -74,55 +78,54 @@ class MultiPipeline:
             assert self.static_info[key] == value, f"Static info key '{key}' has conflicting values: {self.static_info[key]} vs {value}"
 
     def run(self):
-        logger.info(f"🚀 Starting Multi-Process Evaluation with {self.num_processes} processes.")
-        logger.info(f"🔢 Seeds: {self.seeds}, Frictions: {self.frictions}, Base masses: {self.base_masses}")
+        multi_logger.info(f"🚀 Starting Multi-Process Evaluation with {self.num_processes} processes.")
+        multi_logger.info(f"🔢 Seeds: {self.seeds}, Frictions: {self.frictions}, Base masses: {self.base_masses}")
 
         workers_data = list(product(self.seeds, self.base_masses, self.frictions))
         ctx = multiprocessing.get_context('spawn')
         worker_func = functools.partial(run_single_process, self.args)
         results_list = []
-        success_flags = []
         with ctx.Pool(processes=self.num_processes) as pool:
             iterator = pool.imap_unordered(worker_func, workers_data)
             for results in tqdm(iterator, total=len(workers_data), desc="Evaluation"):
-                success_flags.append(results['status'] == 'success')
-
-                results_list.append(results['results'])
+                results_list.append(results)
                 self.add_static_info('model_path', results['model_path'])
                 self.add_static_info('terrain_name', results['results']['terrain_name'])
                 self.add_static_info('terrain_level', results['results']['terrain_level'])
                 if results['status'] != 'success':
                     data = results['data']
-                    logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")
+                    multi_logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")
 
-        logger.info("✅ Multi-Process Evaluation Completed.")
-        aggregated_results = self.aggregate_results(results_list, success_flags, workers_data)
+        multi_logger.info("✅ Multi-Process Evaluation Completed.")
+        aggregated_results = self.aggregate_results(results_list)
         return aggregated_results
     
-    def aggregate_results(self, all_results, success_flags, workers_data):
+    def aggregate_results(self, all_results):
         """ Process results from all processes and aggregate them. """
-        logger.info("📊 Aggregating Results from all runs...")
+        multi_logger.info("📊 Aggregating Results from all runs...")
 
         summary = {'success': {}, **self.static_info}
         finish_msg = (
             f"""\n{'='*20} Run Finish Summary {'='*20}\n"""
             f"""{'Seed':^10}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
         )
-        for success, data in zip(success_flags, workers_data):
-            seed, base_mass, friction = data
+        all_results = sorted(all_results, key=lambda x: x['data'])
+        for result in all_results:
+            seed, base_mass, friction = result['data']
+            success = result['status'] == 'success'
             status_str = "✅" if success else "❌"
             finish_msg += f"{seed:^10}{base_mass:^15}{friction:^15}{status_str:^10}\n"
             summary['success'][f"Seed_{seed}_BaseMass_{base_mass}_Friction_{friction}"] = True if success else False
         finish_msg += f"""{'='*88}"""
-        logger.info(finish_msg)
+        multi_logger.info(finish_msg)
 
         if not all_results:
-            logger.error("No results to aggregate.")
+            multi_logger.error("No results to aggregate.")
             return
         
         value_collections = defaultdict(lambda: defaultdict(list))
         for result in all_results:
-            for goal, metrics in result.items():
+            for goal, metrics in result['results'].items():
                 if goal != 'summary':
                     continue
                 for metric, means in metrics.items():
@@ -134,13 +137,13 @@ class MultiPipeline:
             for mean_name, values in means.items():
                 summary[metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
         
-        save_path = logger.log_dir / "aggregated_results.yaml"
+        save_path = multi_logger.log_dir / "aggregated_results.yaml"
         with open(save_path, 'w') as file:
             yaml.dump(summary, file, allow_unicode=True, sort_keys=False)
-        logger.info("✅ Aggregated execution finished.")
-        logger.info(f"📁 Aggregated results saved to: {save_path}")
+        multi_logger.info("✅ Aggregated execution finished.")
+        multi_logger.info(f"📁 Aggregated results saved to: {save_path}")
 
-        logger.info(
+        multi_logger.info(
             f"""\n{'='*20} Multi-Run Summary {'='*20}\n"""
             f"""{yaml.dump(summary, allow_unicode=True)}"""
             f"""{'='*60}"""

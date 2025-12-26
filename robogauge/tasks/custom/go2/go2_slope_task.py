@@ -17,8 +17,3 @@ class Go2SlopeGaugeConfig(SlopeGaugeConfig):
             enabled = True
             soft_dof_limit_ratio = 0.7
             dof_names = ['hip', 'thigh']  # List of DOF names to monitor, None for all
-
-class Go2SlopeMujocoConfig(MujocoConfig):
-    class domain_rand(MujocoConfig.domain_rand):
-        action_delay = True
-        friction = 2.4

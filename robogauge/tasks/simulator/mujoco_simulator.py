@@ -283,9 +283,19 @@ class MujocoSimulator:
             if -projected_gravity[2] < np.cos(self.cfg.truncation.projected_gravity_rad):
                 raise RuntimeError(f"[Roll Error] Episode truncated due to excessive projected gravity, angle: {np.arccos(-projected_gravity[2]):.3f} rad, projected: {projected_gravity}")
 
-            # is_penetrated, geom1, geom2, dist = self.check_penetration(self.cfg.truncation.penetration_threshold)
-            # if is_penetrated:
-            #     raise RuntimeError(f"[Penetration Error] Episode truncated: Penetration ({geom1} <-> {geom2}), distance: {dist}")
+            is_penetrated, geom1, geom2, dist = self.check_penetration(self.cfg.truncation.penetration_threshold)
+            if is_penetrated:
+                flat = True
+                if self.cfg.truncation.skip_penetration_geoms is not None and (
+                    any(skip_geom in geom1.lower() for skip_geom in self.cfg.truncation.skip_penetration_geoms) or
+                    any(skip_geom in geom2.lower() for skip_geom in self.cfg.truncation.skip_penetration_geoms)
+                ):
+                    flat = False
+                if self.cfg.truncation.skip_self_penetration:
+                    if geom1.split('/')[0] == geom2.split('/')[0]:
+                        flat = False
+                if flat:
+                    raise RuntimeError(f"[Penetration Error] Episode truncated: Penetration ({geom1} <-> {geom2}), distance: {dist}")
     
     def reset(self):
         """ Reset the simulator to initial state. """

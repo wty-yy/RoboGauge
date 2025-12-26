@@ -48,9 +48,15 @@ class Go2Config(RobotConfig):
 
     class commands(RobotConfig.commands):
         lin_vel_x = [-2.0, 2.0]  # min max [m/s]
-        lin_vel_y = [-2.0, 2.0]  # min max [m/s]
+        lin_vel_y = [-1.0, 1.0]  # min max [m/s]
         lin_vel_z = None  # min max [m/s]
         ang_vel_roll = None  # min max [rad/s]
         ang_vel_pitch = None  # min max [rad/s]
         ang_vel_yaw = [-2, 2]  # min max [rad/s]
 
+class Go2TerrainConfig(Go2Config):
+    """ Go2 Robot Configuration for Terrain Tasks (wave, stairs up/down, slope, obstacles) """
+    class commands(Go2Config.commands):
+        lin_vel_x = [-1.0, 1.0]  # min max [m/s]
+        lin_vel_y = [-1.0, 1.0]  # min max [m/s]
+        ang_vel_yaw = [-1.5, 1.5]  # min max [rad/s]

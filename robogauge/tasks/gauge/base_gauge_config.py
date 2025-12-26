@@ -22,7 +22,8 @@ class BaseGaugeConfig(Config):
     class goals:
         class max_velocity:  # goal with maximum velocity
             enabled = False
-            cmd_duration = 5.0  # [s] duration for each velocity command
+            move_duration = 5.0  # [s] duration for each velocity command
+            stance_duration = 2.0  # [s] duration for each stance (no movement)
 
         class diagonal_velocity:  # goal with diagonal velocity changes
             enabled = False

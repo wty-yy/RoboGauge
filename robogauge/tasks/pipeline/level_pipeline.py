@@ -10,17 +10,19 @@
 import yaml
 
 from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
-from robogauge.utils.logger import logger
+from robogauge.utils.logger import Logger
+
+level_logger = Logger()  # LevelPipeline logger
 
 class LevelPipeline:
     def __init__(self, args):
         self.args = args
         self.seeds = args.seeds
-        logger.create(args.experiment_name+'_level', args.run_name)
+        level_logger.create(args.experiment_name+'_level', args.run_name)
     
     def run(self):
-        logger.info(f"🚀 Starting Level Seacher for '{self.args.experiment_name}'.")
-        logger.info(f"🔢 Seeds: {self.seeds}")
+        level_logger.info(f"🚀 Starting Level Searcher for '{self.args.experiment_name}'.")
+        level_logger.info(f"🔢 Seeds: {self.seeds}")
 
         # binary search levels
         l, r = 0, 10
@@ -40,22 +42,22 @@ class LevelPipeline:
             'terrain_level': 0,
         })
         if level >= 1:
-            logger.info(f"🏆 Found maximum level: {level}")
+            level_logger.info(f"🏆 Found maximum level: {level}")
         else:
-            logger.info(f"❌ No valid level found [1-10].")
-        with open(logger.log_dir / "level_search_results.yaml", 'w') as f:
+            level_logger.info(f"❌ No valid level found [1-10].")
+        with open(level_logger.log_dir / "level_search_results.yaml", 'w') as f:
             yaml.dump(level_results, f, allow_unicode=True, sort_keys=False)
         return level, level_results
 
-    def test_level(self, level: int) -> bool:
-        logger.info(f"🔍 Testing level {level}...")
+    def test_level(self, level: int):
+        level_logger.info(f"🔍 Testing level {level}...")
         self.args.level = level
         multi_pipeline = MultiPipeline(self.args)
         aggregated_results = multi_pipeline.run()
         success_mean = float(aggregated_results['success']['mean'].split(' ')[0])
         all_success = success_mean >= 0.8
         if all_success:
-            logger.info(f"✅ Level {level} passed all tests.")
+            level_logger.info(f"✅ Level {level} passed all tests.")
         else:
-            logger.info(f"❌ Level {level} failed some tests.")
+            level_logger.info(f"❌ Level {level} failed some tests.")
         return all_success, aggregated_results

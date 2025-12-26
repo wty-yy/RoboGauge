@@ -1,7 +1,7 @@
 # Single Pipeline
 ```bash
 python robogauge/scripts/run.py \
-    --task go2_moe_flat \
+    --task go2_moe.flat \
     --experiment-name debug \
     --headless
 ```
@@ -9,28 +9,30 @@ python robogauge/scripts/run.py \
 # Multi Pipeline
 ```bash
 python robogauge/scripts/run.py \
-    --task go2_moe_flat \
+    --task go2_moe.flat \
     --experiment-name debug \
     --multi \
-    --num-processes 3 \
-    --headless
-
-python robogauge/scripts/run.py \
-    --task go2_moe_flat \
-    --experiment-name debug \
-    --multi \
-    --num-processes 3 \
+    --num-processes 5 \
+    --seeds 0 1 2 3 4 \
+    --frictions 0.5 1.0 1.5 2.0 2.5 \
     --headless
 ```
 
 # Level Pipeline
 ```bash
+# Must specify single frictions for LevelPipeline!
 python robogauge/scripts/run.py \
-    --task go2_slope \
+    --task go2_moe.slope \
     --experiment-name debug \
-    --seed 0 \
-    --headless \
-    --search-max-level --seeds 0 1 2 --frictions 1
+    --search-max-level \
+    --seeds 0 1 2 \
+    --frictions 1.0 \
+    --headless
+```
+
+# Stress Pipeline
+```bash
+
 ```
 
 # Radar/Bar Plot

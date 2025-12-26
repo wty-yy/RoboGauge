@@ -80,20 +80,27 @@ def parse_args():
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
         {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes."},
-        {"name": "--seeds", "type": int, "nargs": "+", "default": [0], "help": "List of random seeds for multiple runs."},
+        {"name": "--seeds", "type": int, "nargs": "+", "default": [0, 1, 2, 3, 4], "help": "List of random seeds for multiple runs."},
         {"name": "--base-masses", "type": float, "nargs": "+", "default": [0], "help": "List of base masses for the model."},
-        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.4, 0.7, 1.0, 1.3, 1.6], "help": "List of friction coefficients for the model."},
+        {"name": "--frictions", "type": float, "nargs": "+", "default": [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5], "help": "List of friction coefficients for the model."},
 
         # Level pipeline parameters
         {"name": "--search-max-level", "action": "store_true", "default": False, "help": "Use level pipeline to search maximum level."},
+
+        # Stress pipeline parameters
+        {"name": "--stress-benchmark", "action": "store_true", "default": False, "help": "Use stress pipeline to benchmark model robustness."},
+        {"name": "--stress-terrain-names", "type": str, "nargs": "+", "default": ["flat", "slope", "wave", "stairs_up", "stairs_down"], "help": "List of terrain names for stress benchmark."},
+        {"name": "--stress-num-processes", "type": int, "default": 2, "help": "Number of parallel processes for stress benchmark."},
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})
     args = parser.parse_args()
+    flatten_task_name = args.task_name.replace('.', '_')
+    args.cli_experiment_name = args.experiment_name
     if args.experiment_name is not None:
-        args.experiment_name = f"{args.task_name}_{args.experiment_name}"
+        args.experiment_name = f"{flatten_task_name}_{args.experiment_name}"
     else:
-        args.experiment_name = args.task_name
+        args.experiment_name = flatten_task_name
     return args
 
 def snake_to_pascal(s: str) -> str:

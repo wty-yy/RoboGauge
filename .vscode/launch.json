@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/robogauge/scripts/run.py",
             "args": [
-                "--task", "go2_moe_flat",
+                "--task", "go2_moe.flat",
                 "--experiment-name", "debug",
                 "--seed", "0",
                 "--friction", "1.6",
@@ -24,13 +24,13 @@
             "request": "launch",
             "program": "${workspaceFolder}/robogauge/scripts/run.py",
             "args": [
-                "--task", "go2_moe_slope",
+                "--task", "go2_moe.slope",
                 "--experiment-name", "debug",
                 "--seed", "0",
-                "--search-max-level",
-                "--seeds", "0", "1", "2",
+                // "--search-max-level",
+                // "--seeds", "0", "1", "2",
                 "--frictions", "1",
-                "--headless"
+                // "--headless"
             ],
             "console": "integratedTerminal"
         },
