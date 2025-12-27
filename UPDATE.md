@@ -1,4 +1,12 @@
 # UPDATE
+## 20251227
+### v0.1.17
+1. args中添加`goals`配置, 在LevelPipeline和MultiPipeline中指定goals, 修正压力测试中评估的目标不对的问题
+2. 评估必须使用5个种子, 否则LevelPipeline中的80%通过率就没有意义了, 并且提高5个种子最终的评级影响可能非常大 (moe.stairs_up Friction 2.0从Lv 7->10)
+3. 在StressPipeline测试中, 不再保存
+4. 添加obstacles地形
+5. 优化分数计算方法, 按照`(level-1)*0.1+metric_score`计算
+6. 加入日志文件夹递归保存, StressPipeline -> LevelPipeline -> MultiPipeline, 加入压缩参数`--compress-logs`, 将日志文件夹压缩为`subtasks.tar.xz`, 日志文件压缩`4M->100kb`
 ## 20251226
 ### v0.1.16
 1. 基本完成StressPipeline, 加入绘制进度条的线程, 其他进程通过Queue更新主进程的进度条

@@ -12,6 +12,7 @@ import yaml
 from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
 from robogauge.utils.logger import Logger
 from robogauge.utils.progress_monitor import report_progress, ProgressTypes, ProgressData
+from robogauge.utils.file_utils import compress_directory
 
 level_logger = Logger()  # LevelPipeline logger
 
@@ -21,7 +22,11 @@ class LevelPipeline:
         self.seeds = args.seeds
         self.console_output = console_output
         self.progress_data = progress_data
-        level_logger.create(args.experiment_name+'_level', args.run_name, console_output=console_output)
+        parent_log_dir = getattr(args, 'parent_log_dir', None)
+        level_logger.create(args.experiment_name+'_level', args.run_name, console_output=console_output, parent_log_dir=parent_log_dir)
+        self.args.parent_log_dir = str(level_logger.log_dir / "subtasks")
+        self.compress_logs = args.compress_logs
+        args.compress_logs = False  # Disable child log compression
     
     def run(self):
         level_logger.info(f"🚀 Starting Level Searcher for '{self.args.experiment_name}'.")
@@ -53,6 +58,9 @@ class LevelPipeline:
             level_logger.info(f"❌ No valid level found [1-10].")
         with open(level_logger.log_dir / "level_search_results.yaml", 'w') as f:
             yaml.dump(level_results, f, allow_unicode=True, sort_keys=False)
+        level_logger.logger.info(f"📂 Level search results saved to: {level_logger.log_dir / 'level_search_results.yaml'}")
+        if self.compress_logs:
+            compress_directory(level_logger.log_dir / "subtasks", delete_original=True, logger=level_logger)
         return level, level_results
 
     def test_level(self, level: int):
@@ -63,7 +71,7 @@ class LevelPipeline:
         success_mean = float(aggregated_results['summary']['success']['mean'].split(' ')[0])
         all_success = success_mean >= 0.8
         if all_success:
-            level_logger.info(f"✅ Level {level} passed all tests.")
+            level_logger.info(f"✅ Level {level} passed all tests, success mean: {success_mean}.")
         else:
-            level_logger.info(f"❌ Level {level} failed some tests.")
+            level_logger.info(f"❌ Level {level} failed some tests, success mean: {success_mean}.")
         return all_success, aggregated_results

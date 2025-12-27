@@ -58,7 +58,8 @@ class Logger:
         experiment_name,
         run_name,
         console_output=True, color_output=True,
-        log_level=logging.DEBUG, save_file_mode='a'
+        log_level=logging.DEBUG, save_file_mode='a',
+        parent_log_dir=None
     ):
         """
         Create customed Logger
@@ -69,6 +70,7 @@ class Logger:
             color_output (bool, optional): Whether use color output. Defaults to True.
             log_level (int, optional): Defaults to logging.DEBUG.
             save_file_mode (str, optional): The mode of saving to path_log_file
+            parent_log_dir (Path | str, optional): If specified, log_dir will be created under this directory.
 
         Returns:
             logging.Logger: logger
@@ -102,7 +104,11 @@ class Logger:
             sh.setFormatter(console_formatter)
             self.logger.addHandler(sh)
 
-        self.log_dir = Path(ROBOGAUGE_LOGS_DIR) / experiment_name / self.tag
+        if parent_log_dir:
+            baes_dir = Path(parent_log_dir)
+        else:
+            baes_dir = Path(ROBOGAUGE_LOGS_DIR)
+        self.log_dir = baes_dir / experiment_name / self.tag
         self.log_dir.mkdir(parents=True, exist_ok=True)
         path_log_file = self.log_dir / "stdout.log"
         if path_log_file:

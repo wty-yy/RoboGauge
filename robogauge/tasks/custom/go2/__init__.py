@@ -11,3 +11,4 @@ from .go2_slope_task import Go2SlopeGaugeConfig
 from .go2_wave_task import Go2WaveGaugeConfig
 from .go2_stairs_up_task import Go2StairsUpGaugeConfig
 from .go2_stairs_down_task import Go2StairsDownGaugeConfig
+from .go2_obstacle_task import Go2ObstacleGaugeConfig

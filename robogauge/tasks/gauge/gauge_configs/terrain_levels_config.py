@@ -87,6 +87,9 @@ class TerrainSearchLevelsConfig(Config):
             [1.1, 3.0, 7],
         ]
 
+    class obstacle:
+        levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
 class TerrainEvalLevelsConfig(Config):
     class slope:
         levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]

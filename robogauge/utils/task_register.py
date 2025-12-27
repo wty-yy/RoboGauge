@@ -9,7 +9,7 @@
 '''
 from robogauge import ROBOGAUGE_ROOT_DIR
 from robogauge.utils.logger import logger
-from robogauge.utils.helpers import parse_args, set_seed
+from robogauge.utils.helpers import parse_args, set_seed, class_to_dict
 from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
 
 class TaskRegister():
@@ -73,14 +73,23 @@ class TaskRegister():
         if args.level is not None:
             gauger_cfg.assets.terrain_level = args.level
             levels_cfg = TerrainSearchLevelsConfig()
-            cfg = getattr(levels_cfg, gauger_cfg.assets.terrain_name)
+            cfg = getattr(levels_cfg, gauger_cfg.assets.terrain_name, None)
             assert cfg is not None, f"Level {args.level} configuration not found in TerrainLevelsConfig."
             assert args.level in cfg.levels, f"Level must be in {cfg.levels}."
-            gauger_cfg.goals.target_pos_velocity.target_pos = cfg.targets[cfg.levels.index(args.level)]
+            if hasattr(cfg, 'targets'):
+                gauger_cfg.goals.target_pos_velocity.target_pos = cfg.targets[cfg.levels.index(args.level)]
             if hasattr(cfg, 'spawns'):
                 gauger_cfg.assets.terrain_spawn_pos = cfg.spawns[cfg.levels.index(args.level)]
             xml = gauger_cfg.assets.terrain_xmls[0]
             xml = xml.rsplit('/', 1)[0] + f"/{gauger_cfg.assets.terrain_name}_{args.level}.xml"
             gauger_cfg.assets.terrain_xmls[0] = xml
+        if args.goals is not None:
+            keys = class_to_dict(gauger_cfg.goals).keys()
+            enable_count = 0
+            for key in keys:
+                flag = key in args.goals
+                getattr(gauger_cfg.goals, key).enabled = flag
+                enable_count += int(flag)
+            assert enable_count > 0, f"At least one goal must be enabled from '{args.goals}', available goals are {list(keys)}."
 
 task_register = TaskRegister()

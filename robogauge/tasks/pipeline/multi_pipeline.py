@@ -24,6 +24,7 @@ from robogauge.utils.task_register import task_register
 from robogauge.utils.logger import Logger
 from robogauge.utils.process_utils import NoDaemonPool
 from robogauge.utils.progress_monitor import report_progress, ProgressTypes, ProgressData
+from robogauge.utils.file_utils import compress_directory
 
 multi_logger = Logger()  # MultiPipeline logger
 
@@ -38,7 +39,8 @@ def run_single_process(args, data):
     logger.create(
         experiment_name=local_args.experiment_name,
         run_name=run_name,
-        console_output=False
+        console_output=False,
+        parent_log_dir=args.parent_log_dir
     )
     pipeline = task_register.make_pipeline(args=local_args, create_logger=False)
     results, warning, error = pipeline.run()
@@ -73,7 +75,10 @@ class MultiPipeline:
         self.progress_data = progress_data
         self.num_processes = args.num_processes
         self.static_info = {}
-        multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi', console_output=console_output)
+        parent_log_dir = getattr(args, 'parent_log_dir', None)
+        multi_logger.create(args.experiment_name+'_multi', args.run_name+'_multi', console_output=console_output, parent_log_dir=parent_log_dir)
+        self.args.parent_log_dir = str(multi_logger.log_dir / "subtasks")
+        self.compress_logs = args.compress_logs
     
     def add_static_info(self, key: str, value):
         if key not in self.static_info:
@@ -153,6 +158,8 @@ class MultiPipeline:
         multi_logger.info("✅ Aggregated execution finished.")
         multi_logger.info(f"📁 Aggregated results saved to: {save_path}")
 
+        if self.compress_logs:
+            compress_directory(multi_logger.log_dir / "subtasks", delete_original=True, logger=multi_logger)
         # multi_logger.info(
         #     f"""\n{'='*20} Multi-Run Summary {'='*20}\n"""
         #     f"""{yaml.dump(summary, allow_unicode=True)}"""

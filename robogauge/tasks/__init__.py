@@ -15,6 +15,7 @@ task_register.register('go2.slope', BasePipeline, MujocoConfig, Go2SlopeGaugeCon
 task_register.register('go2.wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2TerrainConfig)
 task_register.register('go2.stairs_up', BasePipeline, MujocoConfig, Go2StairsUpGaugeConfig, Go2TerrainConfig)
 task_register.register('go2.stairs_down', BasePipeline, MujocoConfig, Go2StairsDownGaugeConfig, Go2TerrainConfig)
+task_register.register('go2.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2TerrainConfig)
 
 # Go2 MoE
 task_register.register('go2_moe.flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfig, Go2MoEConfig)
@@ -22,3 +23,4 @@ task_register.register('go2_moe.slope', BasePipeline, MujocoConfig, Go2SlopeGaug
 task_register.register('go2_moe.wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2MoETerrainConfig)
 task_register.register('go2_moe.stairs_up', BasePipeline, MujocoConfig, Go2StairsUpGaugeConfig, Go2MoETerrainConfig)
 task_register.register('go2_moe.stairs_down', BasePipeline, MujocoConfig, Go2StairsDownGaugeConfig, Go2MoETerrainConfig)
+task_register.register('go2_moe.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2MoETerrainConfig)

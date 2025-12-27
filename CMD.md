@@ -15,6 +15,20 @@ python robogauge/scripts/run.py \
     --num-processes 5 \
     --seeds 0 1 2 3 4 \
     --frictions 0.5 1.0 1.5 2.0 2.5 \
+    --compress-logs \
+    --headless
+
+# Terrain with Level, need specify goals (default is target_pos)
+python robogauge/scripts/run.py \
+    --task go2_moe.slope \
+    --experiment-name debug \
+    --multi \
+    --num-processes 5 \
+    --seeds 0 1 2 3 4 \
+    --frictions 1.0 \
+    --level 3 \
+    --goals max_velocity diagonal_velocity\
+    --compress-logs \
     --headless
 ```
 
@@ -25,8 +39,9 @@ python robogauge/scripts/run.py \
     --task go2_moe.slope \
     --experiment-name debug \
     --search-max-level \
-    --seeds 0 1 2 \
+    --seeds 0 1 2 3 4 \
     --frictions 1.0 \
+    --compress-logs \
     --headless
 ```
 
@@ -39,8 +54,9 @@ python robogauge/scripts/run.py \
     --stress-terrain-names flat slope stairs_up stairs_down wave \
     --stress-num-processes 2 \
     --num-processes 3 \
-    --seeds 0 1 2 \
+    --seeds 0 1 2 3 4 \
     --frictions 0.5 1.0 1.5 2.0 2.5 \
+    --compress-logs \
     --headless
 ```
 

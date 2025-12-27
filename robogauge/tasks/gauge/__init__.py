@@ -5,3 +5,4 @@ from .gauge_configs.slope_gauge_config import SlopeGaugeConfig
 from .gauge_configs.wave_gauge_config import WaveGaugeConfig
 from .gauge_configs.stairs_up_gauge_config import StairsUpGaugeConfig
 from .gauge_configs.stairs_down_gauge_config import StairsDownGaugeConfig
+from .gauge_configs.obstacle_gauge_config import ObstacleGaugeConfig

@@ -12,6 +12,14 @@
 | - | - | - |
 | Unitree go2 | 四足 | ✅ |
 
+## 安装
+参考[PyTorch官网](https://pytorch.org/get-started/locally/)安装2.0以上任意版本, 安装本仓库
+
+```bash
+git clone https://github.com/wty-yy/RoboGauge.git
+pip install -e .
+```
+
 ## 目录结构
 - `robogauge/scripts`: 启动指标测试程序
 - `robogauge/tasks`: 定义测试任务

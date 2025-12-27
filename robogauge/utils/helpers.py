@@ -76,6 +76,7 @@ def parse_args():
         {"name": "--base-mass", "type": float, "default": 0.0, "help": "Set the base mass of the robot."},
         {"name": "--friction", "type": float, "default": 1.0, "help": "Set the ground friction coefficient."},
         {"name": "--level", "type": int, "help": "Set the difficulty level of the environment, range 1-10 (flat is 0)."},
+        {"name": "--goals", "type": str, "nargs": "+", "help": "List of goal names to evaluate."},
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
@@ -91,6 +92,8 @@ def parse_args():
         {"name": "--stress-benchmark", "action": "store_true", "default": False, "help": "Use stress pipeline to benchmark model robustness."},
         {"name": "--stress-terrain-names", "type": str, "nargs": "+", "default": ["flat", "slope", "wave", "stairs_up", "stairs_down"], "help": "List of terrain names for stress benchmark."},
         {"name": "--stress-num-processes", "type": int, "default": 2, "help": "Number of parallel processes for stress benchmark."},
+
+        {"name": "--compress-logs", "action": "store_true", "default": False, "help": "Compress and delete logs after run."},
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})

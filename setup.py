@@ -10,14 +10,12 @@ setup(
     packages=find_packages(),
     install_requires=[
         "numpy>=1.20.0",
-        "mujoco>=3.0.0",       # 必须依赖
-        "dm_control>=1.0.14",  # 之前推荐用来组合地形的库
-        "scipy",               # 计算信号处理、统计指标常用
-        "matplotlib",          # 用于画出评估图表
-        "pandas",              # 用于生成评估报告表格
-        "tqdm",                # 显示评估进度条
-        # "gymnasium",         # 如果你的接口兼容 gym
-        # "torch",             # 如果你需要加载 pytorch 模型
+        "mujoco>=3.0.0",
+        "dm_control>=1.0.14",
+        "scipy",
+        "matplotlib",
+        "tqdm",
+        "imageio[ffmpeg]",
     ],
     python_requires=">=3.8",
     

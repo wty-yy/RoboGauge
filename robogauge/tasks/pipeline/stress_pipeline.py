@@ -7,6 +7,12 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Stress Pipeline for Robogauge
 '''
+# MuJoCo/XLA warnings suppression
+import os
+os.environ['ABSL_LOG_LEVEL'] = 'error'  
+import absl.logging
+absl.logging.set_verbosity(absl.logging.ERROR)
+
 import yaml
 import traceback
 import functools
@@ -22,8 +28,14 @@ from robogauge.utils.process_utils import NoDaemonPool
 from robogauge.utils.progress_monitor import report_progress, ProgressTypes, start_progress_monitor_thread, ProgressData
 from robogauge.tasks.pipeline import MultiPipeline, LevelPipeline
 from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
+from robogauge.utils.file_utils import compress_directory
 
 stress_logger = Logger()  # StressPipeline logger
+
+GOALS = {
+    'level_pipeline': ['target_pos_velocity'],
+    'multi_pipeline': ['max_velocity', 'diagonal_velocity']
+}
 
 def run_pipeline(args, progress_queue, data):
     args = deepcopy(args)
@@ -44,6 +56,7 @@ def run_pipeline(args, progress_queue, data):
         args.base_masses = [data['base_mass']]
         args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
         args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
+        args.goals = GOALS['level_pipeline']
 
         level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
         if level == 0:  # no valid level found
@@ -63,6 +76,7 @@ def run_pipeline(args, progress_queue, data):
         args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}"
         
     args.level = level
+    args.goals = GOALS['multi_pipeline']
     results = {
         'success': True,
         'results': MultiPipeline(args, console_output=False, progress_data=progress_data).run(),
@@ -81,6 +95,9 @@ class StressPipeline:
         args.experiment_name = self.task_robot_model + '_stress' + ('' if args.cli_experiment_name is None else '_' + args.cli_experiment_name)
         self.static_info = {}
         stress_logger.create(args.experiment_name, args.run_name)
+        self.args.parent_log_dir = str(stress_logger.log_dir / "subtasks")
+        self.compress_logs = args.compress_logs
+        args.compress_logs = False  # Disable child log compression
 
     def add_static_info(self, key: str, value):
         if key not in self.static_info:
@@ -183,7 +200,9 @@ class StressPipeline:
 
             for metric, means in result['results']['summary'].items():
                 for mean_name, mean_value in means.items():
-                    value_collections[metric][mean_name].append(float(mean_value.split(' ')[0]))
+                    value = float(mean_value.split(' ')[0])
+                    value += (terrain_level - 1) * 0.1 if terrain_level is not None else 0.0
+                    value_collections[metric][mean_name].append(value)
 
         for metric, means in value_collections.items():
             summary['summary'][metric] = {}
@@ -196,4 +215,7 @@ class StressPipeline:
             yaml.dump(summary, file, allow_unicode=True, sort_keys=False)
         stress_logger.info(f"✅ Stress benchmark aggregated execution finished.")
         stress_logger.info(f"📁 Stress benchmark results saved to: {save_path}")
+
+        if self.compress_logs:
+            compress_directory(stress_logger.log_dir / "subtasks", delete_original=True, logger=stress_logger)
         return summary
