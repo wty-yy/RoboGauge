@@ -80,7 +80,6 @@ def parse_args():
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
-        {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes."},
         {"name": "--seeds", "type": int, "nargs": "+", "default": [0, 1, 2, 3, 4], "help": "List of random seeds for multiple runs."},
         {"name": "--base-masses", "type": float, "nargs": "+", "default": [0], "help": "List of base masses for the model."},
         {"name": "--frictions", "type": float, "nargs": "+", "default": [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5], "help": "List of friction coefficients for the model."},
@@ -91,8 +90,9 @@ def parse_args():
         # Stress pipeline parameters
         {"name": "--stress-benchmark", "action": "store_true", "default": False, "help": "Use stress pipeline to benchmark model robustness."},
         {"name": "--stress-terrain-names", "type": str, "nargs": "+", "default": ["flat", "slope", "wave", "stairs_up", "stairs_down"], "help": "List of terrain names for stress benchmark."},
-        {"name": "--stress-num-processes", "type": int, "default": 2, "help": "Number of parallel processes for stress benchmark."},
 
+        # Common parameters
+        {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes for Multi or Stress benchmark."},
         {"name": "--compress-logs", "action": "store_true", "default": False, "help": "Compress and delete logs after run."},
     ]
     for param in parameters:

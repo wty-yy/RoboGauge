@@ -91,25 +91,38 @@ class MultiPipeline:
         multi_logger.info(f"🔢 Seeds: {self.seeds}, Frictions: {self.frictions}, Base masses: {self.base_masses}")
 
         workers_data = list(product(self.seeds, self.base_masses, self.frictions))
-        report_progress(self.progress_data, ProgressTypes.INIT, total=len(workers_data), desc="🚀 MultiPipeline Executing")
+        report_progress(self.progress_data, ProgressTypes.INIT, total=len(workers_data), desc="🚀 MultiPipeline")
 
         ctx = multiprocessing.get_context('spawn')
         worker_func = functools.partial(run_single_process, self.args)
         results_list = []
-        with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
-            iterator = pool.imap_unordered(worker_func, workers_data)
-            bar = iterator
+
+        def update_results(results):
+            results_list.append(results)
+            self.add_static_info('model_path', results['model_path'])
+            self.add_static_info('terrain_name', results['results']['terrain_name'])
+            self.add_static_info('terrain_level', results['results']['terrain_level'])
+            report_progress(self.progress_data, ProgressTypes.UPDATE, value=1)
+            if results['status'] != 'success':
+                data = results['data']
+                multi_logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")
+
+        if self.num_processes == 1:
+            multi_logger.info("🚀 Running in Serial Mode")
+            bar = workers_data
             if self.console_output:
-                bar = tqdm(iterator, total=len(workers_data), desc="Evaluation")
-            for results in bar:
-                results_list.append(results)
-                self.add_static_info('model_path', results['model_path'])
-                self.add_static_info('terrain_name', results['results']['terrain_name'])
-                self.add_static_info('terrain_level', results['results']['terrain_level'])
-                report_progress(self.progress_data, ProgressTypes.UPDATE, value=1)
-                if results['status'] != 'success':
-                    data = results['data']
-                    multi_logger.error(f"❌ Process with seed={data[0]}, base_mass={data[1]}, friction={data[2]} failed with error: {results['error_msg']}")
+                bar = tqdm(workers_data, desc="Evaluation")
+            for data in bar:
+                results = worker_func(data)
+                update_results(results)
+        else:
+            with NoDaemonPool(processes=self.num_processes, context=ctx) as pool:
+                iterator = pool.imap_unordered(worker_func, workers_data)
+                bar = iterator
+                if self.console_output:
+                    bar = tqdm(iterator, total=len(workers_data), desc="Evaluation")
+                for results in bar:
+                    update_results(results)
 
         multi_logger.info("✅ Multi-Process Evaluation Completed.")
         aggregated_results = self.aggregate_results(results_list)

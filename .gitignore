@@ -8,5 +8,6 @@ __pycache__/
 
 # Logger
 logs/
+logs*/
 .aim/
 *.bkp

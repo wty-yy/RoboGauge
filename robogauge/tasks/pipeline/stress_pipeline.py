@@ -41,23 +41,22 @@ def run_pipeline(args, progress_queue, data):
     args = deepcopy(args)
     task_id = data['task_id']
     search = data['search_max_level']
-    task_label = f"[{data['terrain_name']}]"
+    task_label = f"[{data['terrain_name']}] M:{data['base_mass']} F:{data['friction']}"
     progress_data = ProgressData(
         task_id=task_id,
         msg_prefix=task_label + ' ',
         progress_queue=progress_queue
     )
-    if search is True:
-        task_label += f" M:{data['base_mass']} F:{data['friction']}"
-        progress_data.msg_prefix = task_label + ' '
-        args.friction = data['friction']
-        args.frictions = [data['friction']]
-        args.base_mass = data['base_mass']
-        args.base_masses = [data['base_mass']]
-        args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
-        args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
-        args.goals = GOALS['level_pipeline']
 
+    args.friction = data['friction']
+    args.frictions = [data['friction']]
+    args.base_mass = data['base_mass']
+    args.base_masses = [data['base_mass']]
+    args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
+    args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
+
+    if search is True:
+        args.goals = GOALS['level_pipeline']
         level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
         if level == 0:  # no valid level found
             report_progress(progress_data, ProgressTypes.FINISH, desc=f"❌ Failed (Lv 0)")
@@ -68,8 +67,8 @@ def run_pipeline(args, progress_queue, data):
                 'level': 0,
             }
             return results
-        
         report_progress(progress_data, ProgressTypes.RESET, total=0, desc=f"✅ Found Lv {level} -> Running")
+        progress_data.msg_prefix += f"(Lv {level}) "
     else:
         level = None  # flat terrain
         args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
@@ -91,13 +90,14 @@ class StressPipeline:
         self.args = args
         self.seeds = args.seeds
         self.task_robot_model = args.task_name.split('.')[0]
-        self.num_processes = args.stress_num_processes
+        self.num_processes = args.num_processes
         args.experiment_name = self.task_robot_model + '_stress' + ('' if args.cli_experiment_name is None else '_' + args.cli_experiment_name)
         self.static_info = {}
         stress_logger.create(args.experiment_name, args.run_name)
         self.args.parent_log_dir = str(stress_logger.log_dir / "subtasks")
         self.compress_logs = args.compress_logs
         args.compress_logs = False  # Disable child log compression
+        args.num_processes = 1  # Disable child multi-process
 
     def add_static_info(self, key: str, value):
         if key not in self.static_info:
@@ -125,16 +125,13 @@ class StressPipeline:
                 'terrain_name': terrain_name,
                 'search_max_level': search_max_level,
             }
-            if search_max_level:
-                for friction, base_mass in product(self.args.frictions, self.args.base_masses):
-                    now_data = deepcopy(data)
-                    now_data.update({
-                        'friction': friction,
-                        'base_mass': base_mass,
-                    })
-                    workers_data.append(now_data)
-            else:
-                workers_data.append(data)
+            for friction, base_mass in product(self.args.frictions, self.args.base_masses):
+                now_data = deepcopy(data)
+                now_data.update({
+                    'friction': friction,
+                    'base_mass': base_mass,
+                })
+                workers_data.append(now_data)
 
         ### Start progress monitor ###
         progress_queue, monitor_thread = start_progress_monitor_thread(len(workers_data))
@@ -182,16 +179,14 @@ class StressPipeline:
             stress_logger.error("No results to aggregate.")
             return
 
-        summary = {**self.static_info, 'summary': {}}
+        summary = {**self.static_info, 'summary': {}, 'final_score': {}}
         value_collections = defaultdict(lambda: defaultdict(list))
         zero_terrain_count = 0
         for result in all_results:
             terrain_name = result['data']['terrain_name']
             terrain_level = result['level']  # None, 0, 1, ..., 10
-            key = terrain_name
-            if terrain_level is not None:
-                key += f'_{terrain_level}'
-                key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
+            key = f'{terrain_name}_{terrain_level}'
+            key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
             if terrain_level == 0:
                 summary[key] = None
                 zero_terrain_count += 1
@@ -201,14 +196,19 @@ class StressPipeline:
             for metric, means in result['results']['summary'].items():
                 for mean_name, mean_value in means.items():
                     value = float(mean_value.split(' ')[0])
-                    value += (terrain_level - 1) * 0.1 if terrain_level is not None else 0.0
+                    if terrain_level is not None:  # level terrain
+                        value = (terrain_level - 1) * 0.1 + value * 0.1
                     value_collections[metric][mean_name].append(value)
 
+        final_metrics = defaultdict(list)
         for metric, means in value_collections.items():
             summary['summary'][metric] = {}
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count)  # include zero terrains
                 summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
+                final_metrics[mean_name].append(np.mean(values))
+        for mean_name, values in final_metrics.items():
+            summary['final_score'][mean_name] = float(np.mean(values))
 
         save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"
         with open(save_path, 'w') as file:

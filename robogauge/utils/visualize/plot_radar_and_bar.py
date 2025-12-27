@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : plot_radar_and_bar.py
+@Time    : 2025/12/27 22:52:24
+@Author  : wty-yy (with Gemini 3)
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : 可视化评测结果，生成雷达图和柱状图
+'''
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
@@ -48,9 +57,10 @@ def load_data(file_paths):
         model_name = os.path.basename(raw_path).replace('.pt', '')
 
         values = []
+        summary = content['summary']
         for k in metric_keys:
-            if k in content:
-                raw_val = content[k]['mean@50']
+            if k in summary:
+                raw_val = summary[k]['mean@25']
                 values.append(parse_value_string(raw_val))
             else:
                 values.append(0.0)

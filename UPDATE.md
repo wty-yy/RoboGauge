@@ -6,7 +6,10 @@
 3. 在StressPipeline测试中, 不再保存
 4. 添加obstacles地形
 5. 优化分数计算方法, 按照`(level-1)*0.1+metric_score`计算
-6. 加入日志文件夹递归保存, StressPipeline -> LevelPipeline -> MultiPipeline, 加入压缩参数`--compress-logs`, 将日志文件夹压缩为`subtasks.tar.xz`, 日志文件压缩`4M->100kb`
+6. 加入日志文件夹递归保存, StressPipeline -> LevelPipeline -> MultiPipeline, 加入压缩参数`--compress-logs`, 将日志文件夹压缩为`subtasks.tar.xz`, 日志文件压缩`4M->100kb` (6种地形的全部评估测试日志压缩后`29M->539K`)
+7. StressPipeline和MultiPipeline同时工作时, 很大概率发生死锁 (StressPipeline传入的任务超过10个以上), 将MultiPipeline的num-processes设置为1即可避免该问题 (不创建Process), 为了提高速度可以将flat的不同域随机化也展平
+8. 将进度条换成当前时间/剩余时间
+9. 添加`plot_terrain_levels.py`绘图代码, 绘制5种可变等级的地形与摩擦系数的关系图
 ## 20251226
 ### v0.1.16
 1. 基本完成StressPipeline, 加入绘制进度条的线程, 其他进程通过Queue更新主进程的进度条

@@ -13,9 +13,11 @@ setup(
         "mujoco>=3.0.0",
         "dm_control>=1.0.14",
         "scipy",
-        "matplotlib",
+        "matplotlib==3.6.3",
         "tqdm",
         "imageio[ffmpeg]",
+        "tensorboard",
+        "PyYAML",
     ],
     python_requires=">=3.8",
     

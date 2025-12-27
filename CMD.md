@@ -51,9 +51,8 @@ python robogauge/scripts/run.py \
     --task go2_moe \
     --experiment-name debug \
     --stress-benchmark \
-    --stress-terrain-names flat slope stairs_up stairs_down wave \
-    --stress-num-processes 2 \
-    --num-processes 3 \
+    --stress-terrain-names flat slope stairs_up stairs_down wave obstacle \
+    --num-processes 6 \
     --seeds 0 1 2 3 4 \
     --frictions 0.5 1.0 1.5 2.0 2.5 \
     --compress-logs \
@@ -64,14 +63,23 @@ python robogauge/scripts/run.py \
 将Multi Run结果绘制在雷达图中
 ```bash
 # 可选--out保存到图片
-python robogauge/utils/visualize_results.py \
+python robogauge/utils/visualize/plot_radar_and_bar.py \
     aggregated_results_1.yaml \
     aggregated_results_2.yaml \
     --out logs/1.jpg
 
 # 绘制下全部 *.yaml, 可选range控制radar, bar y轴显示范围
-python robogauge/utils/visualize_results.py \
+python robogauge/utils/visualize/plot_radar_and_bar.py \
     /home/xfy/Coding/robot_gauge/mytest/results \
     --range 0.35 1.0 \
     --out logs/1.jpg
+```
+
+# Terrain Levels Plot
+```bash
+# 绘制5种可变等级的地形与摩擦系数的关系图
+python robogauge/utils/visualize/plot_terrain_levels.py \
+    aggregated_results_1.yaml \
+    aggregated_results_2.yaml \
+    --out logs/terrain_analysis.jpg
 ```

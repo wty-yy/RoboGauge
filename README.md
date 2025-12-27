@@ -13,10 +13,11 @@
 | Unitree go2 | 四足 | ✅ |
 
 ## 安装
-参考[PyTorch官网](https://pytorch.org/get-started/locally/)安装2.0以上任意版本, 安装本仓库
+推荐安装`python=3.8`, 参考[PyTorch官网](https://pytorch.org/get-started/locally/)安装2.0以上任意版本, 安装本仓库
 
 ```bash
 git clone https://github.com/wty-yy/RoboGauge.git
+cd RoboGauge
 pip install -e .
 ```
 
