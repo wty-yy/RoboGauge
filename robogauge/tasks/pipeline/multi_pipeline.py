@@ -133,7 +133,7 @@ class MultiPipeline:
         """ Process results from all processes and aggregate them. """
         multi_logger.info("📊 Aggregating Results from all runs...")
 
-        summary = {'success': {}, **self.static_info, 'summary': {}, 'quality_score': {}, 'terrain_quality_score': {}}
+        summary = {'success': {}, **self.static_info, 'summary': {}, 'terrain_weighted_summary': {}, 'quality_score': {}, 'terrain_quality_score': {}}
         finish_msg = (
             f"""\n{'='*20} Run Finish Summary {'='*20}\n"""
             f"""{'Seed':^10}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
@@ -165,9 +165,14 @@ class MultiPipeline:
         
         for metric, means in value_collections.items():
             summary['summary'][metric] = {}
+            summary['terrain_weighted_summary'][metric] = {}
             for mean_name, values in means.items():
                 v = float(np.mean(values))
                 summary['summary'][metric][mean_name] = f"{v:.4f} ± {float(np.std(values)):.4f}"
+                twv = v
+                if summary['terrain_name'] in SEARCH_LEVELS_TERRAINS:
+                    twv = 0.09 * (summary['terrain_level'] - 1) + 0.19 * v
+                summary['terrain_weighted_summary'][metric][mean_name] = f"{twv:.4f} ± {float(np.std(values)):.4f}"
                 weight = 1
                 if metric in ['ang_vel_err', 'lin_vel_err']:
                     weight = 2

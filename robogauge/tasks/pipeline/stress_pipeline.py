@@ -193,7 +193,7 @@ class StressPipeline:
                 continue
             summary[key] = result['results']
 
-            for metric, means in result['results']['summary'].items():
+            for metric, means in result['results']['terrain_weighted_summary'].items():
                 for mean_name, value_str in means.items():
                     value = float(value_str.split(' ± ')[0])
                     metric_collections[metric][mean_name].append(value)
