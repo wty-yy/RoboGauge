@@ -27,7 +27,7 @@ from robogauge.utils.logger import Logger
 from robogauge.utils.process_utils import NoDaemonPool
 from robogauge.utils.progress_monitor import report_progress, ProgressTypes, start_progress_monitor_thread, ProgressData
 from robogauge.tasks.pipeline import MultiPipeline, LevelPipeline
-from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
+from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import SEARCH_LEVELS_TERRAINS
 from robogauge.utils.file_utils import compress_directory
 
 stress_logger = Logger()  # StressPipeline logger
@@ -57,6 +57,7 @@ def run_pipeline(args, progress_queue, data):
 
     if search is True:
         args.goals = GOALS['level_pipeline']
+        args.spawn_type = "level_search"
         level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
         if level == 0:  # no valid level found
             report_progress(progress_data, ProgressTypes.FINISH, desc=f"❌ Failed (Lv 0)")
@@ -76,6 +77,7 @@ def run_pipeline(args, progress_queue, data):
         
     args.level = level
     args.goals = GOALS['multi_pipeline']
+    args.spawn_type = "level_eval"
     results = {
         'success': True,
         'results': MultiPipeline(args, console_output=False, progress_data=progress_data).run(),
@@ -113,12 +115,9 @@ class StressPipeline:
 
         ### Build worker data ###
         workers_data = []
-        terrain_search_levels_config = TerrainSearchLevelsConfig()
         for terrain_name in terrain_names:
             search_max_level = True
-            terrain_level_cfg = getattr(terrain_search_levels_config, terrain_name, None)
-            assert terrain_level_cfg is not None, f"Terrain '{terrain_name}' not found in TerrainSearchLevelsConfig."
-            if len(terrain_level_cfg.levels) == 1:  # Flattened terrain
+            if terrain_name not in SEARCH_LEVELS_TERRAINS:  # Flattened terrain
                 search_max_level = False
             data = {
                 'task_robot_model': self.task_robot_model,
@@ -179,8 +178,9 @@ class StressPipeline:
             stress_logger.error("No results to aggregate.")
             return
 
-        summary = {**self.static_info, 'summary': {}, 'final_score': {}}
-        value_collections = defaultdict(lambda: defaultdict(list))
+        summary = {**self.static_info, 'summary': {}, 'robust_score': {}, 'benchmark_score': 0.0}
+        metric_collections = defaultdict(lambda: defaultdict(list))
+        terrain_collections = defaultdict(lambda: defaultdict(list))
         zero_terrain_count = 0
         for result in all_results:
             terrain_name = result['data']['terrain_name']
@@ -194,21 +194,27 @@ class StressPipeline:
             summary[key] = result['results']
 
             for metric, means in result['results']['summary'].items():
-                for mean_name, mean_value in means.items():
-                    value = float(mean_value.split(' ')[0])
-                    if terrain_level is not None:  # level terrain
-                        value = (terrain_level - 1) * 0.1 + value * 0.1
-                    value_collections[metric][mean_name].append(value)
+                for mean_name, value_str in means.items():
+                    value = float(value_str.split(' ± ')[0])
+                    metric_collections[metric][mean_name].append(value)
+            for mean_name, value in result['results']['terrain_quality_score'].items():
+                terrain_collections[terrain_name][mean_name].append(value)
 
-        final_metrics = defaultdict(list)
-        for metric, means in value_collections.items():
+        for metric, means in metric_collections.items():
             summary['summary'][metric] = {}
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count)  # include zero terrains
                 summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
-                final_metrics[mean_name].append(np.mean(values))
-        for mean_name, values in final_metrics.items():
-            summary['final_score'][mean_name] = float(np.mean(values))
+        
+        robust_score = defaultdict(dict)
+        robust_scores = []
+        for terrain_name, means in terrain_collections.items():
+            for mean_name, values in means.items():
+                values.extend([0.0] * zero_terrain_count)  # include zero terrains
+                robust_score[terrain_name][mean_name] = float(np.mean(values))
+                robust_scores.append(robust_score[terrain_name][mean_name])
+        summary['robust_score'] = dict(robust_score)
+        summary['benchmark_score'] = float(np.mean(robust_scores))
 
         save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"
         with open(save_path, 'w') as file:

@@ -1,9 +1,20 @@
 # Single Pipeline
 ```bash
+# Default goals: max_velocity, diagonal_velocity
 python robogauge/scripts/run.py \
     --task go2_moe.flat \
     --experiment-name debug \
     --headless
+
+# To evaluate metrics for level terrains, add `--goals` and `--spawn-type`
+# level terrains: wave, slope, stairs up, stairs down, obstacle (default is target_pos)
+python robogauge/scripts/run.py \
+    --task go2_moe.obstacle \
+    --experiment-name debug \
+    --level 10 \
+    --friction 2 \
+    --spawn-type level_eval \
+    --goals max_velocity diagonal_velocity
 ```
 
 # Multi Pipeline
@@ -20,13 +31,14 @@ python robogauge/scripts/run.py \
 
 # Terrain with Level, need specify goals (default is target_pos)
 python robogauge/scripts/run.py \
-    --task go2_moe.slope \
+    --task go2_moe.stairs_up \
     --experiment-name debug \
     --multi \
     --num-processes 5 \
     --seeds 0 1 2 3 4 \
-    --frictions 1.0 \
-    --level 3 \
+    --frictions 2.0 \
+    --level 10 \
+    --spawn-type level_eval \
     --goals max_velocity diagonal_velocity\
     --compress-logs \
     --headless
@@ -52,9 +64,9 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope stairs_up stairs_down wave obstacle \
-    --num-processes 6 \
+    --num-processes 50 \
     --seeds 0 1 2 3 4 \
-    --frictions 0.5 1.0 1.5 2.0 2.5 \
+    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
     --compress-logs \
     --headless
 ```

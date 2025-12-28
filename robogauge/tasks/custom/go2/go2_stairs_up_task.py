@@ -7,7 +7,6 @@
 @Blog    : https://wty-yy.github.io/
 @Desc    : Go2 Wave Task Configuration
 '''
-from robogauge.tasks.robots import Go2Config, Go2MoEConfig
 from robogauge.tasks.gauge import StairsUpGaugeConfig
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 

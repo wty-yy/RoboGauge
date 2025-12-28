@@ -30,7 +30,7 @@ class Go2FlatGaugeConfig(FlatGaugeConfig):
             cmd_duration = 6.0
 
         class target_pos_velocity(FlatGaugeConfig.goals.target_pos_velocity):  # goal to reach a target position by velocity command, config target at assets.target_pos
-            enabled = True
+            enabled = False
             target_pos = [2, 2, 0]  # x y z [m], target position in the environment, used for target position goal
             lin_vel_x = 1.0  # +/- m/s
             lin_vel_y = 1.0  # +/- m/s

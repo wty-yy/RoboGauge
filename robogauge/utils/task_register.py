@@ -10,7 +10,7 @@
 from robogauge import ROBOGAUGE_ROOT_DIR
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_args, set_seed, class_to_dict
-from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig
+from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig, TerrainEvalLevelsConfig
 
 class TaskRegister():
     def __init__(self):
@@ -72,14 +72,18 @@ class TaskRegister():
             sim_cfg.domain_rand.base_mass = args.base_mass
         if args.level is not None:
             gauger_cfg.assets.terrain_level = args.level
-            levels_cfg = TerrainSearchLevelsConfig()
-            cfg = getattr(levels_cfg, gauger_cfg.assets.terrain_name, None)
-            assert cfg is not None, f"Level {args.level} configuration not found in TerrainLevelsConfig."
-            assert args.level in cfg.levels, f"Level must be in {cfg.levels}."
-            if hasattr(cfg, 'targets'):
-                gauger_cfg.goals.target_pos_velocity.target_pos = cfg.targets[cfg.levels.index(args.level)]
-            if hasattr(cfg, 'spawns'):
-                gauger_cfg.assets.terrain_spawn_pos = cfg.spawns[cfg.levels.index(args.level)]
+            search_level_cfg = TerrainSearchLevelsConfig()
+            eval_level_cfg = TerrainEvalLevelsConfig()
+            search_cfg = getattr(search_level_cfg, gauger_cfg.assets.terrain_name, None)
+            eval_cfg = getattr(eval_level_cfg, gauger_cfg.assets.terrain_name, None)
+            assert search_cfg is not None and eval_cfg is not None, f"Level {args.level} configuration not found in TerrainLevelsConfig or TerrainEvalLevelsConfig."
+            assert args.level in search_cfg.levels and args.level in eval_cfg.levels, f"Level must be in {search_cfg.levels=} and {eval_cfg.levels=}."
+            if hasattr(search_cfg, 'targets'):
+                gauger_cfg.goals.target_pos_velocity.target_pos = search_cfg.targets[search_cfg.levels.index(args.level)]
+            if hasattr(search_cfg, 'spawns') and args.spawn_type == "level_search":
+                gauger_cfg.assets.terrain_spawn_pos = search_cfg.spawns[search_cfg.levels.index(args.level)]
+            elif hasattr(eval_cfg, 'spawns') and args.spawn_type == "level_eval":
+                gauger_cfg.assets.terrain_spawn_pos = eval_cfg.spawns[eval_cfg.levels.index(args.level)]
             xml = gauger_cfg.assets.terrain_xmls[0]
             xml = xml.rsplit('/', 1)[0] + f"/{gauger_cfg.assets.terrain_name}_{args.level}.xml"
             gauger_cfg.assets.terrain_xmls[0] = xml

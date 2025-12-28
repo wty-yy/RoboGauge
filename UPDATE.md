@@ -4,7 +4,8 @@
 1. 将final_score改为merge_metrics, 并在multi_pipeline中也进行该评估
 2. [放弃, 好像也没这个必要] 上下台阶取二者的最小等级, 实现中都计算出来, 统计地形得分时仅计算二者种较低等级的一个
 3. 对有难度地形设置goals, 但是忘记设置到地形的正中心了!!!在每种地形上调出对应的中心初始位置
-4. 重新详细设计整个打分标准, 引入几个得分: quality_score, terrain_quality_score, robust_score, benchmark_score
+4. 添加`--spawn-type`配置, 根据评估和搜索修改初始生成点, 完成slope, wave, stairs up, stairs down, obstacle
+5. 重新详细设计整个打分标准, 引入几个阶段性得分: quality_score, terrain_quality_score, robust_score, benchmark_score
 ## 20251227
 ### v0.1.17
 1. args中添加`goals`配置, 在LevelPipeline和MultiPipeline中指定goals, 修正压力测试中评估的目标不对的问题

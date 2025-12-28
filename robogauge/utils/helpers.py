@@ -76,6 +76,7 @@ def parse_args():
         {"name": "--base-mass", "type": float, "default": 0.0, "help": "Set the base mass of the robot."},
         {"name": "--friction", "type": float, "default": 1.0, "help": "Set the ground friction coefficient."},
         {"name": "--level", "type": int, "help": "Set the difficulty level of the environment, range 1-10 (flat is 0)."},
+        {"name": "--spawn-type", "type": str, "choices": ["level_eval", "level_search"], "help": "Spawn type for the robot."},
         {"name": "--goals", "type": str, "nargs": "+", "help": "List of goal names to evaluate."},
 
         # Multiprocessing parameters, with different seeds
