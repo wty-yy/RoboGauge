@@ -6,6 +6,8 @@
 3. 对有难度地形设置goals, 但是忘记设置到地形的正中心了!!!在每种地形上调出对应的中心初始位置
 4. 添加`--spawn-type`配置, 根据评估和搜索修改初始生成点, 完成slope, wave, stairs up, stairs down, obstacle
 5. 重新详细设计整个打分标准, 引入几个阶段性得分: quality_score, terrain_quality_score, robust_score, benchmark_score
+6. 对于楼梯环境, 计算benchmark_score和统计每个metrics平均分时, 不计算下楼梯, 因为下楼梯几乎对模型没有仍和区分度 (都是最高难度)
+Fix bug: 修复零难度的地形个数计算问题
 ## 20251227
 ### v0.1.17
 1. args中添加`goals`配置, 在LevelPipeline和MultiPipeline中指定goals, 修正压力测试中评估的目标不对的问题
