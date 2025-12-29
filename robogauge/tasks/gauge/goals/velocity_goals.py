@@ -171,6 +171,7 @@ class TargetPosVelocityGoal(BaseVelocityGoal):
 
     def __init__(self,
         control_dt: float,
+        backward: bool,
         target_pos: List[float],
         lin_vel_x: float,
         lin_vel_y: float,
@@ -186,6 +187,7 @@ class TargetPosVelocityGoal(BaseVelocityGoal):
         self.lin_vel_y = lin_vel_y
         self.ang_vel_yaw = ang_vel_yaw
         self.reach_threshold = reach_threshold
+        self.backward = backward
 
         kwargs.pop('enabled', None)
         if kwargs:
@@ -205,8 +207,12 @@ class TargetPosVelocityGoal(BaseVelocityGoal):
         self.update_runtime_count(sim_data)
         delta_pos, _, delta_ang = self.get_delta_info(sim_data)
         ang_vel_yaw = np.sign(delta_ang) * min(abs(delta_ang) * 2, self.ang_vel_yaw)
+        lin_vel_x = self.lin_vel_x if abs(delta_ang) < PI / 4 else 0.0
+        if self.backward:
+            ang_vel_yaw = -np.sign(delta_ang) * min((PI - abs(delta_ang)) * 2, self.ang_vel_yaw)
+            lin_vel_x = -self.lin_vel_x if abs(delta_ang) > PI * 3 / 4 else 0.0
         self.current_goal = VelocityGoal(
-            lin_vel_x=self.lin_vel_x if abs(delta_ang) < PI / 4 else 0.0,
+            lin_vel_x=lin_vel_x,
             lin_vel_y=np.sign(delta_pos[1]) * min(abs(delta_pos[1]), self.lin_vel_y) if abs(delta_ang) >= PI / 4 else 0.0,
             ang_vel_yaw=ang_vel_yaw
         )

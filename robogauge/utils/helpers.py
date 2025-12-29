@@ -76,7 +76,7 @@ def parse_args(args_list=None):
         {"name": "--base-mass", "type": float, "default": 0.0, "help": "Set the base mass of the robot."},
         {"name": "--friction", "type": float, "default": 1.0, "help": "Set the ground friction coefficient."},
         {"name": "--level", "type": int, "help": "Set the difficulty level of the environment, range 1-10 (flat is 0)."},
-        {"name": "--spawn-type", "type": str, "choices": ["level_eval", "level_search"], "help": "Spawn type for the robot."},
+        {"name": "--spawn-type", "type": str, "default": "level_search", "choices": ["level_eval", "level_search"], "help": "Spawn type for the robot when specify level (Default is level_search)."},
         {"name": "--goals", "type": str, "nargs": "+", "help": "List of goal names to evaluate."},
 
         # Multiprocessing parameters, with different seeds
@@ -91,7 +91,7 @@ def parse_args(args_list=None):
 
         # Stress pipeline parameters
         {"name": "--stress-benchmark", "action": "store_true", "default": False, "help": "Use stress pipeline to benchmark model robustness."},
-        {"name": "--stress-terrain-names", "type": str, "nargs": "+", "default": ["flat", "slope", "wave", "stairs_up", "stairs_down"], "help": "List of terrain names for stress benchmark."},
+        {"name": "--stress-terrain-names", "type": str, "nargs": "+", "default": ["flat", "slope_fd", "slope_bd", "wave", "stairs_fd", "stairs_bd"], "help": "List of terrain names for stress benchmark."},
 
         # Common parameters
         {"name": "--num-processes", "type": int, "default": 2, "help": "Number of parallel processes for Multi or Stress benchmark."},

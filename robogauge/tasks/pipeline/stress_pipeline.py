@@ -192,11 +192,10 @@ class StressPipeline:
                 continue
             summary[key] = result['results']
 
-            if terrain_name != 'stairs_down':  # skip stairs_down for metrics means calculation
-                for metric, means in result['results']['terrain_weighted_summary'].items():
-                    for mean_name, value_str in means.items():
-                        value = float(value_str.split(' ± ')[0])
-                        metric_collections[metric][mean_name].append(value)
+            for metric, means in result['results']['terrain_weighted_summary'].items():
+                for mean_name, value_str in means.items():
+                    value = float(value_str.split(' ± ')[0])
+                    metric_collections[metric][mean_name].append(value)
             for mean_name, value in result['results']['terrain_quality_score'].items():
                 terrain_collections[terrain_name][mean_name].append(value)
 
@@ -214,8 +213,7 @@ class StressPipeline:
                 values.extend([0.0] * zero_terrain_count[terrain_name])  # include zero terrains
                 robust_score[terrain_name][mean_name] = float(np.mean(values))
             scores[terrain_name] = robust_score[terrain_name]['mean@50']
-            if terrain_name != 'stairs_down':  # skip stairs_down for benchmark score calculation
-                robust_scores.append(robust_score[terrain_name]['mean@50'])
+            robust_scores.append(robust_score[terrain_name]['mean@50'])
         summary['robust_score'] = dict(robust_score)
         summary['benchmark_score'] = float(np.mean(robust_scores))
         scores['benchmark'] = summary['benchmark_score']

@@ -12,6 +12,7 @@ from robogauge.utils.config import Config
 class BaseGaugeConfig(Config):
     gauge_class = 'BaseGauge'
     write_tensorboard = False  # Whether to write tensorboard logs
+    backward = False  # Whether to invert init yaw orient and backward move to target
 
     class assets:
         terrain_name = "flat"

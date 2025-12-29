@@ -35,6 +35,7 @@ class MujocoSimulator:
         self.terrain_spawn_pos = None
         self.robot_spawn_height = None
         self.default_dof_pos = None
+        self.invert_yaw = None
         self.viewer = None
         self.offscreen_cam = mujoco.MjvCamera()
         self.renderer = None
@@ -52,6 +53,7 @@ class MujocoSimulator:
         robot_xml: str = None,
         terrain_spawn_pos: list = None,
         default_dof_pos: list = None,
+        invert_yaw: bool = None,
     ):
         """ Load terrain and robot into the simulator, support re-loading. """
         if terrain_xmls is not None:
@@ -62,6 +64,8 @@ class MujocoSimulator:
             self.terrain_spawn_pos = terrain_spawn_pos
         if default_dof_pos is not None:
             self.default_dof_pos = default_dof_pos
+        if invert_yaw is not None:
+            self.invert_yaw = invert_yaw
 
         terrain_xmls = self.terrain_xmls
         robot_xml = self.robot_xml
@@ -91,6 +95,9 @@ class MujocoSimulator:
         self.mj_data = self.mj_physics.data.ptr
         self.mj_model.opt.timestep = self.cfg.physics.simulation_dt
         self.sim_dt = self.cfg.physics.simulation_dt
+        if self.invert_yaw:
+            self.mj_data.qpos[3] = 0.0
+            self.mj_data.qpos[6] = 1.0
         self.mj_data.qpos[7:] = default_dof_pos
 
         # Domain randomization: base mass
@@ -265,6 +272,7 @@ class MujocoSimulator:
             proprio=proprio
         )
 
+        # input("DEBUG")
         self.n_step += 1
         self.sim_time = self.n_step * self.sim_dt
         self.check_truncation(sim_data)
@@ -305,6 +313,9 @@ class MujocoSimulator:
     def reset(self):
         """ Reset the simulator to initial state. """
         self.mj_physics.reset()
+        if self.invert_yaw:
+            self.mj_data.qpos[3] = 0.0
+            self.mj_data.qpos[6] = 1.0
         self.mj_data.qpos[7:] = self.default_dof_pos
         mujoco.mj_forward(self.mj_model, self.mj_data)
 

@@ -10,7 +10,7 @@
 from robogauge import ROBOGAUGE_ROOT_DIR
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_args, set_seed, class_to_dict
-from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig, TerrainEvalLevelsConfig
+from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import TerrainSearchLevelsConfig, TerrainEvalLevelsConfig, TERRAIN_NAME2_XML_NAME
 
 class TaskRegister():
     def __init__(self):
@@ -82,10 +82,10 @@ class TaskRegister():
                 gauger_cfg.goals.target_pos_velocity.target_pos = search_cfg.targets[search_cfg.levels.index(args.level)]
             if hasattr(search_cfg, 'spawns') and args.spawn_type == "level_search":
                 gauger_cfg.assets.terrain_spawn_pos = search_cfg.spawns[search_cfg.levels.index(args.level)]
-            elif hasattr(eval_cfg, 'spawns') and args.spawn_type == "level_eval":
+            if hasattr(eval_cfg, 'spawns') and args.spawn_type == "level_eval":
                 gauger_cfg.assets.terrain_spawn_pos = eval_cfg.spawns[eval_cfg.levels.index(args.level)]
             xml = gauger_cfg.assets.terrain_xmls[0]
-            xml = xml.rsplit('/', 1)[0] + f"/{gauger_cfg.assets.terrain_name}_{args.level}.xml"
+            xml = xml.rsplit('/', 1)[0] + f"/{TERRAIN_NAME2_XML_NAME[gauger_cfg.assets.terrain_name]}_{args.level}.xml"
             gauger_cfg.assets.terrain_xmls[0] = xml
         if args.goals is not None:
             keys = class_to_dict(gauger_cfg.goals).keys()

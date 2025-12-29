@@ -28,7 +28,7 @@ from pprint import pprint
 
 default_args_list = [
     '--stress-benchmark',
-    # '--stress-terrain-names', 'flat', 'wave', 'slope', 'stairs_up', 'stairs_down', 'obstacle',
+    # '--stress-terrain-names', 'flat', 'wave', 'slope_fd',  'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle',
     '--stress-terrain-names', 'flat', 'wave',
     '--num-processes', '50',
     '--seeds', '0', '1', '2',

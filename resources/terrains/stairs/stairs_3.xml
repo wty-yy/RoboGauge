@@ -1,5 +1,5 @@
-<mujoco model="stairs_up_3">
-  <!-- Terrain Type: stairs_up, Level: 3, Stairs step height: 0.1400 -->
+<mujoco model="stairs_3">
+  <!-- Terrain Type: stairs, Level: 3, Stairs step height: 0.1400 -->
   <statistic center="0 0 0.1" extent="0.8" />
   <visual>
     <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0" />

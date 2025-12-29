@@ -56,7 +56,8 @@ class BasePipeline:
             self.gauge_cfg.assets.terrain_xmls,
             self.robot_cfg.assets.robot_xml,
             self.gauge_cfg.assets.terrain_spawn_pos,
-            self.robot_cfg.control.default_dof_pos
+            self.robot_cfg.control.default_dof_pos,
+            self.gauge_cfg.backward,
         )
 
     def run(self):

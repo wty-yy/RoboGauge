@@ -4,7 +4,7 @@
 1. 完成stress pipeline的客户端, 服务端代码, 支持异步推理
 2. 加入MultiPipeline和LevelPipeline分开的种子数量`seeds, search_seeds`, Level 5个, Multi 3个, 这样可以显著提高速度, 并且保证评估精度不掉 (两种评估总分前三位都是相同的), 速度提升`3m 32s -> 2m 47s`
 3. 删除stairs_down任务, 将stairs_up重命名为stairs
-4. 对于slope, stairs再分化为两个任务, slope_fd, slope_bd, stairs_fd, stairs_bd, 分别表示正向/背向朝更高处的初始化, target_pos_velocity中指令同时根据是否backward反转
+4. 对于slope, stairs再分化为两个任务, slope_fd, slope_bd, stairs_fd, stairs_bd, 分别表示正向/背向朝更高处的初始化, target_pos_velocity中指令同时根据是否backward反转, 分别为slope, stairs写初始化位置, 原来6个地形换成现在7种, 测试用时变为`2m 59s`
 ## 20251228
 ### v0.1.18
 1. 将final_score改为merge_metrics, 并在multi_pipeline中也进行该评估

@@ -52,7 +52,7 @@ class BaseGauge:
                 self.goals.append(DiagonalVelocityGoal(robot_cfg.control.control_dt, robot_cfg.commands, **kwargs))
                 log_str += f"  - Diagonal Velocity Goal: {kwargs}\n"
             elif name == 'target_pos_velocity':
-                self.goals.append(TargetPosVelocityGoal(robot_cfg.control.control_dt,**kwargs))
+                self.goals.append(TargetPosVelocityGoal(robot_cfg.control.control_dt, cfg.backward, **kwargs))
                 log_str += f"  - Target Position Velocity Goal: {kwargs}\n"
             else:
                 raise NotImplementedError(f"Goal '{name}' is not implemented in BaseGauge.")

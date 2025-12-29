@@ -33,7 +33,7 @@ def load_terrain_data(file_paths):
     Returns:
         model_data: {model_name: {terrain_type: {friction: level}}}
     """
-    target_terrains = ['wave', 'slope', 'stairs_up', 'stairs_down', 'obstacle']
+    target_terrains = ['wave', 'slope_fd', 'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle']
     model_data = {}
     
     # 用于从键名中提取 friction 的正则 (例如 friction1.25)

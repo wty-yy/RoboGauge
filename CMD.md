@@ -7,7 +7,7 @@ python robogauge/scripts/run.py \
     --headless
 
 # To evaluate metrics for level terrains, add `--goals` and `--spawn-type`
-# level terrains: wave, slope, stairs up, stairs down, obstacle (default is target_pos)
+# level terrains: wave, slope_fb, slope_bd, stairs_fb, stairs_bd, obstacle (default is target_pos)
 python robogauge/scripts/run.py \
     --task go2_moe.obstacle \
     --experiment-name debug \
@@ -31,7 +31,7 @@ python robogauge/scripts/run.py \
 
 # Terrain with Level, need specify goals (default is target_pos)
 python robogauge/scripts/run.py \
-    --task go2_moe.stairs_up \
+    --task go2_moe.stairs_bd \
     --experiment-name debug \
     --multi \
     --num-processes 5 \
@@ -63,7 +63,7 @@ python robogauge/scripts/run.py \
     --task go2_moe \
     --experiment-name debug \
     --stress-benchmark \
-    --stress-terrain-names flat slope stairs_up stairs_down wave obstacle \
+    --stress-terrain-names flat slope_fb slope_bd stairs_fb stairs_bd wave obstacle \
     --num-processes 50 \
     --seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \

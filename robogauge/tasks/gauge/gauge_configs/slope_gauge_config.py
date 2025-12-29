@@ -5,15 +5,15 @@
 @Author  : wty-yy
 @Version : 1.0
 @Blog    : https://wty-yy.github.io/
-@Desc    : Slope Gauge Configuration
+@Desc    : Slope Forward(fd)/Backward(bd) Gauge Configuration
 '''
 from robogauge.tasks.gauge.base_gauge_config import BaseGaugeConfig
 
-class SlopeGaugeConfig(BaseGaugeConfig):
+class SlopeForwardGaugeConfig(BaseGaugeConfig):
     gauge_class = 'BaseGauge'
 
     class assets(BaseGaugeConfig.assets):
-        terrain_name = "slope"
+        terrain_name = "slope_fd"
         terrain_level = 4  # 1-10
         terrain_xmls = [
             '{ROBOGAUGE_ROOT_DIR}/resources/terrains/slope/slope_4.xml',
@@ -30,4 +30,9 @@ class SlopeGaugeConfig(BaseGaugeConfig):
             ang_vel_yaw = 1.5  # +/- rad/s
             max_cmd_duration = 20.0  # [s] maximum duration to reach the target position
             reach_threshold = 0.1
-        
+
+class SlopeBackwardGaugeConfig(SlopeForwardGaugeConfig):
+    backward = True
+
+    class assets(SlopeForwardGaugeConfig.assets):
+        terrain_name = "slope_bd"

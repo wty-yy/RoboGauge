@@ -9,9 +9,19 @@
 '''
 from robogauge.utils.config import Config
 
-SEARCH_LEVELS_TERRAINS = ['slope', 'wave', 'stairs_up', 'stairs_down', 'obstacle']
+SEARCH_LEVELS_TERRAINS = ['slope_fd', 'slope_bd', 'wave', 'stairs_fd', 'stairs_bd', 'obstacle']
+TERRAIN_NAME2_XML_NAME = {
+    'flat': 'flat',
+    'slope_fd': 'slope',
+    'slope_bd': 'slope',
+    'wave': 'wave',
+    'stairs_fd': 'stairs',
+    'stairs_bd': 'stairs',
+    'obstacle': 'obstacle',
+}
 
 class TerrainSearchLevelsConfig(Config):
+    """ Go2 robot init/target position """
     class flat:
         levels = [0]
         targets = [[4, 0, 0]]  # target positions for each level, if target goal is used
@@ -46,7 +56,7 @@ class TerrainSearchLevelsConfig(Config):
             [6.5, -2.65, 0.80],
         ]
 
-    class stairs_up:
+    class stairs:
         levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         targets = [
             [4.5, 0.0, 1.35],
@@ -61,36 +71,30 @@ class TerrainSearchLevelsConfig(Config):
             [4.5, 0.0, 3.60],
         ]
 
-    class stairs_down:
-        levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        targets = [
-            [8.3, 0.0, 1.90 - 0.07 * 15],
-            [8.3, 0.0, 1.90 - 0.07 * 12],
-            [8.3, 0.0, 1.90 - 0.07 * 9],
-            [8.3, 0.0, 1.90 - 0.07 * 6],
-            [8.3, 0.0, 1.90 - 0.07 * 5],
-            [8.3, 0.0, 1.90 - 0.07 * 4],
-            [8.3, 0.0, 1.90 - 0.07 * 3],
-            [8.3, 0.0, 1.90 - 0.07 * 2],
-            [8.3, 0.0, 1.90 - 0.07],
-            [8.3, 0.0, 1.90],
-        ]
-
         spawns = [
-            [1.1, 3.0, 7 - 0.3 * 15],
-            [1.1, 3.0, 7 - 0.3 * 12],
-            [1.1, 3.0, 7 - 0.3 * 9],
-            [1.1, 3.0, 7 - 0.3 * 6],
-            [1.1, 3.0, 7 - 0.3 * 5],
-            [1.1, 3.0, 7 - 0.3 * 4],
-            [1.1, 3.0, 7 - 0.3 * 3],
-            [1.1, 3.0, 7 - 0.3 * 2],
-            [1.1, 3.0, 7 - 0.3],
-            [1.1, 3.0, 7],
+            [1.15, 0.0, 1.1 - 0.05 * 6 - 0.15 * 3],
+            [1.15, 0.0, 1.1 - 0.05 * 6 - 0.15 * 2],
+            [1.15, 0.0, 1.1 - 0.05 * 6 - 0.15],
+            [1.15, 0.0, 1.1 - 0.05 * 6],
+            [1.15, 0.0, 1.1 - 0.05 * 5],
+            [1.15, 0.0, 1.1 - 0.05 * 4],
+            [1.15, 0.0, 1.1 - 0.05 * 3],
+            [1.15, 0.0, 1.1 - 0.05 * 2],
+            [1.15, 0.0, 1.1 - 0.05 * 1],
+            [1.15, 0.0, 1.1],
         ]
 
     class obstacle:
         levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    
+    class slope_fd(slope):  # forward direction
+        pass
+    class slope_bd(slope):  # backward direction
+        pass
+    class stairs_fd(stairs):  # forward direction
+        pass
+    class stairs_bd(stairs):  # backward direction
+        pass
 
 class TerrainEvalLevelsConfig(Config):
     class flat:
@@ -99,16 +103,16 @@ class TerrainEvalLevelsConfig(Config):
     class slope:
         levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         spawns = [
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 9)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 8)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 7)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 6)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 5)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 4)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 3)],
-            [5.0, 0, 4.2 * (0.57 - 0.047 * 2)],
-            [5.0, 0, 4.2 * (0.57 - 0.047)],
-            [5.0, 0, 4.2 * 0.57],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 9)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 8)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 7)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 6)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 5)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 4)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 3)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047 * 2)],
+            [5.0, 0, 0.03 + 4.2 * (0.57 - 0.047)],
+            [5.0, 0, 0.03 + 4.2 * 0.57],
         ]
 
     class wave:
@@ -126,34 +130,19 @@ class TerrainEvalLevelsConfig(Config):
             [4.55, 0, 0.65],
         ]
 
-    class stairs_up:
+    class stairs:
         levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         spawns = [
-            [5.0, 0.0, 1.35],
-            [5.0, 0.0, 1.80],
-            [5.0, 0.0, 2.25 + 0.03],
-            [5.0, 0.0, 2.70 + 0.08],
-            [5.0, 0.0, 2.85 + 0.1],
-            [5.0, 0.0, 3.00 + 0.12],
-            [5.0, 0.0, 3.15 + 0.14],
-            [5.0, 0.0, 3.30 + 0.16],
-            [5.0, 0.0, 3.45 + 0.18],
-            [5.0, 0.0, 3.60 + 0.2],
-        ]
-
-    class stairs_down:
-        levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        spawns = [
-            [5.1, 0.0, 1.35],
-            [5.1, 0.0, 1.80 + 0.08],
-            [5.1, 0.0, 2.25 + 0.15],
-            [5.1, 0.0, 2.70 + 0.25],
-            [5.1, 0.0, 2.85 + 0.27],
-            [5.1, 0.0, 3.00 + 0.30],
-            [5.1, 0.0, 3.15 + 0.33],
-            [5.1, 0.0, 3.30 + 0.36],
-            [5.1, 0.0, 3.45 + 0.39],
-            [5.1, 0.0, 3.60 + 0.42],
+            [4.85, 0.0, 0.05 + 1.35],
+            [4.85, 0.0, 0.05 + 1.80],
+            [4.85, 0.0, 0.05 + 2.25 + 0.03],
+            [4.85, 0.0, 0.05 + 2.70 + 0.08],
+            [4.85, 0.0, 0.05 + 2.85 + 0.1],
+            [4.85, 0.0, 0.05 + 3.00 + 0.12],
+            [4.85, 0.0, 0.05 + 3.15 + 0.14],
+            [4.85, 0.0, 0.05 + 3.30 + 0.16],
+            [4.85, 0.0, 0.05 + 3.45 + 0.18],
+            [4.85, 0.0, 0.05 + 3.60 + 0.2],
         ]
 
     class obstacle:
@@ -170,3 +159,16 @@ class TerrainEvalLevelsConfig(Config):
             [5, 0.0, 0.20 - 0.023 * 1],
             [5, 0.0, 0.20],
         ]
+
+    class slope_fd(slope):  # forward direction
+        pass
+    class slope_bd(slope):  # backward direction
+        pass
+    class stairs_fd(stairs):  # forward direction
+        pass
+    class stairs_bd(stairs):  # backward direction
+        pass
+
+if __name__ == '__main__':
+    terrain_search_cfg = TerrainSearchLevelsConfig()
+    print(terrain_search_cfg.stairs.spawns)
