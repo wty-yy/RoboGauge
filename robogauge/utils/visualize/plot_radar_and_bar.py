@@ -2,7 +2,7 @@
 '''
 @File    : plot_radar_and_bar.py
 @Time    : 2025/12/27 22:52:24
-@Author  : wty-yy (with Gemini 3)
+@Author  : wty-yy, Gemini3 Pro
 @Version : 1.0
 @Blog    : https://wty-yy.github.io/
 @Desc    : 可视化评测结果，生成雷达图和柱状图

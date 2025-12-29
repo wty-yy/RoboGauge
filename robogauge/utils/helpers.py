@@ -60,7 +60,7 @@ def str2bool(v):
         return False
     raise TypeError('Boolean value expected.')
 
-def parse_args():
+def parse_args(args_list=None):
     parser = ArgumentParser()
     parameters = [
         # Single run parameters
@@ -81,12 +81,13 @@ def parse_args():
 
         # Multiprocessing parameters, with different seeds
         {"name": "--multi", "action": "store_true", "default": False, "help": "Enable multiprocessing."},
-        {"name": "--seeds", "type": int, "nargs": "+", "default": [0, 1, 2, 3, 4], "help": "List of random seeds for multiple runs."},
+        {"name": "--seeds", "type": int, "nargs": "+", "default": [0, 1, 2], "help": "List of random seeds for multiple runs."},
         {"name": "--base-masses", "type": float, "nargs": "+", "default": [0], "help": "List of base masses for the model."},
         {"name": "--frictions", "type": float, "nargs": "+", "default": [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5], "help": "List of friction coefficients for the model."},
 
         # Level pipeline parameters
         {"name": "--search-max-level", "action": "store_true", "default": False, "help": "Use level pipeline to search maximum level."},
+        {"name": "--search-seeds", "type": int, "nargs": "+", "default": [0, 1, 2, 3, 4], "help": "List of random seeds for level search."},
 
         # Stress pipeline parameters
         {"name": "--stress-benchmark", "action": "store_true", "default": False, "help": "Use stress pipeline to benchmark model robustness."},
@@ -98,7 +99,7 @@ def parse_args():
     ]
     for param in parameters:
         parser.add_argument(param['name'], **{k: v for k, v in param.items() if k != 'name'})
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
     flatten_task_name = args.task_name.replace('.', '_')
     args.cli_experiment_name = args.experiment_name
     if args.experiment_name is not None:

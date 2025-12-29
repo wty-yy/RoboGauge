@@ -2,7 +2,7 @@
 '''
 @File    : progress_monitor.py
 @Time    : 2025/12/27 00:10:07
-@Author  : wty-yy (with Gemini 3)
+@Author  : wty-yy, Gemini3 Pro
 @Version : 1.0
 @Blog    : https://wty-yy.github.io/
 @Desc    : Centralized progress monitoring with Dynamic Slot Management

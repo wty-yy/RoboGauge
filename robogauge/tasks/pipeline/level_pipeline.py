@@ -8,6 +8,7 @@
 @Desc    : Level Pipeline for Robogauge
 '''
 import yaml
+from copy import deepcopy
 
 from robogauge.tasks.pipeline.multi_pipeline import MultiPipeline
 from robogauge.utils.logger import Logger
@@ -19,7 +20,7 @@ level_logger = Logger()  # LevelPipeline logger
 class LevelPipeline:
     def __init__(self, args, console_output=True, progress_data: ProgressData = None):
         self.args = args
-        self.seeds = args.seeds
+        self.seeds = args.search_seeds
         self.console_output = console_output
         self.progress_data = progress_data
         parent_log_dir = getattr(args, 'parent_log_dir', None)
@@ -65,8 +66,10 @@ class LevelPipeline:
 
     def test_level(self, level: int):
         level_logger.info(f"🔍 Testing level {level}...")
-        self.args.level = level
-        multi_pipeline = MultiPipeline(self.args, console_output=self.console_output)
+        args = deepcopy(self.args)
+        args.level = level
+        args.seeds = self.seeds
+        multi_pipeline = MultiPipeline(args, console_output=self.console_output)
         aggregated_results = multi_pipeline.run()
         success_mean = float(aggregated_results['summary']['success']['mean'].split(' ')[0])
         all_success = success_mean >= 0.8

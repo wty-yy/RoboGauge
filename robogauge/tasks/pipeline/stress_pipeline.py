@@ -90,7 +90,6 @@ def run_pipeline(args, progress_queue, data):
 class StressPipeline:
     def __init__(self, args):
         self.args = args
-        self.seeds = args.seeds
         self.task_robot_model = args.task_name.split('.')[0]
         self.num_processes = args.num_processes
         args.experiment_name = self.task_robot_model + '_stress' + ('' if args.cli_experiment_name is None else '_' + args.cli_experiment_name)
@@ -109,7 +108,7 @@ class StressPipeline:
 
     def run(self):
         stress_logger.info(f"🚀 Starting Stress Benchmark for '{self.args.experiment_name}'.")
-        stress_logger.info(f"🔢 Seeds: {self.seeds}")
+        stress_logger.info(f"🔢 Seeds: {self.args.seeds}, Level Search Seeds: {self.args.search_seeds}")
         terrain_names = self.args.stress_terrain_names
         stress_logger.info(f"🌄 Stress Test Terrain Names: {terrain_names}")
 
@@ -161,7 +160,7 @@ class StressPipeline:
         stress_logger.info("📊 Aggregating Stress Benchmark Results...")
         finish_msg = (
             f"""\n{'='*20} Stress Benchmark Summary {'='*20}\n"""
-            f"""{'Seeds':^20}{str(self.seeds)}\n"""
+            f"""{'Seeds':^20}{str(self.args.seeds):^15}{'Level Search Seeds':^20}{str(self.args.search_seeds):^15}\n"""
             f"""{'Terrain Name':^20}{'Base Mass':^15}{'Friction':^15}{'Max Level':^15}\n"""
         )
         all_results = sorted(all_results, key=lambda x: (x['data']['terrain_name'], x['data'].get('base_mass', 0), x['data'].get('friction', 0)))
@@ -178,7 +177,7 @@ class StressPipeline:
             stress_logger.error("No results to aggregate.")
             return
 
-        summary = {**self.static_info, 'summary': {}, 'robust_score': {}, 'benchmark_score': 0.0}
+        summary = {**self.static_info, 'summary': {}, 'robust_score': {}, 'benchmark_score': 0.0, 'scores': {}}
         metric_collections = defaultdict(lambda: defaultdict(list))
         terrain_collections = defaultdict(lambda: defaultdict(list))
         zero_terrain_count = defaultdict(lambda: 0)
@@ -209,14 +208,17 @@ class StressPipeline:
         
         robust_score = defaultdict(dict)
         robust_scores = []
+        scores = summary['scores']
         for terrain_name, means in terrain_collections.items():
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count[terrain_name])  # include zero terrains
                 robust_score[terrain_name][mean_name] = float(np.mean(values))
+            scores[terrain_name] = robust_score[terrain_name]['mean@50']
             if terrain_name != 'stairs_down':  # skip stairs_down for benchmark score calculation
                 robust_scores.append(robust_score[terrain_name]['mean@50'])
         summary['robust_score'] = dict(robust_score)
         summary['benchmark_score'] = float(np.mean(robust_scores))
+        scores['benchmark'] = summary['benchmark_score']
 
         save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"
         with open(save_path, 'w') as file:

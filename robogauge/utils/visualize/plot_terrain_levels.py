@@ -2,7 +2,7 @@
 '''
 @File    : plot_terrain_levels.py
 @Time    : 2025/12/27 23:04:01
-@Author  : wty-yy (with Gemini 3)
+@Author  : wty-yy, Gemini3 Pro
 @Version : 1.0
 @Blog    : https://wty-yy.github.io/
 @Desc    : None

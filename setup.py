@@ -2,13 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="robogauge",  # 包名
-    version="0.1.0",   # 版本号
-    author="wty-yy", # 你的名字
+    version="1.0.0",   # 版本号
+    author="Wu Tianyang", # 你的名字
     author_email="993660140@qq.com",
     description="A generic robot RL model evaluation library based on MuJoCo",
     url="https://github.com/wty-yy/robot_gauge", # 如果有仓库地址
     packages=find_packages(),
     install_requires=[
+        "torch",  # Refer: https://pytorch.org/get-started/locally/
         "numpy>=1.20.0",
         "mujoco>=3.0.0",
         "dm_control>=1.0.14",
@@ -18,6 +19,8 @@ setup(
         "imageio[ffmpeg]",
         "tensorboard",
         "PyYAML",
+        "fastapi",
+        "uvicorn",
     ],
     python_requires=">=3.8",
     
