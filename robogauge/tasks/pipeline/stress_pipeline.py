@@ -178,12 +178,14 @@ class StressPipeline:
             return
 
         summary = {**self.static_info, 'summary': {}, 'robust_score': {}, 'benchmark_score': 0.0, 'scores': {}}
+        scores = summary['scores']
         metric_collections = defaultdict(lambda: defaultdict(list))
         terrain_collections = defaultdict(lambda: defaultdict(list))
         zero_terrain_count = defaultdict(lambda: 0)
         for result in all_results:
             terrain_name = result['data']['terrain_name']
             terrain_level = result['level']  # None, 0, 1, ..., 10
+            scores[terrain_name] = 0.0
             key = f'{terrain_name}_{terrain_level}'
             key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
             if terrain_level == 0:
@@ -207,7 +209,6 @@ class StressPipeline:
         
         robust_score = defaultdict(dict)
         robust_scores = []
-        scores = summary['scores']
         for terrain_name, means in terrain_collections.items():
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count[terrain_name])  # include zero terrains
@@ -215,7 +216,7 @@ class StressPipeline:
             scores[terrain_name] = robust_score[terrain_name]['mean@50']
             robust_scores.append(robust_score[terrain_name]['mean@50'])
         summary['robust_score'] = dict(robust_score)
-        summary['benchmark_score'] = float(np.mean(robust_scores))
+        summary['benchmark_score'] = float(np.mean(list(scores.values())))
         scores['benchmark'] = summary['benchmark_score']
 
         save_path = stress_logger.log_dir / "stress_benchmark_results.yaml"

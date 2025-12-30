@@ -28,9 +28,9 @@ from pprint import pprint
 
 default_args_list = [
     '--stress-benchmark',
-    # '--stress-terrain-names', 'flat', 'wave', 'slope_fd',  'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle',
-    '--stress-terrain-names', 'flat', 'wave',
-    '--num-processes', '50',
+    '--stress-terrain-names', 'flat', 'wave', 'slope_fd',  'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle',
+    # '--stress-terrain-names', 'flat', 'wave',
+    '--num-processes', '30',
     '--seeds', '0', '1', '2',
     '--search-seeds', '0', '1', '2', '3', '4',
     '--frictions', '0.5', '0.75', '1.0', '1.25', '1.5', '1.75', '2.0', '2.25', '2.5',
@@ -58,7 +58,7 @@ class ResponseStatus:
     ERROR = "error"
     NOT_FOUND = "not_found"
 
-def run_api_server(input_queue, result_dict, port=9973):
+def run_api_server(input_queue: multiprocessing.Queue, result_dict: dict, port=9973):
     """
     Running in a separate subprocess.
     I/O Process: submit requests -> put into queue -> return ID.
@@ -83,7 +83,8 @@ def run_api_server(input_queue, result_dict, port=9973):
     def get_result(task_id: str):
         if task_id not in result_dict:
             return {"status": ResponseStatus.NOT_FOUND}
-        return result_dict[task_id]
+        result = result_dict.pop(task_id)
+        return result
 
     print(f"📡 API Server listening on port {port}...")
     uvicorn.run(app, host="127.0.0.1", port=port, log_level="error")

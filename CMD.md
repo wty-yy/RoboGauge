@@ -24,7 +24,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --multi \
     --num-processes 5 \
-    --seeds 0 1 2 3 4 \
+    --seeds 0 1 2 \
     --frictions 0.5 1.0 1.5 2.0 2.5 \
     --compress-logs \
     --headless
@@ -35,7 +35,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --multi \
     --num-processes 5 \
-    --seeds 0 1 2 3 4 \
+    --seeds 0 1 2 \
     --frictions 2.0 \
     --level 10 \
     --spawn-type level_eval \
@@ -51,7 +51,8 @@ python robogauge/scripts/run.py \
     --task go2_moe.slope \
     --experiment-name debug \
     --search-max-level \
-    --seeds 0 1 2 3 4 \
+    --seeds 0 1 2 \
+    --search-seeds 0 1 2 3 4 \
     --frictions 1.0 \
     --compress-logs \
     --headless
@@ -63,9 +64,10 @@ python robogauge/scripts/run.py \
     --task go2_moe \
     --experiment-name debug \
     --stress-benchmark \
-    --stress-terrain-names flat slope_fb slope_bd stairs_fb stairs_bd wave obstacle \
+    --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
     --num-processes 50 \
-    --seeds 0 1 2 3 4 \
+    --seeds 0 1 2 \
+    --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
     --compress-logs \
     --headless
