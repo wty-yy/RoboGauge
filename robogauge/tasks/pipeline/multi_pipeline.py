@@ -133,7 +133,7 @@ class MultiPipeline:
         """ Process results from all processes and aggregate them. """
         multi_logger.info("📊 Aggregating Results from all runs...")
 
-        summary = {'success': {}, **self.static_info, 'summary': {}, 'terrain_weighted_summary': {}, 'quality_score': {}, 'terrain_quality_score': {}}
+        summary = {'success': {}, **self.static_info, 'summary': {}, 'terrain_weighted_summary': {}}
         finish_msg = (
             f"""\n{'='*20} Run Finish Summary {'='*20}\n"""
             f"""{'Seed':^10}{'Base Mass':^15}{'Friction':^15}{'Status':^10}\n"""
@@ -152,7 +152,6 @@ class MultiPipeline:
             multi_logger.error("No results to aggregate.")
             return
         
-        quality_score, terrain_quality_score = summary['quality_score'], summary['terrain_quality_score']
         value_collections = defaultdict(lambda: defaultdict(list))
         for result in all_results:
             for goal, metrics in result['results'].items():
@@ -161,27 +160,20 @@ class MultiPipeline:
                 for metric, means in metrics.items():
                     for mean_name, mean_value in means.items():
                         value_collections[metric][mean_name].append(float(mean_value.split(' ')[0]))
-                        quality_score[mean_name] = 1
         
         for metric, means in value_collections.items():
             summary['summary'][metric] = {}
-            summary['terrain_weighted_summary'][metric] = {}
             for mean_name, values in means.items():
                 v = float(np.mean(values))
                 summary['summary'][metric][mean_name] = f"{v:.4f} ± {float(np.std(values)):.4f}"
-                twv = v
+
+            if 'quality_score' in metric: continue
+            summary['terrain_weighted_summary'][metric] = {}
+            for mean_name, values in means.items():
+                twv = float(np.mean(values))
                 if summary['terrain_name'] in SEARCH_LEVELS_TERRAINS:
                     twv = 0.09 * (summary['terrain_level'] - 1) + 0.19 * v
                 summary['terrain_weighted_summary'][metric][mean_name] = f"{twv:.4f} ± {float(np.std(values)):.4f}"
-                weight = 1
-                if metric in ['ang_vel_err', 'lin_vel_err']:
-                    weight = 2
-                quality_score[mean_name] *= min(max(1e-9, v), 1.0) ** weight
-        for mean_name in quality_score:
-            quality_score[mean_name] = quality_score[mean_name] ** (1 / 8)  # 2 + 2 + 1 * 4
-            terrain_quality_score[mean_name] = quality_score[mean_name]
-            if summary['terrain_name'] in SEARCH_LEVELS_TERRAINS:
-                terrain_quality_score[mean_name] = 0.09 * (summary['terrain_level'] - 1) + 0.19 * quality_score[mean_name]
         
         save_path = multi_logger.log_dir / "aggregated_results.yaml"
         with open(save_path, 'w') as file:

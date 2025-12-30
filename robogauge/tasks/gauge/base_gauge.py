@@ -21,6 +21,7 @@ from robogauge.tasks.robots import RobotConfig
 from robogauge.tasks.gauge.base_gauge_config import BaseGaugeConfig
 from robogauge.tasks.gauge.goal_data import GoalData, VelocityGoal, PositionGoal
 from robogauge.tasks.simulator.sim_data import SimData
+from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import SEARCH_LEVELS_TERRAINS
 
 from robogauge.tasks.gauge.goals import *
 from robogauge.tasks.gauge.metrics import *
@@ -149,7 +150,7 @@ class BaseGauge:
             for metric_name, quantiles in self.results[goal].items():
                 for quantile, val in quantiles.items():
                     metrics[metric_name][quantile].append(val)
-        self.results['summary'] = {}
+        self.results['summary'] = {'quality_score': {}, 'terrain_quality_score': {}}
         for metric_name, quantiles in metrics.items():
             if metric_name not in self.results['summary']:
                 self.results['summary'][metric_name] = {}
@@ -157,14 +158,19 @@ class BaseGauge:
                 mean = float(np.mean(vals))
                 std = float(np.std(vals))
                 self.results['summary'][metric_name][quantile] = f"{mean:.4f} ± {std:.4f}"
+                if metric_name == 'quality_score':
+                    tqs = mean
+                    if self.cfg.assets.terrain_name in SEARCH_LEVELS_TERRAINS:
+                        tqs = 0.09 * (self.cfg.assets.terrain_level - 1) + 0.19 * mean
+                    self.results['summary']['terrain_quality_score'][quantile] = f"{tqs:.4f} ± {std:.4f}"
 
         save_path = Path(logger.log_dir) / "results.yaml"
         self.results["terrain_name"] = self.cfg.assets.terrain_name
         self.results["terrain_level"] = self.cfg.assets.terrain_level
 
-        with open(save_path, 'w') as file:
-            yaml.dump(self.results, file, allow_unicode=True, sort_keys=False)
+        with open(save_path, 'w', encoding='utf-8') as file:
             yaml_str = yaml.dump(self.results, allow_unicode=True, sort_keys=False)
+            file.write(yaml_str)
         logger.info(
             f"""\n{'='*20} Goals and Metrics results {'='*20}\n"""
             f"""{yaml_str}"""

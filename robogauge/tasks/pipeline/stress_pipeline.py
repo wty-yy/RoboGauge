@@ -182,10 +182,12 @@ class StressPipeline:
         metric_collections = defaultdict(lambda: defaultdict(list))
         terrain_collections = defaultdict(lambda: defaultdict(list))
         zero_terrain_count = defaultdict(lambda: 0)
+        robust_score = summary['robust_score']
         for result in all_results:
             terrain_name = result['data']['terrain_name']
             terrain_level = result['level']  # None, 0, 1, ..., 10
             scores[terrain_name] = 0.0
+            robust_score[terrain_name] = {}
             key = f'{terrain_name}_{terrain_level}'
             key += f'_baseMass{result["data"]["base_mass"]}_friction{result["data"]["friction"]}'
             if terrain_level == 0:
@@ -198,7 +200,8 @@ class StressPipeline:
                 for mean_name, value_str in means.items():
                     value = float(value_str.split(' ± ')[0])
                     metric_collections[metric][mean_name].append(value)
-            for mean_name, value in result['results']['terrain_quality_score'].items():
+            for mean_name, value_str in result['results']['summary']['terrain_quality_score'].items():
+                value = float(value_str.split(' ± ')[0])
                 terrain_collections[terrain_name][mean_name].append(value)
 
         for metric, means in metric_collections.items():
@@ -207,15 +210,14 @@ class StressPipeline:
                 values.extend([0.0] * sum(zero_terrain_count.values()))  # include zero terrains
                 summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
         
-        robust_score = defaultdict(dict)
-        robust_scores = []
         for terrain_name, means in terrain_collections.items():
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count[terrain_name])  # include zero terrains
                 robust_score[terrain_name][mean_name] = float(np.mean(values))
             scores[terrain_name] = robust_score[terrain_name]['mean@50']
-            robust_scores.append(robust_score[terrain_name]['mean@50'])
-        summary['robust_score'] = dict(robust_score)
+        for terrain_name in robust_score:
+            if len(robust_score[terrain_name]) == 0:
+                robust_score[terrain_name] = None
         summary['benchmark_score'] = float(np.mean(list(scores.values())))
         scores['benchmark'] = summary['benchmark_score']
 

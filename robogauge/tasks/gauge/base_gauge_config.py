@@ -9,6 +9,15 @@
 '''
 from robogauge.utils.config import Config
 
+QUALITY_WEIGHTS  = {  # Weights for geometric average, to calculate quality score
+    'lin_vel_err': 2,
+    'ang_vel_err': 2,
+    'dof_limits': 1,
+    'dof_power': 1,
+    'orientation_stability': 1,
+    'torque_smoothness': 1,
+}
+
 class BaseGaugeConfig(Config):
     gauge_class = 'BaseGauge'
     write_tensorboard = False  # Whether to write tensorboard logs

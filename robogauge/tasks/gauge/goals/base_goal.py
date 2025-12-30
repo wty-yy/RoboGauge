@@ -12,6 +12,7 @@ from collections import defaultdict
 from robogauge.utils.measure import Average
 from robogauge.tasks.gauge.goal_data import GoalData
 from robogauge.tasks.simulator.sim_data import SimData
+from robogauge.tasks.gauge.base_gauge_config import QUALITY_WEIGHTS
 
 class BaseGoal:
     name = 'base_goal'
@@ -21,7 +22,8 @@ class BaseGoal:
         self.total = 0  # total tasks
         self.sub_name = None
 
-        self._goal_mean_metrics = defaultdict(list)
+        self.goal_metrics = defaultdict(list)
+        self.goal_quality_scores = []
 
     def pre_get_goal(self) -> bool:
         raise NotImplementedError
@@ -42,13 +44,19 @@ class BaseGoal:
     
     def update_metrics(self, metrics: dict):
         """ Update step metrics for the current goal."""
+        quality_score = 1.0
         for metric_name, value in metrics.items():
-            self._goal_mean_metrics[metric_name].append(value)
+            self.goal_metrics[metric_name].append(value)
+            quality_score *= min(max(1e-9, value), 1.0) ** QUALITY_WEIGHTS[metric_name]
+        quality_score = quality_score ** (1.0 / sum(QUALITY_WEIGHTS.values()))
+        self.goal_quality_scores.append(quality_score)
     
     @property
     def goal_mean_metrics(self):
         """ Get the mean metrics for the current goal. """
-        return {k: self._analysis_metrics(v) for k, v in self._goal_mean_metrics.items()}
+        result = {k: self._analysis_metrics(v) for k, v in self.goal_metrics.items()}
+        result['quality_score'] = self._analysis_metrics(self.goal_quality_scores)
+        return result
 
     @staticmethod
     def _analysis_metrics(metrics: list):
