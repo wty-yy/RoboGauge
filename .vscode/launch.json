@@ -24,7 +24,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/robogauge/scripts/run.py",
             "args": [
-                "--task", "go2_moe.slope",
+                "--task", "go2_moe.slope_bd",
                 "--experiment-name", "debug",
                 "--seed", "0",
                 // "--search-max-level",
@@ -32,6 +32,22 @@
                 "--frictions", "1",
                 // "--headless"
             ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "go2 mcp stairs_bd load",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/robogauge/scripts/run.py",
+            "args": [
+                "--task", "go2_moe.stairs_bd",
+                "--model-path", "/data/user/wutianyang/Coding/robotics/go2_rl_gym/logs/go2_mcp_cts/Dec31_01-21-01_/jit_models/policy_jit_0.pt",
+                "--experiment-name", "mcp_debug",
+                "--seed", "3",
+                "--level", "8",
+                "--frictions", "0.5",
+            ],
+            "env": {"DISPLAY": ":1"},
             "console": "integratedTerminal"
         },
     ]

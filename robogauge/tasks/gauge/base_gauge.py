@@ -36,7 +36,7 @@ class BaseGauge:
         self.goals_cfg = class_to_dict(self.cfg.goals)
         self.metrics_cfg = class_to_dict(self.cfg.metrics)
 
-        self.goal_str = ""
+        self.goal_str = "Init"
         self.goal_idx = 0
         self.goals: List[BaseGoal] = []
         self.metrics: List[function] = []

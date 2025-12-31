@@ -107,7 +107,7 @@ class BasePipeline:
                         self.sim.setup_action(action, p_gains, d_gains, control_type)
                     sim_data = self.sim.step()
                     self.gauge.update_metrics(sim_data, goal_data)
-                if self.gauge.is_reset(sim_data):
+                if not self.first_reset and self.gauge.is_reset(sim_data):
                     sim_data = self.reset_sim_and_robot(sim_data)
             except Exception as e:
                 if str(e).startswith("[Penetration Error]"):
