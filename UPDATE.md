@@ -1,6 +1,7 @@
 # UPDATE
 ## 20251231
 ### v1.0.2
+1. 删除pyproject.toml文件, 使用`pip install -e .`就可以安装到pip easy-install.pth中, vscode能找到robogauge包
 Fix Bug: 当reset初始化静止站立, 可能存在模型连站都站不住, 导致机器人侧翻, 并恰好让target投影到本体坐标系下的xy接近0, 误以为到达了终点, 修改静止站立过程中不让重置环境
 ## 20251230
 ### v1.0.1
