@@ -38,54 +38,66 @@ GOALS = {
 }
 
 def run_pipeline(args, progress_queue, data):
-    args = deepcopy(args)
-    task_id = data['task_id']
-    search = data['search_max_level']
-    task_label = f"[{data['terrain_name']}] M:{data['base_mass']} F:{data['friction']}"
-    progress_data = ProgressData(
-        task_id=task_id,
-        msg_prefix=task_label + ' ',
-        progress_queue=progress_queue
-    )
+    try:
+        args = deepcopy(args)
+        task_id = data['task_id']
+        search = data['search_max_level']
+        task_label = f"[{data['terrain_name']}] M:{data['base_mass']} F:{data['friction']}"
+        progress_data = ProgressData(
+            task_id=task_id,
+            msg_prefix=task_label + ' ',
+            progress_queue=progress_queue
+        )
 
-    args.friction = data['friction']
-    args.frictions = [data['friction']]
-    args.base_mass = data['base_mass']
-    args.base_masses = [data['base_mass']]
-    args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
-    args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
-
-    if search is True:
-        args.goals = GOALS['level_pipeline']
-        args.spawn_type = "level_search"
-        level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
-        if level == 0:  # no valid level found
-            report_progress(progress_data, ProgressTypes.FINISH, desc=f"❌ Failed (Lv 0)")
-            results = {
-                'success': False,
-                'results': level_results,
-                'data': data,
-                'level': 0,
-            }
-            return results
-        report_progress(progress_data, ProgressTypes.RESET, total=0, desc=f"✅ Found Lv {level} -> Running")
-        progress_data.msg_prefix += f"(Lv {level}) "
-    else:
-        level = None  # flat terrain
+        args.friction = data['friction']
+        args.frictions = [data['friction']]
+        args.base_mass = data['base_mass']
+        args.base_masses = [data['base_mass']]
         args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
-        args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}"
-        
-    args.level = level
-    args.goals = GOALS['multi_pipeline']
-    args.spawn_type = "level_eval"
-    results = {
-        'success': True,
-        'results': MultiPipeline(args, console_output=False, progress_data=progress_data).run(),
-        'data': data,
-        'level': level,
-    }
-    report_progress(progress_data, ProgressTypes.FINISH, desc=f"✅ Done (Lv {level})")
-    return results
+        args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}_M{data['base_mass']}_F{data['friction']}"
+
+        if search is True:
+            args.goals = GOALS['level_pipeline']
+            args.spawn_type = "level_search"
+            level, level_results = LevelPipeline(args, console_output=False, progress_data=progress_data).run()
+            if level == 0:  # no valid level found
+                report_progress(progress_data, ProgressTypes.FINISH, desc=f"❌ Failed (Lv 0)")
+                results = {
+                    'success': False,
+                    'results': level_results,
+                    'data': data,
+                    'level': 0,
+                }
+                return results
+            report_progress(progress_data, ProgressTypes.RESET, total=0, desc=f"✅ Found Lv {level} -> Running")
+            progress_data.msg_prefix += f"(Lv {level}) "
+        else:
+            level = None  # flat terrain
+            args.task_name = f"{data['task_robot_model']}.{data['terrain_name']}"
+            args.experiment_name = f"{args.experiment_name}_{data['terrain_name']}"
+            
+        args.level = level
+        args.goals = GOALS['multi_pipeline']
+        args.spawn_type = "level_eval"
+        results = {
+            'success': True,
+            'results': MultiPipeline(args, console_output=False, progress_data=progress_data).run(),
+            'data': data,
+            'level': level,
+        }
+        report_progress(progress_data, ProgressTypes.FINISH, desc=f"✅ Done (Lv {level})")
+        return results
+    except Exception as e:
+        error_context = (
+            f"\n{'='*20} 💥 CRASH CONTEXT 💥 {'='*20}\n"
+            f"Terrain   : {data.get('terrain_name')}\n"
+            f"Friction  : {data.get('friction')}\n"
+            f"Base Mass : {data.get('base_mass')}\n"
+            f"Task ID   : {data.get('task_id')}\n"
+            f"Original Error: {str(e)}\n"
+            f"{'='*60}"
+        )
+        raise RuntimeError(error_context) from e
 
 class StressPipeline:
     def __init__(self, args):

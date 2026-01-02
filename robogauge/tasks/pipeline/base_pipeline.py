@@ -28,12 +28,14 @@ class BasePipeline:
         run_name: str,
         simulator_cfg: MujocoConfig,
         robot_cfg: RobotConfig,
-        gauge_cfg: BaseGaugeConfig
+        gauge_cfg: BaseGaugeConfig,
+        args,
     ):
         self.run_name = run_name
         self.sim_cfg = simulator_cfg
         self.robot_cfg = robot_cfg
         self.gauge_cfg = gauge_cfg
+        self.args = args
 
         self.sim: MujocoSimulator = eval(simulator_cfg.simulator_class)(simulator_cfg)
         self.robot: BaseRobot = eval(robot_cfg.robot_class)(robot_cfg)
@@ -44,7 +46,7 @@ class BasePipeline:
     
         # save configs
         cfg = {}
-        for name in ['sim_cfg', 'robot_cfg', 'gauge_cfg']:
+        for name in ['args', 'sim_cfg', 'robot_cfg', 'gauge_cfg']:
             obj = getattr(self, name)
             obj_dict = class_to_dict(obj)
             cfg.update({name: obj_dict})

@@ -1,4 +1,7 @@
 # UPDATE
+## 20260101
+### v1.0.3
+Fix bug: 修复多进程中修改全局参数配置的问题, 同一个进程池中修改的全局变量会被保留, 因此task_register中需要实例化对象
 ## 20251231
 ### v1.0.2
 1. 删除pyproject.toml文件, 使用`pip install -e .`就可以安装到pip easy-install.pth中, vscode能找到robogauge包
