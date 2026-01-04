@@ -37,6 +37,7 @@ class RobotConfig(Config):
                            0.1,  1.0,  -1.5,  -0.1, 1.0, -1.5] 
 
         mj2model_dof_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        save_additional_output = False
 
         class scales:
             lin_vel = 2.0

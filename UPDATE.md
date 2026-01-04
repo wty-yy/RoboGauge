@@ -1,4 +1,7 @@
 # UPDATE
+## 20260103
+### v1.0.4
+1. 加入save_additional_output参数, 启动会自动记录每个step的latent和weights
 ## 20260101
 ### v1.0.3
 Fix bug: 修复多进程中修改全局参数配置的问题, 同一个进程池中修改的全局变量会被保留, 因此task_register中需要实例化对象

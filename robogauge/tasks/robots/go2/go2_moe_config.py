@@ -14,6 +14,7 @@ class Go2MoEConfig(Go2Config):
 
     class control(Go2Config.control):
         model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_124k.pt"
+        save_additional_output = False
 
 class Go2MoETerrainConfig(Go2MoEConfig):
     """ Go2 MoE Robot Configuration for Terrain Tasks (wave, stairs up/down, slope, obstacles) """

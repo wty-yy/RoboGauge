@@ -7,7 +7,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
@@ -20,7 +20,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
@@ -33,7 +33,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
@@ -45,7 +45,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
@@ -58,7 +58,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
@@ -71,7 +71,7 @@ python robogauge/scripts/run.py \
     --experiment-name debug \
     --stress-benchmark \
     --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
-    --num-processes 62 \
+    --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
