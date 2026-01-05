@@ -83,7 +83,9 @@ def run_api_server(input_queue: multiprocessing.Queue, result_dict: dict, port=9
     def get_result(task_id: str):
         if task_id not in result_dict:
             return {"status": ResponseStatus.NOT_FOUND}
-        result = result_dict.pop(task_id)
+        result = result_dict[task_id]
+        if result["status"] == ResponseStatus.FINISHED:
+            result_dict.pop(task_id)
         return result
 
     print(f"📡 API Server listening on port {port}...")
