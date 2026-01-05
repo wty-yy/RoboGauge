@@ -1,6 +1,7 @@
 # UPDATE
-## 20260106
+## 20260103
 ### v1.0.4
+1. 加入save_additional_output参数, 启动会自动记录每个step的latent和weights
 Fix bug: 修复高频评估会将之前的评估冲掉问题
 ## 20260101
 ### v1.0.3
