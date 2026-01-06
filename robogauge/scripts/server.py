@@ -31,7 +31,7 @@ default_args_list = [
     '--stress-benchmark',
     '--stress-terrain-names', 'flat', 'wave', 'slope_fd',  'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle',
     # '--stress-terrain-names', 'flat', 'wave',
-    '--num-processes', '30',
+    # '--num-processes', '30',  # Set in CLI
     '--seeds', '0', '1', '2',
     '--search-seeds', '0', '1', '2', '3', '4',
     '--frictions', '0.5', '0.75', '1.0', '1.25', '1.5', '1.75', '2.0', '2.25', '2.5',
@@ -95,6 +95,7 @@ def run_api_server(input_queue: multiprocessing.Queue, result_dict: dict, port=9
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=9973, help='API server port')
+    parser.add_argument('--num-processes', type=int, default=30, help='Number of parallel processes for StressPipeline')
     args_cli = parser.parse_args()
     print("🤖 RoboGauge Evaluation Server Starting...")
     ctx = multiprocessing.get_context('spawn')
@@ -122,7 +123,12 @@ def main():
                 results_store[task_id] = {"status": ResponseStatus.PROCESSING}
                 
                 args_list = default_args_list.copy()
-                args_list += ['--model-path', task_data.model_path, '--task-name', task_data.task_name, '--experiment-name', task_data.experiment_name]
+                args_list += [
+                    '--model-path', task_data.model_path,
+                    '--task-name', task_data.task_name,
+                    '--experiment-name', task_data.experiment_name,
+                    '--num-processes', str(args_cli.num_processes),
+                ]
                 args = parse_args(args_list)
 
                 print(f"📋 Running with args:")

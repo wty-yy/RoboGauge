@@ -1,7 +1,8 @@
 # UPDATE
 ## 20260106
 ### v1.0.5
-1. `robogauge/scripts/server.py`加入`--port`设置端口配置选项
+1. `robogauge/scripts/server.py`加入`--port`设置端口配置选项, 加入`--num-processes`设置并行进程数量
+2. `go2_moe`新增dual_moe模型支持, 预测返回三个对象, `student_weights, actor_weights, action`
 ## 20260103
 ### v1.0.4
 1. 加入save_additional_output参数, 启动会自动记录每个step的latent和weights
