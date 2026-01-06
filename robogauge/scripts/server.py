@@ -20,6 +20,7 @@ import uuid
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Dict, Optional
+import argparse
 
 from dataclasses import dataclass
 from robogauge.utils.helpers import parse_args, class_to_dict
@@ -92,6 +93,9 @@ def run_api_server(input_queue: multiprocessing.Queue, result_dict: dict, port=9
     uvicorn.run(app, host="127.0.0.1", port=port, log_level="error")
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=9973, help='API server port')
+    args_cli = parser.parse_args()
     print("🤖 RoboGauge Evaluation Server Starting...")
     ctx = multiprocessing.get_context('spawn')
     manager = ctx.Manager()
@@ -100,7 +104,7 @@ def main():
 
     api_p = ctx.Process(
         target=run_api_server, 
-        args=(task_queue, results_store),
+        args=(task_queue, results_store, args_cli.port),
         daemon=True
     )
     api_p.start()

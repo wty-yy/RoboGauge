@@ -1,4 +1,7 @@
 # UPDATE
+## 20260106
+### v1.0.5
+1. `robogauge/scripts/server.py`加入`--port`设置端口配置选项
 ## 20260103
 ### v1.0.4
 1. 加入save_additional_output参数, 启动会自动记录每个step的latent和weights
