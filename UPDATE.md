@@ -1,4 +1,11 @@
 # UPDATE
+## 20260110
+### v1.1.0
+1. 修复三个Metric计算错误
+    1. DofLimitsMetric中soft_lower_limit, soft_upper_limit范围计算错误，通过原来比例为0.7但是按照整个范围对单边做限制，修改为0.4比例等价之前的限制，表示关节超过总范围的40%开始惩罚
+    2. OrientationStabilityMetric中错误将roll计算成了pitch，修改为正确的roll计算，不然slope会一直扣分
+    3. TorqueSmoothnessMetric计算错误，之前的last_torque一直忘记更新了，完全错误，修改为上一步的torque
+2. 修复delay action中actions_start_decimation随机数范围错误，之前是[0, frame_skip]，修改为[0, frame_skip-1]，避免出现不执行action的bug
 ## 20260106
 ### v1.0.5
 1. `robogauge/scripts/server.py`加入`--port`设置端口配置选项, 加入`--num-processes`设置并行进程数量

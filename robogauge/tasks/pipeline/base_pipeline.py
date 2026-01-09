@@ -101,7 +101,7 @@ class BasePipeline:
                 action, p_gains, d_gains, control_type = self.robot.get_action(obs)
 
                 if self.sim_cfg.domain_rand.action_delay:
-                    actions_start_decimation = random.randint(0, frame_skip)
+                    actions_start_decimation = random.randint(0, frame_skip - 1)
                 else:
                     self.sim.setup_action(action, p_gains, d_gains, control_type)
                 for i in range(frame_skip):

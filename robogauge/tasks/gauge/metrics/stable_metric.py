@@ -28,9 +28,9 @@ class OrientationStabilityMetric(BaseMetric):
     
     def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
         projected_gravity = get_projected_gravity(sim_data.proprio.base.quat)
-        projected_x = projected_gravity[0]
-        metric_value = 1 - abs(projected_x)  # consider roll only
-        logger.log(abs(projected_x), f'stable_metric/projected_x_abs', step=sim_data.n_step)
+        projected_y = projected_gravity[1]
+        metric_value = 1 - abs(projected_y)  # consider roll only
+        logger.log(abs(projected_y), f'stable_metric/projected_y_abs', step=sim_data.n_step)
         return metric_value
 
 class TorqueSmoothnessMetric(BaseMetric):
@@ -55,6 +55,7 @@ class TorqueSmoothnessMetric(BaseMetric):
             self.last_torque = current_torque
             return 1.0  # No change at first step
         torque_diff = current_torque - self.last_torque
+        self.last_torque = current_torque
         rms_value = np.sqrt(np.mean(np.square(torque_diff)))
         metric_value = 1.0 - rms_value / self.scaling_factor
         logger.log(rms_value, f'stable_metric/torque_rms_diff', step=sim_data.n_step)

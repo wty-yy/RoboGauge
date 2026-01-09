@@ -35,8 +35,12 @@ class DofLimitsMetric(BaseMetric):
             lower_limit = sim_data.proprio.joint.limits[i, 0]
             upper_limit = sim_data.proprio.joint.limits[i, 1]
             dof_range = upper_limit - lower_limit
-            soft_lower_limit = lower_limit + (1 - self.soft_dof_limit_ratio) * dof_range
-            soft_upper_limit = upper_limit - (1 - self.soft_dof_limit_ratio) * dof_range
+            if dof_range <= 1e-6:
+                logger.warning(f"DOF range for {sim_data.proprio.joint.names[i]} is too small ({dof_range:.6f}), skipping metric calculation.")
+                continue
+
+            soft_lower_limit = lower_limit + (1 - self.soft_dof_limit_ratio) * dof_range / 2
+            soft_upper_limit = upper_limit - (1 - self.soft_dof_limit_ratio) * dof_range / 2
 
             pos = sim_data.proprio.joint.pos[i]
             dof_name = sim_data.proprio.joint.names[i]
@@ -53,6 +57,11 @@ class DofLimitsMetric(BaseMetric):
                         values.append(value)
             else:
                 values.append(value)
+        
+        if len(values) == 0:
+            logger.warning("No DOF limit values calculated, returning 0.0.")
+            return 0.0
+
         rms_value = 1 - np.sqrt(np.mean(np.square(values)))
         logger.log(1 - rms_value, f'dof_limits/rms', step=sim_data.n_step)
         return rms_value
