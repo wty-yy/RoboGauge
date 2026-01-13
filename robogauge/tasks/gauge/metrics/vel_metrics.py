@@ -28,6 +28,8 @@ class LinVelErrMetric(BaseMetric):
             cmds = cfg_commands.get(name)
             if cmds is not None:
                 max_ranges.append(max(abs(cmds[0]), abs(cmds[1])))
+        if not max_ranges:
+            raise ValueError("[LinVelErrMetric] No linear velocity commands found in robot configuration.")
         self.norm_vel = np.linalg.norm(max_ranges)
     
     def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
@@ -52,6 +54,8 @@ class AngVelErrMetric(BaseMetric):
             cmds = cfg_commands.get(name)
             if cmds is not None:
                 max_ranges.append(max(abs(cmds[0]), abs(cmds[1])))
+        if not max_ranges:
+            raise ValueError("[AngVelErrMetric] No angular velocity commands found in robot configuration.")
         self.norm_vel = np.linalg.norm(max_ranges)
     
     def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:

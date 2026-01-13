@@ -64,6 +64,7 @@
 
   <worldbody>
     <body name="base_link" pos="0 0 0.445" childclass="go2">
+    <!-- <body name="base_link" pos="0 0 0.445" quat="0.707 0 0 0.707" childclass="go2"> -->
     <!-- <body name="base_link" pos="-5 1.2 0.445" childclass="go2"> -->
       <inertial pos="0.021112 0 -0.005366" quat="-0.000543471 0.713435 -0.00173769 0.700719"
         mass="6.921"

@@ -1,4 +1,8 @@
 # UPDATE
+## 20260113
+### v1.1.1
+1. 修复base lin vel计算错误，错误将世界坐标系下的速度作为了body坐标系下的速度，导致关键指标计算错误，重新评估
+2. 修复TorqueSmoothnessMetric中last_torque未在episode重置时重置的问题
 ## 20260110
 ### v1.1.0
 1. 修复三个Metric计算错误

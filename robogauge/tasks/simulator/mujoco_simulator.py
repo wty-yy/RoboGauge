@@ -20,7 +20,7 @@ from typing import Literal, List
 
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_path
-from robogauge.utils.math_utils import get_projected_gravity
+from robogauge.utils.math_utils import get_projected_gravity, quat_rotate_inverse
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 from robogauge.tasks.simulator.sim_data import (
     SimData,
@@ -248,20 +248,24 @@ class MujocoSimulator:
                 pos=self.get_sensor_data('imu_pos'),
                 quat=self.get_sensor_data('imu_quat'),
                 acc=self.get_sensor_data('imu_acc'),
-                lin_vel=self.get_sensor_data('imu_lin_vel'),
-                ang_vel=self.get_sensor_data('imu_ang_vel'),
+                lin_vel=self.get_sensor_data('imu_lin_vel'),  # body frame, check direction, go2 is inverted
+                ang_vel=self.get_sensor_data('imu_ang_vel'),  # body frame, check direction, go2 is inverted
             ),
             base=BaseState(
                 pos=self.mj_data.qpos[:3],      # world frame
                 quat=self.mj_data.qpos[3:7],    # world frame
-                lin_vel=self.mj_data.qvel[:3],  # body frame
-                ang_vel=self.mj_data.qvel[3:6], # body frame
+                lin_vel=quat_rotate_inverse(self.mj_data.qpos[3:7], self.mj_data.qvel[:3]),  # body frame
+                ang_vel=quat_rotate_inverse(self.mj_data.qpos[3:7], self.mj_data.qvel[3:6]), # body frame
             )
         )
         if self.n_step % int(0.1 / self.sim_dt) == 0:
             logger.log(value=np.mean(proprio.imu.quat - proprio.base.quat), tag="sim/delta_quat", step=self.n_step)
             logger.log(value=np.mean(proprio.imu.ang_vel - proprio.base.ang_vel), tag="sim/delta_ang_vel", step=self.n_step)
             logger.log(value=np.mean(proprio.imu.lin_vel - proprio.base.lin_vel), tag="sim/delta_lin_vel", step=self.n_step)
+            logger.log(value=proprio.imu.lin_vel[0], tag="sim/imu_lin_vel_x", step=self.n_step)
+            logger.log(value=proprio.imu.lin_vel[1], tag="sim/imu_lin_vel_y", step=self.n_step)
+            logger.log(value=proprio.base.lin_vel[0], tag="sim/base_lin_vel_x", step=self.n_step)
+            logger.log(value=proprio.base.lin_vel[1], tag="sim/base_lin_vel_y", step=self.n_step)
         if self.n_step == 0:
             self.debug_print_proprio_shapes()
 

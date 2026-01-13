@@ -39,7 +39,7 @@ class BaseGauge:
         self.goal_str = "Init"
         self.goal_idx = 0
         self.goals: List[BaseGoal] = []
-        self.metrics: List[function] = []
+        self.metrics: List[BaseMetric] = []
         self.info = {'goal': [], 'metric': []}
         self.results = {}  # {'goal/sub_goal': {'metric': result}}
 
@@ -134,7 +134,7 @@ class BaseGauge:
         self.create_new_goal_logger()
     
     def update_metrics(self, sim_data: SimData, goal_data: GoalData):
-        if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt) != 0:
+        if sim_data.n_step % int(self.cfg.metrics.metric_dt / sim_data.sim_dt + 1e-9) != 0:
             return
         metrics_results = {}
         for metric_name, metric_obj in zip(self.info['metric'], self.metrics):
@@ -142,6 +142,10 @@ class BaseGauge:
             if metric_name not in ['visualization']:
                 metrics_results[metric_name] = val
         self.goals[self.goal_idx].update_metrics(metrics_results)
+    
+    def reset_metrics(self):
+        for metric in self.metrics:
+            metric.reset()
 
     def save_results(self):
         """ Save the results to a yaml file. """

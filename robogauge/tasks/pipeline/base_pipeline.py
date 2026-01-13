@@ -137,6 +137,7 @@ class BasePipeline:
         self.first_reset = True
         sim_data = self.sim.step()
         self.robot.reset()
+        self.gauge.reset_metrics()
         return sim_data
 
     def add_noise(self, sim_data: SimData):
