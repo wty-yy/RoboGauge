@@ -1,4 +1,12 @@
 # UPDATE
+## 20260122
+### v1.1.1-rc1
+1. 加入可视化潜空间的绘图工具，使用方法：
+    1. 打开`robogauge/tasks/robots/go2/go2_moe_config.py`中的`save_additional_output = True`
+    2. `robogauge/tasks/gauge/goals/velocity_goals.py`中注释掉`self.current_goal = VelocityGoal()  # zero velocity`
+    3. 修改评估脚本`scripts/run_save_latent.bash`中模型为评估模型，开始评估
+    4. 将评估得到的`logs/*latent/`文件夹都移动到`logs_latent/{model_name}`目录下: `mkdir -p logs_latent/{model_name} && mv logs/*latent logs_latent/{model_name}/`
+    5. 修改`robogauge/utils/visualize/plot_latent_pca_cmd.py`或`robogauge/utils/visualize/plot_latent_pca_terrain.py`中的`data_root`为对应的`logs_latent/{model_name}`目录，运行脚本即可生成潜空间PCA可视化图
 ## 20260113
 ### v1.1.1
 1. 修复base lin vel计算错误，错误将世界坐标系下的速度作为了body坐标系下的速度，导致关键指标计算错误，重新评估

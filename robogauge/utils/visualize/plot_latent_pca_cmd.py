@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+'''
+@File    : plot_latent_pca_cmd.py
+@Time    : 2026/01/22 23:32:20
+@Author  : wty-yy
+@Version : 1.0
+@Blog    : https://wty-yy.github.io/
+@Desc    : PCA Visualization of Latent Space Grouped by Control Command (All Terrains Mixed)
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
@@ -5,7 +14,7 @@ import os
 import glob
 
 # ================= 配置区域 =================
-data_root = "/root/Coding/RoboGauge/logs_latent"
+data_root = "/root/Coding/RoboGauge/logs_latent/rem"
 
 # 地形列表 (我们需要遍历所有地形来收集同一个指令的数据)
 terrains = ['flat', 'wave', 'slope_fd', 'slope_bd', 'stairs_fd', 'stairs_bd', 'obstacle']
@@ -137,4 +146,4 @@ plt.grid(True, linestyle='--', alpha=0.4)
 save_path = 'latent_pca_by_command_mixed.png'
 plt.savefig(save_path)
 print(f"Done! Visualization saved to {save_path}")
-plt.show()
+# plt.show()

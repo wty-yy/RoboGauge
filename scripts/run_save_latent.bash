@@ -5,6 +5,13 @@
 
 source /root/Programs/miniforge3/bin/activate robot
 
+# MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_rem_cts_137k_0.6745.pt"
+# MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt"
+# MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt"
+# MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_rem_cts_103k_0.6357.pt"
+# MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_cts_130k_60%.pt"
+MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_moe_cts_79k_0.6637.pt"
+
 # python robogauge/scripts/run.py \
 #     --task-name go2_moe \
 #     --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
@@ -20,7 +27,7 @@ source /root/Programs/miniforge3/bin/activate robot
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.flat \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -29,8 +36,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.obstacle \
-    --level 9 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -39,8 +46,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.slope_bd \
-    --level 6 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -49,8 +56,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.slope_fd \
-    --level 6 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -59,8 +66,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.stairs_bd \
-    --level 7 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -69,8 +76,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.stairs_fd \
-    --level 9 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
@@ -79,8 +86,8 @@ python robogauge/scripts/run.py \
 
 python robogauge/scripts/run.py \
     --task-name go2_moe.wave \
-    --level 6 \
-    --model-path /root/Coding/RoboGauge/mytest/go2_moe_cts_111k_61.09%.pt \
+    --level 5 \
+    --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
     --friction 1.5 \
