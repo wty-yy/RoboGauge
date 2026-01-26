@@ -16,7 +16,7 @@ import time
 import imageio
 import numpy as np
 from pathlib import Path
-from typing import Literal, List
+from typing import Literal, List, Optional, Union
 
 from robogauge.utils.logger import logger
 from robogauge.utils.helpers import parse_path
@@ -26,6 +26,7 @@ from robogauge.tasks.simulator.sim_data import (
     SimData,
     RobotProprioception, JointState, BaseState, IMUState
 )
+from robogauge.tasks.gauge.goal_data import VelocityGoal
 
 class MujocoSimulator:
     def __init__(self, sim_cfg: MujocoConfig):
@@ -45,6 +46,7 @@ class MujocoSimulator:
         self.n_step = 0
         self.sim_time = 0.0
         self.target_pos = None
+        self.target_velocity: Optional[VelocityGoal] = None
         self.penetration_reset_count = 0
 
     def load(
@@ -78,6 +80,11 @@ class MujocoSimulator:
         # Create MJCF models
         robot_mjcf = mjcf.from_path(robot_xml)
         terrain_mjcf = mjcf.from_path(terrain_xmls[0])
+        visual_elem = terrain_mjcf.visual
+        global_elem = visual_elem.get_children('global')
+        global_elem.offwidth = 1920
+        global_elem.offheight = 1080
+
         for path in terrain_xmls[1:]:
             next_terrain = mjcf.from_path(path)
             terrain_mjcf.attach(next_terrain)
@@ -180,9 +187,6 @@ class MujocoSimulator:
         if keycode == 32:
             self._pause = not self._pause
             logger.info(f"Pause toggled: {self._pause}")
-    
-    def set_target_pos(self, pos):
-        self.target_pos = pos
 
     def step(self) -> SimData:
         """ Simulation step, pause will block thread. """
@@ -194,17 +198,7 @@ class MujocoSimulator:
         # Viewer sync
         if self.viewer is not None:
             if self.viewer.is_running():
-                if self.target_pos is not None:
-                    self.viewer.user_scn.ngeom = 0
-                    mujoco.mjv_initGeom(
-                        self.viewer.user_scn.geoms[0],
-                        type=mujoco.mjtGeom.mjGEOM_SPHERE,
-                        size=[0.1, 0, 0],
-                        pos=self.target_pos,
-                        mat=np.eye(3).flatten(),
-                        rgba=[1, 0, 0, 1]
-                    )
-                    self.viewer.user_scn.ngeom = 1
+                self.update_external_rendering(self.viewer, ctype='viewer')
                 self.viewer.sync()
                 time_untile_next_render = self.cfg.physics.simulation_dt - (
                     time.time() - self.last_render_time
@@ -221,18 +215,7 @@ class MujocoSimulator:
             render_cam = self.viewer.cam if self.viewer is not None else self.offscreen_cam
             # mujoco.mjv_updateCamera(render_cam)
             self.renderer.update_scene(self.mj_data, camera=render_cam)
-            
-            if self.target_pos is not None:
-                self.renderer.scene.ngeom += 1
-                mujoco.mjv_initGeom(
-                    self.renderer.scene.geoms[self.renderer.scene.ngeom - 1],
-                    type=mujoco.mjtGeom.mjGEOM_SPHERE,
-                    size=[0.1, 0, 0],
-                    pos=self.target_pos,
-                    mat=np.eye(3).flatten(),
-                    rgba=[1, 0, 0, 1]
-                )
-
+            self.update_external_rendering(self.renderer, ctype='renderer')
             frame = self.renderer.render()
             self.vid_writer.append_data(frame)
 
@@ -281,6 +264,106 @@ class MujocoSimulator:
         self.sim_time = self.n_step * self.sim_dt
         self.check_truncation(sim_data)
         return sim_data
+    
+    def update_external_rendering(self,
+            handle: Union[mujoco.viewer.Handle, mujoco.Renderer],
+            ctype: Literal['viewer', 'renderer'],
+        ):
+        """ Update external rendering handle (viewer or renderer). """
+        def add_target_sphere(geom_elem):
+            mujoco.mjv_initGeom(
+                geom_elem,
+                type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                size=[0.1, 0, 0],
+                pos=self.target_pos,
+                mat=np.eye(3).flatten(),
+                rgba=[1, 0, 0, 1]
+            )
+
+        def add_arrow(geom_elem, pos, vec, rgba, scale=1.0):
+            vel_norm = np.linalg.norm(vec)
+            if vel_norm < 1e-3: 
+                mujoco.mjv_initGeom(
+                    geom_elem,
+                    type=mujoco.mjtGeom.mjGEOM_NONE,
+                    size=[0, 0, 0], pos=pos, mat=np.eye(3).flatten(), rgba=[0, 0, 0, 0]
+                )
+                return
+
+            mat = np.zeros(9)
+            target_quat = np.zeros(4)
+            vec_normalized = vec / vel_norm
+            mujoco.mju_quatZ2Vec(target_quat, vec_normalized)
+            mujoco.mju_quat2Mat(mat, target_quat)
+            total_length = max(vel_norm * scale * 0.5, 0.05)
+            shaft_radius = 0.015
+            head_radius = 0.035
+            mujoco.mjv_initGeom(
+                geom_elem,
+                type=mujoco.mjtGeom.mjGEOM_ARROW,
+                size=[shaft_radius, head_radius, total_length], 
+                pos=pos,
+                mat=mat,
+                rgba=rgba
+            )
+
+        viewer_geom_idx = 0
+        if ctype == 'viewer':
+            handle.user_scn.ngeom = 0  # reset user scene geometry
+
+        if self.target_pos is not None:
+            if ctype == 'viewer':
+                add_target_sphere(handle.user_scn.geoms[viewer_geom_idx])
+                viewer_geom_idx += 1
+            else:
+                handle.scene.ngeom += 1
+                add_target_sphere(handle.scene.geoms[self.renderer.scene.ngeom - 1])
+        
+        if self.target_velocity is not None:
+            base_pos_world = self.mj_data.qpos[:3]
+            base_quat = self.mj_data.qpos[3:7]
+            
+            # rendering arrows start position
+            offset_body = np.array([0.0, 0.0, 0.6])
+            offset_world = np.zeros(3)
+            mujoco.mju_rotVecQuat(offset_world, offset_body, base_quat)
+            start_pos = base_pos_world + offset_world
+
+            # Body Frame -> World Frame
+            target_lin_vel_body = np.array([
+                self.target_velocity.lin_vel_x, 
+                self.target_velocity.lin_vel_y, 
+                0.0
+            ])
+            target_lin_vel_world = np.zeros(3)
+            mujoco.mju_rotVecQuat(target_lin_vel_world, target_lin_vel_body, base_quat)
+
+            # Body Frame -> World Frame
+            raw_current_vel = self.proprio.base.lin_vel
+            current_lin_vel_body = np.array([
+                raw_current_vel[0],
+                raw_current_vel[1],
+                0.0
+            ])
+            current_lin_vel_world = np.zeros(3)
+            mujoco.mju_rotVecQuat(current_lin_vel_world, current_lin_vel_body, base_quat)
+
+            COLOR_GREEN = [0, 1, 0, 1] # target
+            COLOR_BLUE = [0, 0, 1, 1]  # current
+
+            if ctype == 'viewer':
+                add_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, target_lin_vel_world, COLOR_GREEN)
+                viewer_geom_idx += 1
+                add_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, current_lin_vel_world, COLOR_BLUE)
+                viewer_geom_idx += 1
+            else:
+                handle.scene.ngeom += 1
+                add_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, target_lin_vel_world, COLOR_GREEN)
+                handle.scene.ngeom += 1
+                add_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, current_lin_vel_world, COLOR_BLUE)
+
+        if ctype == 'viewer':
+            handle.user_scn.ngeom = viewer_geom_idx
     
     def check_penetration(self, threshold: float = -0.02):
         if self.penetration_reset_count >= self.cfg.truncation.penetration_max_reset_num:

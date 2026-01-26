@@ -1,4 +1,9 @@
 # UPDATE
+## 20260126
+### v1.1.1-rc2
+1. 加入可视化当前速度（蓝），目标速度（绿）箭头
+2. moe默认模型换为`go2_moe_cts_137k_0.6745.pt`
+3. 修复1080p在某些地形无法渲染的问题，将[mujoco_config.py](robogauge/tasks/simulator/mujoco_config.py)中的`render.width, render.height`改为1920x1080即可使用，默认640x480
 ## 20260122
 ### v1.1.1-rc1
 1. 加入可视化潜空间的绘图工具，使用方法：

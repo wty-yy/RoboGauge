@@ -92,10 +92,9 @@ class BasePipeline:
                     sim_data = self.reset_sim_and_robot(sim_data)
                     continue
 
-                if goal_data.visualization_pos is not None:
-                    self.sim.set_target_pos(goal_data.visualization_pos)
-                else:
-                    self.sim.set_target_pos(None)
+                # Setup visualization for simulation
+                self.sim.target_pos = goal_data.visualization_pos
+                self.sim.target_velocity = goal_data.velocity_goal
 
                 obs = self.robot.build_observation(self.add_noise(sim_data), goal_data)
                 action, p_gains, d_gains, control_type = self.robot.get_action(obs)
