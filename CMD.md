@@ -1,4 +1,15 @@
+# CMD for RoboGauge
+
+- [Single Pipeline](#single-pipeline): Evaluate metrics in a single run
+- [Multi Pipeline](#multi-pipeline): Evaluate metrics in multiple runs with different seeds and environment parameters
+- [Level Pipeline](#level-pipeline): Evaluate metrics across different terrain levels to find the maximum level the policy can handle
+- [Stress Pipeline](#stress-pipeline): Evaluate metrics across different terrain types and environment parameters to test policy robustness
+- [Radar/Bar Plot](#radarbar-plot): Plot Multi Run results in Radar and Bar charts
+- [Terrain Levels Plot](#terrain-levels-plot): Plot terrain levels analysis
+
 # Single Pipeline
+Evaluate metrics in a single run
+
 ```bash
 # Default goals: max_velocity, diagonal_velocity
 python robogauge/scripts/run.py \
@@ -18,6 +29,8 @@ python robogauge/scripts/run.py \
 ```
 
 # Multi Pipeline
+Evaluate metrics in multiple runs with different seeds and environment parameters
+
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe.flat \
@@ -45,6 +58,8 @@ python robogauge/scripts/run.py \
 ```
 
 # Level Pipeline
+Evaluate metrics across different terrain levels to find the maximum level the policy can handle
+
 ```bash
 # Must specify single frictions for LevelPipeline!
 python robogauge/scripts/run.py \
@@ -59,6 +74,8 @@ python robogauge/scripts/run.py \
 ```
 
 # Stress Pipeline
+Evaluate metrics across different terrain types and environment parameters to test policy robustness
+
 ```bash
 python robogauge/scripts/run.py \
     --task go2_moe \
@@ -74,15 +91,15 @@ python robogauge/scripts/run.py \
 ```
 
 # Radar/Bar Plot
-将Multi Run结果绘制在雷达图中
+Plot Multi Run results in Radar and Bar charts
 ```bash
-# 可选--out保存到图片
+# Optional: --out to save to image
 python robogauge/utils/visualize/plot_radar_and_bar.py \
     aggregated_results_1.yaml \
     aggregated_results_2.yaml \
     --out logs/1.jpg
 
-# 绘制下全部 *.yaml, 可选range控制radar, bar y轴显示范围
+# plot all results in a directory, range for radar and bar y-axis
 python robogauge/utils/visualize/plot_radar_and_bar.py \
     /home/xfy/Coding/robot_gauge/mytest/results \
     --range 0.35 1.0 \
@@ -91,7 +108,7 @@ python robogauge/utils/visualize/plot_radar_and_bar.py \
 
 # Terrain Levels Plot
 ```bash
-# 绘制5种可变等级的地形与摩擦系数的关系图
+# plot 5 types of terrains with varying levels and friction coefficients
 python robogauge/utils/visualize/plot_terrain_levels.py \
     aggregated_results_1.yaml \
     aggregated_results_2.yaml \
