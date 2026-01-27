@@ -8,7 +8,15 @@
 @Desc    : Run Robogauge Pipeline
 '''
 import os
-os.environ['MUJOCO_GL'] = 'glfw'  # avoid mujoco.Renderer EGL context error
+
+# Headless solution for mujoco
+# For GPU
+# os.environ['MUJOCO_GL'] = 'egl'
+# For CPU (Slow)
+# os.environ['MUJOCO_GL'] = 'osmesa'
+# With a graphical user interface (GUI)
+os.environ['MUJOCO_GL'] = 'glfw'
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
