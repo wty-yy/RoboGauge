@@ -48,6 +48,10 @@ class MujocoSimulator:
         self.target_pos = None
         self.target_velocity: Optional[VelocityGoal] = None
         self.penetration_reset_count = 0
+        self.vis_smooth_factor = 0.01
+        self.vis_cur_vel = np.zeros(3)
+        self.ren_smooth_factor = self.vis_smooth_factor / self.cfg.render.video_fps / self.cfg.physics.simulation_dt
+        self.ren_cur_vel = np.zeros(3)
 
     def load(
         self,
@@ -280,13 +284,15 @@ class MujocoSimulator:
                 rgba=[1, 0, 0, 1]
             )
 
-        def add_arrow(geom_elem, pos, vec, rgba, scale=1.0):
+        def add_thick_arrow(geom_elem, pos, vec, rgba, scale=0.7):
             vel_norm = np.linalg.norm(vec)
-            if vel_norm < 1e-3: 
+            display_norm = min(vel_norm * scale, 1.0)
+
+            if display_norm < 0.10:
                 mujoco.mjv_initGeom(
                     geom_elem,
                     type=mujoco.mjtGeom.mjGEOM_NONE,
-                    size=[0, 0, 0], pos=pos, mat=np.eye(3).flatten(), rgba=[0, 0, 0, 0]
+                    size=[0,0,0], pos=pos, mat=np.eye(3).flatten(), rgba=[0,0,0,0]
                 )
                 return
 
@@ -295,15 +301,16 @@ class MujocoSimulator:
             vec_normalized = vec / vel_norm
             mujoco.mju_quatZ2Vec(target_quat, vec_normalized)
             mujoco.mju_quat2Mat(mat, target_quat)
-            total_length = max(vel_norm * scale * 0.5, 0.05)
-            shaft_radius = 0.015
-            head_radius = 0.035
+            
+            mat = mat.reshape(3, 3)
+            mat[:, 2] *= display_norm 
+            
             mujoco.mjv_initGeom(
                 geom_elem,
                 type=mujoco.mjtGeom.mjGEOM_ARROW,
-                size=[shaft_radius, head_radius, total_length], 
+                size=[0.02, 0.02, display_norm], # [height, width, length]
                 pos=pos,
-                mat=mat,
+                mat=mat.flatten(),
                 rgba=rgba
             )
 
@@ -329,38 +336,42 @@ class MujocoSimulator:
             mujoco.mju_rotVecQuat(offset_world, offset_body, base_quat)
             start_pos = base_pos_world + offset_world
 
-            # Body Frame -> World Frame
-            target_lin_vel_body = np.array([
-                self.target_velocity.lin_vel_x, 
-                self.target_velocity.lin_vel_y, 
-                0.0
-            ])
-            target_lin_vel_world = np.zeros(3)
-            mujoco.mju_rotVecQuat(target_lin_vel_world, target_lin_vel_body, base_quat)
+            tgt_vel_body = np.array([self.target_velocity.lin_vel_x, self.target_velocity.lin_vel_y, 0.0])
+            
+            raw_cur_vel = self.proprio.base.lin_vel
+            cur_vel_body = np.array([raw_cur_vel[0], raw_cur_vel[1], 0.0])
 
-            # Body Frame -> World Frame
-            raw_current_vel = self.proprio.base.lin_vel
-            current_lin_vel_body = np.array([
-                raw_current_vel[0],
-                raw_current_vel[1],
-                0.0
-            ])
-            current_lin_vel_world = np.zeros(3)
-            mujoco.mju_rotVecQuat(current_lin_vel_world, current_lin_vel_body, base_quat)
+            # EMA: v_smooth = alpha * v_new + (1 - alpha) * v_old
+            alpha = self.vis_smooth_factor if ctype == 'viewer' else self.ren_smooth_factor
+            if ctype == 'viewer':
+                self.vis_cur_vel = alpha * cur_vel_body + (1 - alpha) * self.vis_cur_vel
+            else:
+                self.ren_cur_vel = alpha * cur_vel_body + (1 - alpha) * self.ren_cur_vel
 
-            COLOR_GREEN = [0, 1, 0, 1] # target
-            COLOR_BLUE = [0, 0, 1, 1]  # current
+            tgt_vel_world = np.zeros(3)
+            cur_vel_world = np.zeros(3)
+            mujoco.mju_rotVecQuat(tgt_vel_world, tgt_vel_body, base_quat)
+            if ctype == 'viewer':
+                mujoco.mju_rotVecQuat(cur_vel_world, self.vis_cur_vel, base_quat)
+            else:
+                mujoco.mju_rotVecQuat(cur_vel_world, self.ren_cur_vel, base_quat)
+
+            COLOR_CMD = [0, 1, 0, 1]   # Green 0x00ff00
+            COLOR_REAL = [0, 0, 1, 1]  # Blue  0x0000ff
 
             if ctype == 'viewer':
-                add_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, target_lin_vel_world, COLOR_GREEN)
+                # Cmd Arrow
+                add_thick_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, tgt_vel_world, COLOR_CMD)
                 viewer_geom_idx += 1
-                add_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, current_lin_vel_world, COLOR_BLUE)
+                # Real Arrow
+                add_thick_arrow(handle.user_scn.geoms[viewer_geom_idx], start_pos, cur_vel_world, COLOR_REAL)
                 viewer_geom_idx += 1
             else:
+                # Renderer Append
                 handle.scene.ngeom += 1
-                add_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, target_lin_vel_world, COLOR_GREEN)
+                add_thick_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, tgt_vel_world, COLOR_CMD)
                 handle.scene.ngeom += 1
-                add_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, current_lin_vel_world, COLOR_BLUE)
+                add_thick_arrow(handle.scene.geoms[handle.scene.ngeom - 1], start_pos, cur_vel_world, COLOR_REAL)
 
         if ctype == 'viewer':
             handle.user_scn.ngeom = viewer_geom_idx
