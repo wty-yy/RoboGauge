@@ -105,3 +105,8 @@ pip install -e .
 
 ![robogauge_levelpipeline](./assets/robogauge_levelpipeline.png)
 
+## 可能的报错
+### Mujoco OpenGL Context Error
+```mujoco.FatalError: an OpenGL platform library has not been loaded into this process, this most likely means that a valid OpenGL context has not been created before mjr_makeContext was called```
+问题原因: Mujoco在无头模式下无法创建OpenGL上下文
+解决方案: 在`robogauge/scripts/run.py`和`robogauge/scripts/server.py`中, 将`os.environ['MUJOCO_GL']`设置为`egl`(GPU)或`osmesa`(CPU, 慢)
