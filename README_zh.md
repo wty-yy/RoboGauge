@@ -89,7 +89,7 @@ while True:
 
 > 可通过`python legged_gym/scripts/train.py --task=xxx --robogauge`启动带有评估的训练，会等待客户端启动，结果会在`logs/{experiment_name}`目录下保存，并绘制tensorboard
 
-## 指标/目标/地形
+## 环境参数/指标/目标
 指标的计算方法是通过在环境中发送固定指令及持续时长, 通过Mujoco获取所需参数并计算.
 
 ### 环境参数
@@ -105,6 +105,8 @@ while True:
 #### 地形
 1. 支持legged_gym中的部分地形, 包括: `wave, slope, stairs up, stairs down, obstacles, flat`, 除`flat`地形外其他地形可进行难度系数提升
 2. 地面类型 (影响接触摩擦系数, 弹性摩擦系数), 包括: 橡胶地, 木地板, 瓷砖地
+
+地形生成代码：[windigal - mujoco_terrains](https://github.com/windigal/mujoco_terrains)
 
 ### 指标
 目前在每个`env.step`后可度量的指标, 所有指标均要求**越大越好**, 目前支持:
@@ -177,7 +179,11 @@ while True:
 - `assets/`：文档资源
 - `scripts/`：实验运行的辅助 shell 脚本
 
-### Pipeline逻辑
+### RoboGauge评估框架
+
+| 说明 | 框架图 |
+| - | - |
+| RoboGauge评估框架如右图中三部分组成：<br> Part A: BasePipeline负责单一评估环境，包含地形、机器人、域随机化、原始指标计算功能 <br> Part B: MultiPipeline通过多进程启动多个BasePipeline，进行多seed评估，LevelPipeline负责调用MultiPipeline寻找最高难度地形 <br> Part C: StressPipeline负责全地形下测试，给出整体RoboGauge评分| ![robogauge framework](./assets/robogauge_framework.jpg) |
 
 [BasePipeline](./robogauge/tasks/pipeline/base_pipeline.py)用于管理仿真`sim`, 度量器(控制指令, 指标计算)`gauge`, 机器人运控模型`robot`三者的调度, 并包含异常处理, 域随机化, 观测噪声的添加.
 
@@ -196,4 +202,4 @@ while True:
 解决方案: 在`robogauge/scripts/run.py`和`robogauge/scripts/server.py`中, 将`os.environ['MUJOCO_GL']`设置为`egl`(GPU)或`osmesa`(CPU, 慢)
 
 ## 致谢
-感谢[@windigal](https://github.com/windigal)剪辑视频
+感谢[@windigal](https://github.com/windigal)地形生成及视频剪辑

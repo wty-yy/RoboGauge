@@ -100,7 +100,7 @@ Example integration: `update_robogauge` in [`go2_rl_gym - on_policy_runner.py`](
 
 > You can launch training with evaluation enabled via `python legged_gym/scripts/train.py --task=xxx --robogauge`. The trainer waits for the evaluation client to be available. Results are saved under `logs/{experiment_name}` and visualized in TensorBoard.
 
-## Metrics / Goals / Terrains
+## Env Params / Metrics / Goals
 
 Metrics are computed by sending fixed commands to the environment for a fixed duration, reading required signals from MuJoCo, and aggregating them.
 
@@ -201,7 +201,11 @@ Create a new robot implementation and control-model configuration under `robogau
 - `assets/`: documentation assets
 - `scripts/`: helper shell scripts for running experiments
 
-### Pipeline Logic
+### RoboGauge Framework
+
+| Details | Diagram |
+| - | - |
+| RoboGauge evaluation framework consists of three parts as shown in the diagram on the right: <br> Part A: BasePipeline handles a single evaluation environment, including terrain, robot, domain randomization, and raw metric computation. <br> Part B: MultiPipeline launches multiple BasePipelines in parallel processes for multi-seed evaluation, while LevelPipeline calls MultiPipeline to find the highest difficulty terrain that the policy can handle. <br> Part C: StressPipeline handles testing across all terrains, providing an overall RoboGauge score.| ![robogauge framework](./assets/robogauge_framework.jpg) |
 
 [BasePipeline](./robogauge/tasks/pipeline/base_pipeline.py) manages scheduling among the simulator `sim`, the gauge (command generation + metric computation) `gauge`, and the locomotion policy wrapper `robot`. It also includes exception handling, domain randomization, and observation noise.
 
@@ -224,4 +228,4 @@ Cause: MuJoCo cannot create an OpenGL context in headless mode.
 Fix: In `robogauge/scripts/run.py` and `robogauge/scripts/server.py`, set `os.environ['MUJOCO_GL']` to `egl` (GPU) or `osmesa` (CPU, slower).
 
 ## Thanks
-Thanks to [@windigal](https://github.com/windigal) for editing the videos.
+Thanks to [@windigal](https://github.com/windigal) for terrains generation and editing the videos.
