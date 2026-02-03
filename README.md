@@ -227,5 +227,17 @@ Cause: MuJoCo cannot create an OpenGL context in headless mode.
 
 Fix: In `robogauge/scripts/run.py` and `robogauge/scripts/server.py`, set `os.environ['MUJOCO_GL']` to `egl` (GPU) or `osmesa` (CPU, slower).
 
-## Thanks
+## Acknowledgements
 Thanks to [@windigal](https://github.com/windigal) for terrains generation and editing the videos.
+
+## Citation
+If you find our work helpful, please cite:
+```bibtex
+@article{wu2026robogauge,
+      title={Toward Reliable Sim-to-Real Predictability for MoE-based Robust Quadrupedal Locomotion}, 
+      author={Tianyang Wu and Hanwei Guo and Yuhang Wang and Junshu Yang and Xinyang Sui and Jiayi Xie and Xingyu Chen and Zeyang Liu and Xuguang Lan},
+      year={2026},
+      journal={arXiv preprint arXiv:2602.00678},
+      url={https://arxiv.org/abs/2602.00678}, 
+}
+```

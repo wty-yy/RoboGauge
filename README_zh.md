@@ -203,3 +203,15 @@ while True:
 
 ## 致谢
 感谢[@windigal](https://github.com/windigal)地形生成及视频剪辑
+
+## 引用
+如果觉得我们的工作有帮助，请引用：
+```bibtex
+@article{wu2026robogauge,
+      title={Toward Reliable Sim-to-Real Predictability for MoE-based Robust Quadrupedal Locomotion}, 
+      author={Tianyang Wu and Hanwei Guo and Yuhang Wang and Junshu Yang and Xinyang Sui and Jiayi Xie and Xingyu Chen and Zeyang Liu and Xuguang Lan},
+      year={2026},
+      journal={arXiv preprint arXiv:2602.00678},
+      url={https://arxiv.org/abs/2602.00678}, 
+}
+```
