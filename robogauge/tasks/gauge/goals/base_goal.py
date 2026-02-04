@@ -26,6 +26,10 @@ class BaseGoal:
         self.goal_quality_scores = []
 
     def pre_get_goal(self) -> bool:
+        """ Run before getting the goal
+        Returns:
+            bool: whether the goal sequence is done
+        """
         raise NotImplementedError
     
     def reset_goal(self):

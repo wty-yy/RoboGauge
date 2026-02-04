@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="robogauge",  # 包名
-    version="1.1.1",   # 版本号
+    version="1.1.2",   # 版本号
     author="Wu Tianyang", # 你的名字
     author_email="993660140@qq.com",
     description="A generic robot RL model evaluation library based on MuJoCo",
@@ -22,6 +22,7 @@ setup(
         "PyYAML",
         "fastapi",
         "uvicorn",
+        "pygame",
     ],
     python_requires=">=3.8",
     

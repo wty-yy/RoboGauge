@@ -48,6 +48,11 @@ class BaseGaugeConfig(Config):
             max_cmd_duration = 10.0  # [s] maximum duration to reach the target position
             reach_threshold = 0.1
 
+        class joystick:  # goal controlled by joystick
+            enabled = False
+            goal_type = 'velocity'  # 'velocity'
+            dead_zone = 0.1  # joystick dead zone
+
     class metrics:
         metric_dt = 0.1  # [s] frequency to compute metrics
         class dof_limits:
