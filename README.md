@@ -230,6 +230,8 @@ Fix: In `robogauge/scripts/run.py` and `robogauge/scripts/server.py`, set `os.en
 ## Testing
 A StressPipeline test was performed on an AMD EPYC 7763 64-Core Processor (3.09 GHz) with 64 processes. The total time for evaluating 63 tasks was 2'46". The command was [CMD - stress pipeline](./CMD.md#stress-pipeline) + `--num-processes 64`
 
+https://github.com/user-attachments/assets/7e19d831-1fc9-49db-99e0-c83cddddfb0b
+
 ## Acknowledgements
 Thanks to [@windigal](https://github.com/windigal) for terrains generation and editing the videos.
 
