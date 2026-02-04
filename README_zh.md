@@ -204,6 +204,8 @@ while True:
 ## 测试
 在`AMD EPYC 7763 64-Core Processor (3.09 GHz)`进行StressPipeline测试64进程，评估63个任务总用时2'46"，指令为[CMD - stress pipeline](./CMD.md#stress-pipeline) + `--num-processes 64`
 
+https://github.com/user-attachments/assets/7e19d831-1fc9-49db-99e0-c83cddddfb0b
+
 ## 致谢
 感谢[@windigal](https://github.com/windigal)地形生成及视频剪辑
 
