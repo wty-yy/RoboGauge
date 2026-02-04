@@ -48,10 +48,6 @@ class MujocoSimulator:
         self.target_pos = None
         self.target_velocity: Optional[VelocityGoal] = None
         self.penetration_reset_count = 0
-        self.vis_smooth_factor = 0.01
-        self.vis_cur_vel = np.zeros(3)
-        self.ren_smooth_factor = self.vis_smooth_factor / self.cfg.render.video_fps / self.cfg.physics.simulation_dt
-        self.ren_cur_vel = np.zeros(3)
 
     def load(
         self,
@@ -95,8 +91,16 @@ class MujocoSimulator:
         for j in robot_mjcf.find_all('joint'):
             if j.tag == 'freejoint':
                 j.remove()
+        robot_base = robot_mjcf.find('body', 'base_link')
+        if robot_base is not None:
+            origin_robot_height = robot_base.pos.copy() if robot_base.pos is not None else None
+            robot_base.pos = [0, 0, 0]  # move base_link translation to terrain_spawn_pos
+        else:
+            raise ValueError("Robot base_link body not found in the robot MJCF model.")
         attachment_frame = terrain_mjcf.attach(robot_mjcf)
-        attachment_frame.add('freejoint')
+        attachment_frame.add('freejoint', name='root')
+        if origin_robot_height is not None:
+            terrain_spawn_pos = np.array(terrain_spawn_pos) + origin_robot_height
         attachment_frame.pos = terrain_spawn_pos
 
         self.close_viewer()
@@ -112,7 +116,7 @@ class MujocoSimulator:
         self.mj_data.qpos[7:] = default_dof_pos
 
         # Domain randomization: base mass
-        base_body_name = f'{Path(self.robot_xml).stem}/base_link'
+        base_body_name = f'{robot_mjcf.model}/base_link'
         body_id = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, base_body_name)
         assert body_id != -1, f"Body '{base_body_name}' not found in the model."
         if self.cfg.domain_rand.base_mass != 0.0:
@@ -331,7 +335,7 @@ class MujocoSimulator:
             base_quat = self.mj_data.qpos[3:7]
             
             # rendering arrows start position
-            offset_body = np.array([0.0, 0.0, 0.6])
+            offset_body = np.array([0.0, 0.0, 0.2])
             offset_world = np.zeros(3)
             mujoco.mju_rotVecQuat(offset_world, offset_body, base_quat)
             start_pos = base_pos_world + offset_world
@@ -341,20 +345,13 @@ class MujocoSimulator:
             raw_cur_vel = self.proprio.base.lin_vel
             cur_vel_body = np.array([raw_cur_vel[0], raw_cur_vel[1], 0.0])
 
-            # EMA: v_smooth = alpha * v_new + (1 - alpha) * v_old
-            alpha = self.vis_smooth_factor if ctype == 'viewer' else self.ren_smooth_factor
-            if ctype == 'viewer':
-                self.vis_cur_vel = alpha * cur_vel_body + (1 - alpha) * self.vis_cur_vel
-            else:
-                self.ren_cur_vel = alpha * cur_vel_body + (1 - alpha) * self.ren_cur_vel
-
             tgt_vel_world = np.zeros(3)
             cur_vel_world = np.zeros(3)
             mujoco.mju_rotVecQuat(tgt_vel_world, tgt_vel_body, base_quat)
             if ctype == 'viewer':
-                mujoco.mju_rotVecQuat(cur_vel_world, self.vis_cur_vel, base_quat)
+                mujoco.mju_rotVecQuat(cur_vel_world, cur_vel_body, base_quat)
             else:
-                mujoco.mju_rotVecQuat(cur_vel_world, self.ren_cur_vel, base_quat)
+                mujoco.mju_rotVecQuat(cur_vel_world, cur_vel_body, base_quat)
 
             COLOR_CMD = [0, 1, 0, 1]   # Green 0x00ff00
             COLOR_REAL = [0, 0, 1, 1]  # Blue  0x0000ff
@@ -533,6 +530,8 @@ class MujocoSimulator:
             name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_SENSOR, i)
             if pattern is None or name and pattern.search(name):
                 found.append(name)
+        if len(found) == 0:
+            logger.warning(f"No sensors found for pattern='{pattern}' tag_name='{tag_name}'")
         return found
 
     def get_sensor_data(self, cache_key: str) -> np.ndarray:
