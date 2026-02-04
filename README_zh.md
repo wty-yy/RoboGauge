@@ -201,6 +201,9 @@ while True:
 问题原因: Mujoco在无头模式下无法创建OpenGL上下文
 解决方案: 在`robogauge/scripts/run.py`和`robogauge/scripts/server.py`中, 将`os.environ['MUJOCO_GL']`设置为`egl`(GPU)或`osmesa`(CPU, 慢)
 
+## 测试
+在`AMD EPYC 7763 64-Core Processor (3.09 GHz)`进行StressPipeline测试64进程，评估63个任务总用时2'46"，指令为[CMD - stress pipeline](./CMD.md#stress-pipeline) + `--num-processes 64`
+
 ## 致谢
 感谢[@windigal](https://github.com/windigal)地形生成及视频剪辑
 

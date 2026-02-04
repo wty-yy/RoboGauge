@@ -227,6 +227,9 @@ Cause: MuJoCo cannot create an OpenGL context in headless mode.
 
 Fix: In `robogauge/scripts/run.py` and `robogauge/scripts/server.py`, set `os.environ['MUJOCO_GL']` to `egl` (GPU) or `osmesa` (CPU, slower).
 
+## Testing
+A StressPipeline test was performed on an AMD EPYC 7763 64-Core Processor (3.09 GHz) with 64 processes. The total time for evaluating 63 tasks was 2'46". The command was [CMD - stress pipeline](./CMD.md#stress-pipeline) + `--num-processes 64`
+
 ## Acknowledgements
 Thanks to [@windigal](https://github.com/windigal) for terrains generation and editing the videos.
 
