@@ -114,7 +114,7 @@ All evaluations are run with configured domain randomization (DR). Below are com
 | - | - | - |
 | Random action execution delay | `action delay` | `<= RL control interval` |
 | Base payload mass | `base mass` | `-1, 0, 1, 2, 3 kg` |
-| Ground friction | `friction` | `0.4, 0.7, 1.0, 1.3, 1.6` |
+| Ground friction | `friction` | `0.2 ~ 1.0 (step 0.1)` |
 
 #### Terrains
 

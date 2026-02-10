@@ -38,7 +38,7 @@ python robogauge/scripts/run.py \
     --multi \
     --num-processes 5 \
     --seeds 0 1 2 \
-    --frictions 0.5 1.0 1.5 2.0 2.5 \
+    --frictions 0.2 0.4 0.6 0.8 1.0 \
     --compress-logs \
     --headless
 
@@ -49,7 +49,7 @@ python robogauge/scripts/run.py \
     --multi \
     --num-processes 5 \
     --seeds 0 1 2 \
-    --frictions 2.0 \
+    --frictions 0.8 \
     --level 10 \
     --spawn-type level_eval \
     --goals max_velocity diagonal_velocity\
@@ -68,7 +68,7 @@ python robogauge/scripts/run.py \
     --search-max-level \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 1.0 \
+    --frictions 0.4 \
     --compress-logs \
     --headless
 ```
@@ -85,7 +85,7 @@ python robogauge/scripts/run.py \
     --num-processes 50 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 ```

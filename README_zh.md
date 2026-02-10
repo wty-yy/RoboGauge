@@ -100,7 +100,7 @@ while True:
 | - | - | - |
 | 电机动作执行随机延迟 | `action delay` | `<= RL控制间隔` |
 | base负重 | `base mass` | `-1, 0, 1, 2, 3 kg` |
-| 地面摩擦力 | `friction` | `0.4, 0.7, 1.0, 1.3, 1.6` |
+| 地面摩擦力 | `friction` | `0.2 ~ 1.0 (step 0.1)` |
 
 #### 地形
 1. 支持legged_gym中的部分地形, 包括: `wave, slope, stairs up, stairs down, obstacles, flat`, 除`flat`地形外其他地形可进行难度系数提升

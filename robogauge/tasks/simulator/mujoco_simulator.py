@@ -126,13 +126,13 @@ class MujocoSimulator:
             logger.info(f"Randomized base mass: {original_mass:.3f} -> {new_mass:.3f} kg")
         
         # Domain randomization: friction
-        if self.cfg.domain_rand.friction != 1.0:
+        if self.cfg.domain_rand.friction != 0.0:
             for i in range(self.mj_model.ngeom):
-                # Both change robot friction and terrain friction, usually robot friction < 1.0
-                # Mujoco friction calculation takes the *max* between two contacting geoms
-                geom_friction = self.mj_model.geom_friction[i]
-                geom_friction[0] *= self.cfg.domain_rand.friction
-                self.mj_model.geom_friction[i] = geom_friction
+                # Both change robot friction and terrain friction
+                # If one of the two geoms has higher priority, the friction of that geom is used.
+                # If both geoms have the save priopirty, the maximum of the two friction is used.
+                # (Go2 foot friction is 0.4 and priority is 1, terrain priority is 0 except floor)
+                self.mj_model.geom_friction[i][0] = self.cfg.domain_rand.friction
             logger.info(f"Scaled geom friction by factor: {self.cfg.domain_rand.friction:.3f}")
         mujoco.mj_forward(self.mj_model, self.mj_data)
 

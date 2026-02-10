@@ -36,7 +36,7 @@ class MujocoConfig(Config):
 
         # Setup by config file, ensure evaluation coverage
         base_mass = 0.0  # [kg], {-1, 0, 1, 2, 3}
-        friction = 1.0  # [N.s/m], {0.4, 0.7, 1.0, 1.3, 1.6}
+        friction = 0.0  # [N.s/m], {0.4, 0.7, 1.0, 1.3, 1.6}
 
     class noise:
         # Uniform noise
