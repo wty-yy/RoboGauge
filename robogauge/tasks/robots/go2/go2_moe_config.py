@@ -13,7 +13,7 @@ class Go2MoEConfig(Go2Config):
     robot_class = 'Go2MoE'
 
     class control(Go2Config.control):
-        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_137k_0.6819.pt"
+        model_path = "{ROBOGAUGE_ROOT_DIR}/resources/models/go2/go2_moe_cts_137k_0.6739.pt"
         save_additional_output = False
 
 class Go2MoETerrainConfig(Go2MoEConfig):
