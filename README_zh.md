@@ -53,7 +53,7 @@ pip install -e .
 ### 训练异步评估
 启动评估客户端，
 ```bash
-python robogague/scripts/server.py
+python robogauge/scripts/server.py
 ```
 
 包含如下参数：
