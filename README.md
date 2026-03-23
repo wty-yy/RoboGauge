@@ -133,7 +133,8 @@ Supported per-step metrics (measured after each `env.step`). **All metrics are n
 | 4 | `dof_power` | Motor energy consumption | Scaling factor | 100 | `1-x` |
 | 5 | `orientation_stability` | Body orientation stability (Roll) | NA | NA | `1-x` |
 | 6 | `torque_smoothness` | Torque smoothness | Scaling factor | 30 | `1-x` |
-| 7 | `zmp_margin` | ZMP margin | NA | Default diagonal foot distance | `1-x` |
+| 7 | `friction_margin` | Foot friction margin | Foot contact geom names | $\mu f_{\text{normal}}$ | `1-x` |
+| 8 | `zmp_margin` | ZMP margin | NA | Default diagonal foot distance | `1-x` |
 
 ### Velocity-Tracking Targets
 

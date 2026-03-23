@@ -62,6 +62,117 @@ class TorqueSmoothnessMetric(BaseMetric):
         return metric_value
 
 
+def _normalize_name(name: str) -> str:
+    if name is None:
+        return ""
+    return name.rsplit('/', 1)[-1]
+
+
+class FrictionMarginMetric(BaseMetric):
+    """ Metric to log the friction margin of the contacting feet. """
+    name = 'friction_margin_metric'
+
+    def __init__(self,
+        robot_cfg: RobotConfig,
+        foot_geom_names: list = None,
+        force_threshold: float = 1e-6,
+        **kwargs
+    ):
+        super().__init__(robot_cfg)
+        if foot_geom_names is None:
+            foot_geom_names = getattr(robot_cfg.assets, 'foot_geom_names', None)
+        if foot_geom_names is None or len(foot_geom_names) == 0:
+            raise ValueError(
+                "[FrictionMarginMetric] foot_geom_names is required. "
+                "Please configure robot_cfg.assets.foot_geom_names."
+            )
+        self.foot_geom_names = {_normalize_name(name) for name in foot_geom_names}
+        self.force_threshold = force_threshold
+
+    def __call__(self, sim_data: SimData, goal_data: GoalData) -> float:
+        dynamics = sim_data.dynamics
+        if dynamics is None or dynamics.contacts is None:
+            raise RuntimeError("Friction margin metric requires sim_data.dynamics.contacts, but got None.")
+
+        contacts = dynamics.contacts
+        if contacts.positions.shape[0] == 0:
+            logger.log(1.0, 'stable_metric/friction_margin', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_foot_count', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_contact_count', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_worst_utilization', step=sim_data.n_step)
+            return 1.0
+
+        foot_force_map = {}
+        valid_contact_count = 0
+        for idx, geom_name in enumerate(contacts.robot_geom_names):
+            normalized_geom_name = _normalize_name(geom_name)
+            if normalized_geom_name not in self.foot_geom_names:
+                continue
+
+            if normalized_geom_name not in foot_force_map:
+                foot_force_map[normalized_geom_name] = {
+                    'normal': 0.0,
+                    'tangent': 0.0,
+                    'friction_limit': 0.0,
+                }
+
+            normal_force = float(contacts.normal_forces[idx])
+            tangent_force = float(contacts.tangent_forces[idx])
+            friction_coeff = float(contacts.friction_coefficients[idx])
+            foot_force_map[normalized_geom_name]['normal'] += normal_force
+            foot_force_map[normalized_geom_name]['tangent'] += tangent_force
+            foot_force_map[normalized_geom_name]['friction_limit'] += friction_coeff * normal_force
+            valid_contact_count += 1
+
+        if len(foot_force_map) == 0:
+            logger.warning(
+                f"Friction margin metric found no matching foot contacts using "
+                f"foot_geom_names={sorted(self.foot_geom_names)}."
+            )
+            logger.log(1.0, 'stable_metric/friction_margin', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_foot_count', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_contact_count', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_worst_utilization', step=sim_data.n_step)
+            return 1.0
+
+        foot_margins = []
+        foot_normal_forces = []
+        utilization_values = []
+        for foot_name, force_data in foot_force_map.items():
+            if force_data['normal'] <= self.force_threshold:
+                continue
+            if force_data['friction_limit'] <= self.force_threshold:
+                logger.warning(
+                    f"Friction margin metric got too small friction limit on foot {foot_name}, returning 0 for this foot."
+                )
+                foot_margins.append(0.0)
+                foot_normal_forces.append(force_data['normal'])
+                utilization_values.append(float('inf'))
+                continue
+
+            utilization = force_data['tangent'] / force_data['friction_limit']
+            foot_margins.append(max(0.0, 1.0 - utilization))
+            foot_normal_forces.append(force_data['normal'])
+            utilization_values.append(utilization)
+
+        if len(foot_margins) == 0:
+            logger.log(1.0, 'stable_metric/friction_margin', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_foot_count', step=sim_data.n_step)
+            logger.log(float(valid_contact_count), 'stable_metric/friction_margin_contact_count', step=sim_data.n_step)
+            logger.log(0.0, 'stable_metric/friction_margin_worst_utilization', step=sim_data.n_step)
+            return 1.0
+
+        metric_value = float(np.average(foot_margins, weights=np.array(foot_normal_forces, dtype=np.float32)))
+        worst_utilization = max(utilization_values)
+        if not np.isfinite(worst_utilization):
+            worst_utilization = 0.0
+        logger.log(metric_value, 'stable_metric/friction_margin', step=sim_data.n_step)
+        logger.log(float(len(foot_margins)), 'stable_metric/friction_margin_foot_count', step=sim_data.n_step)
+        logger.log(float(valid_contact_count), 'stable_metric/friction_margin_contact_count', step=sim_data.n_step)
+        logger.log(float(worst_utilization), 'stable_metric/friction_margin_worst_utilization', step=sim_data.n_step)
+        return metric_value
+
+
 def _cross_2d(o: np.ndarray, a: np.ndarray, b: np.ndarray) -> float:
     oa = a - o
     ob = b - o

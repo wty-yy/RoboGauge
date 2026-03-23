@@ -755,6 +755,9 @@ class MujocoSimulator:
     def get_ground_contact_state(self) -> GroundContactState:
         positions = []
         distances = []
+        normal_forces = []
+        tangent_forces = []
+        friction_coefficients = []
         robot_geom_names = []
         other_geom_names = []
         robot_body_names = []
@@ -776,8 +779,15 @@ class MujocoSimulator:
             robot_body = body1 if is_robot1 else body2
             other_body = body2 if is_robot1 else body1
 
+            contact_force = np.zeros(6, dtype=np.float64)
+            mujoco.mj_contactForce(self.mj_model, self.mj_data, i, contact_force)
+            friction = np.array(contact.friction, dtype=np.float32).reshape(-1)
+
             positions.append(np.array(contact.pos, dtype=np.float32))
             distances.append(float(contact.dist))
+            normal_forces.append(float(abs(contact_force[0])))
+            tangent_forces.append(float(np.linalg.norm(contact_force[1:3])))
+            friction_coefficients.append(float(friction[0]) if friction.size > 0 else 0.0)
             robot_geom_names.append(self._get_geom_name(robot_geom))
             other_geom_names.append(self._get_geom_name(other_geom))
             robot_body_names.append(self._get_body_name(robot_body))
@@ -785,9 +795,15 @@ class MujocoSimulator:
 
         positions = np.array(positions, dtype=np.float32).reshape(-1, 3)
         distances = np.array(distances, dtype=np.float32)
+        normal_forces = np.array(normal_forces, dtype=np.float32)
+        tangent_forces = np.array(tangent_forces, dtype=np.float32)
+        friction_coefficients = np.array(friction_coefficients, dtype=np.float32)
         return GroundContactState(
             positions=positions,
             distances=distances,
+            normal_forces=normal_forces,
+            tangent_forces=tangent_forces,
+            friction_coefficients=friction_coefficients,
             robot_geom_names=robot_geom_names,
             other_geom_names=other_geom_names,
             robot_body_names=robot_body_names,

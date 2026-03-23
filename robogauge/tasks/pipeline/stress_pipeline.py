@@ -223,10 +223,15 @@ class StressPipeline:
                 summary['summary'][metric][mean_name] = f"{float(np.mean(values)):.4f} ± {float(np.std(values)):.4f}"
         
         for terrain_name, means in terrain_collections.items():
+            terrain_mean_at_50 = 0.0
             for mean_name, values in means.items():
                 values.extend([0.0] * zero_terrain_count[terrain_name])  # include zero terrains
-                robust_score[terrain_name][mean_name] = float(np.mean(values))
-            scores[terrain_name] = robust_score[terrain_name]['mean@50']
+                mean_value = float(np.mean(values))
+                variance_value = float(np.var(values))
+                robust_score[terrain_name][mean_name] = f"{mean_value:.4f} ± {variance_value:.4f}"
+                if mean_name == 'mean@50':
+                    terrain_mean_at_50 = mean_value
+            scores[terrain_name] = terrain_mean_at_50
         for terrain_name in robust_score:
             if len(robust_score[terrain_name]) == 0:
                 robust_score[terrain_name] = None

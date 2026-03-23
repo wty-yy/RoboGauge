@@ -119,7 +119,8 @@ while True:
 | 4 | `dof_power` | 电机耗能 | 缩放系数 | 100 | `1-x` |
 | 5 | `orientation_stability` | 机身姿态稳定性 (Roll) | NA | NA | `1-x` |
 | 6 | `torque_smoothness` | 力矩平滑度 | 缩放系数 | 30 | `1-x` |
-| 7 | `zmp_margin` | ZMP裕度 | NA | 默认状态下对角足端间距 | `1-x` |
+| 7 | `friction_margin` | 足端摩擦裕度 | 足端接触 geom 名称 | $\mu f_{\text{normal}}$ | `1-x` |
+| 8 | `zmp_margin` | ZMP裕度 | NA | 默认状态下对角足端间距 | `1-x` |
 
 ### 速度追踪目标
 针对在虚实迁移中发现的问题, 整理指标 (metrics) 内容如下:

@@ -5,6 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "go2 joystick debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/robogauge/scripts/run.py",
+            "args": [
+                "--task", "go2_moe.flat",
+                "--experiment-name", "debug",
+                "--seed", "0",
+                "--friction", "0.6",
+                "--goals", "joystick",
+                "--write-tensorboard",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "go2 moe flat single pipeline",
             "type": "debugpy",
             "request": "launch",
@@ -13,7 +28,7 @@
                 "--task", "go2_moe.flat",
                 "--experiment-name", "debug",
                 "--seed", "0",
-                "--friction", "1.6",
+                "--friction", "0.6",
                 "--headless"
             ],
             "console": "integratedTerminal"
@@ -29,7 +44,7 @@
                 "--seed", "0",
                 // "--search-max-level",
                 // "--seeds", "0", "1", "2",
-                "--frictions", "1",
+                "--frictions", "0.4",
                 // "--headless"
             ],
             "console": "integratedTerminal"
@@ -45,7 +60,7 @@
                 "--experiment-name", "mcp_debug",
                 "--seed", "3",
                 "--level", "8",
-                "--frictions", "0.5",
+                "--frictions", "0.2",
             ],
             "env": {"DISPLAY": ":1"},
             "console": "integratedTerminal"

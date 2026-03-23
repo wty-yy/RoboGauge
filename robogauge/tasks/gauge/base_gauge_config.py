@@ -16,6 +16,7 @@ QUALITY_WEIGHTS  = {  # Weights for geometric average, to calculate quality scor
     'dof_power': 1,
     'orientation_stability': 1,
     'torque_smoothness': 1,
+    'friction_margin': 1,
     'zmp_margin': 1,
 }
 
@@ -82,6 +83,10 @@ class BaseGaugeConfig(Config):
         class torque_smoothness:
             enabled = True
             scaling_factor = 30.0  # [Nm] scaling factor for torque smoothness metric
+
+        class friction_margin:
+            enabled = True
+            force_threshold = 5.0  # [N] skip feet with too small accumulated normal force
 
         class zmp_margin:
             enabled = True

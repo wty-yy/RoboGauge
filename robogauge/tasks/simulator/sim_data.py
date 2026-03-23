@@ -45,6 +45,9 @@ class RigidBodyDynamics:
 class GroundContactState:
     positions: np.ndarray         # [m] world frame, shape (n_contact, 3)
     distances: np.ndarray         # [m] shape (n_contact,)
+    normal_forces: np.ndarray     # [N] contact-frame normal force magnitude, shape (n_contact,)
+    tangent_forces: np.ndarray    # [N] contact-frame tangential force magnitude, shape (n_contact,)
+    friction_coefficients: np.ndarray  # [-] translational friction coefficient, shape (n_contact,)
     robot_geom_names: list        # list of robot geom names
     other_geom_names: list        # list of non-robot geom names
     robot_body_names: list        # list of robot body names

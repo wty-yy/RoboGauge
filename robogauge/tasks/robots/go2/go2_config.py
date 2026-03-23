@@ -17,6 +17,7 @@ class Go2Config(RobotConfig):
     class assets:
         robot_xml = "{ROBOGAUGE_ROOT_DIR}/resources/robots/go2/go2.xml"
         robot_spawn_height = 0.1  # z [m]
+        foot_geom_names = ['FL', 'FR', 'RL', 'RR']
 
     class control(RobotConfig.control):
         device = 'cpu'

@@ -17,6 +17,7 @@ class RobotConfig(Config):
 
     class assets:
         robot_xml = "{ROBOGAUGE_ROOT_DIR}/resources/robots/go2/go2.xml"
+        foot_geom_names = []  # List of foot contact geom names (without Mujoco attach prefix)
 
     class control:
         device = 'cpu'
