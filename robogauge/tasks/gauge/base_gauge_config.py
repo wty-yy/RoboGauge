@@ -16,6 +16,7 @@ QUALITY_WEIGHTS  = {  # Weights for geometric average, to calculate quality scor
     'dof_power': 1,
     'orientation_stability': 1,
     'torque_smoothness': 1,
+    'zmp_margin': 1,
 }
 
 class BaseGaugeConfig(Config):
@@ -81,3 +82,12 @@ class BaseGaugeConfig(Config):
         class torque_smoothness:
             enabled = True
             scaling_factor = 30.0  # [Nm] scaling factor for torque smoothness metric
+
+        class zmp_margin:
+            enabled = True
+            contact_threshold = 1e-3  # [m] contact.dist <= threshold is treated as support contact
+            force_threshold = 1e-6  # [N] abs(Fz) below threshold skips ZMP and returns 1.0
+            draw_point = True  # Whether to draw the ZMP point in both viewer and offscreen render
+            draw_point_size = 0.03  # [m] ZMP point sphere radius in Mujoco visualization
+            draw_height_offset = 0.00  # [m] Lift the point slightly above the support plane for visibility
+            draw_point_rgba = [1.0, 0.85, 0.1, 1.0]  # RGBA color of the ZMP point

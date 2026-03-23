@@ -107,7 +107,8 @@ class BasePipeline:
                     if self.sim_cfg.domain_rand.action_delay and i == actions_start_decimation:
                         self.sim.setup_action(action, p_gains, d_gains, control_type)
                     sim_data = self.sim.step()
-                    self.gauge.update_metrics(sim_data, goal_data)
+                    if self.gauge.update_metrics(sim_data, goal_data):
+                        self.sim.update_visuals(sim_data)
                 if not self.first_reset and self.gauge.is_reset(sim_data):
                     sim_data = self.reset_sim_and_robot(sim_data)
             except Exception as e:

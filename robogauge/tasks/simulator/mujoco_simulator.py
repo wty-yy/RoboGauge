@@ -24,7 +24,8 @@ from robogauge.utils.math_utils import get_projected_gravity, quat_rotate_invers
 from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 from robogauge.tasks.simulator.sim_data import (
     SimData,
-    RobotProprioception, JointState, BaseState, IMUState
+    RobotProprioception, JointState, BaseState, IMUState,
+    RigidBodyDynamics, GroundContactState, DynamicsState, VisualState
 )
 from robogauge.tasks.gauge.goal_data import VelocityGoal
 
@@ -48,6 +49,25 @@ class MujocoSimulator:
         self.target_pos = None
         self.target_velocity: Optional[VelocityGoal] = None
         self.penetration_reset_count = 0
+        self.robot_name_prefix = None
+        self.robot_body_ids = None
+        self.robot_body_id_set = set()
+        self.dynamic_body_ids = None
+        self.dynamic_body_names = []
+        self.dynamic_body_mass = None
+        self.dynamic_body_inertia_local = None
+        self.dynamic_body_iquat = None
+        self.foot_body_ids = None
+        self.default_diagonal_foot_distance = 0.0
+        self.prev_body_com_pos = None
+        self.prev_body_rot = None
+        self.prev_body_com_lin_vel = None
+        self.prev_body_ang_vel = None
+        self.zmp_world_pos = None
+        self.zmp_draw_enabled = False
+        self.zmp_draw_size = 0.03
+        self.zmp_draw_height_offset = 0.02
+        self.zmp_draw_rgba = np.array([1.0, 0.85, 0.1, 1.0], dtype=np.float32)
 
     def load(
         self,
@@ -114,6 +134,7 @@ class MujocoSimulator:
             self.mj_data.qpos[3] = 0.0
             self.mj_data.qpos[6] = 1.0
         self.mj_data.qpos[7:] = default_dof_pos
+        self.robot_name_prefix = f'{robot_mjcf.model}/'
 
         # Domain randomization: base mass
         base_body_name = f'{robot_mjcf.model}/base_link'
@@ -184,6 +205,8 @@ class MujocoSimulator:
         self.penetration_reset_count = 0
         self.load_dof_limits()
         self.preload_sensors()
+        self.preload_dynamics_data()
+        self.reset_dynamics_cache()
 
         # Robot controller placeholders
         self.action = None
@@ -259,12 +282,16 @@ class MujocoSimulator:
             logger.log(value=proprio.base.lin_vel[1], tag="sim/base_lin_vel_y", step=self.n_step)
         if self.n_step == 0:
             self.debug_print_proprio_shapes()
+        dynamics = self.get_dynamics_data()
+        visual = VisualState()
 
         sim_data = SimData(
             n_step=self.n_step,
             sim_dt=self.sim_dt,
             sim_time=self.sim_time,
-            proprio=proprio
+            proprio=proprio,
+            dynamics=dynamics,
+            visual=visual,
         )
 
         # input("DEBUG")
@@ -286,6 +313,18 @@ class MujocoSimulator:
                 pos=self.target_pos,
                 mat=np.eye(3).flatten(),
                 rgba=[1, 0, 0, 1]
+            )
+
+        def add_zmp_sphere(geom_elem):
+            zmp_pos = np.array(self.zmp_world_pos, dtype=np.float32).copy()
+            zmp_pos[2] += self.zmp_draw_height_offset
+            mujoco.mjv_initGeom(
+                geom_elem,
+                type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                size=[self.zmp_draw_size, 0, 0],
+                pos=zmp_pos,
+                mat=np.eye(3).flatten(),
+                rgba=np.array(self.zmp_draw_rgba, dtype=np.float32)
             )
 
         def add_thick_arrow(geom_elem, pos, vec, rgba, scale=0.7):
@@ -329,6 +368,14 @@ class MujocoSimulator:
             else:
                 handle.scene.ngeom += 1
                 add_target_sphere(handle.scene.geoms[self.renderer.scene.ngeom - 1])
+
+        if self.zmp_draw_enabled and self.zmp_world_pos is not None:
+            if ctype == 'viewer':
+                add_zmp_sphere(handle.user_scn.geoms[viewer_geom_idx])
+                viewer_geom_idx += 1
+            else:
+                handle.scene.ngeom += 1
+                add_zmp_sphere(handle.scene.geoms[self.renderer.scene.ngeom - 1])
         
         if self.target_velocity is not None:
             base_pos_world = self.mj_data.qpos[:3]
@@ -413,8 +460,10 @@ class MujocoSimulator:
             self.mj_data.qpos[6] = 1.0
         self.mj_data.qpos[7:] = self.default_dof_pos
         mujoco.mj_forward(self.mj_model, self.mj_data)
+        self.reset_dynamics_cache()
 
         self.action = None
+        self.zmp_world_pos = None
         if self.viewer is not None:
             self.viewer.sync()
 
@@ -543,6 +592,273 @@ class MujocoSimulator:
         for adr, dim in ids:
             data_list.append(self.mj_data.sensordata[adr:adr+dim])
         return np.concatenate(data_list)
+
+    def update_visuals(self, sim_data: SimData):
+        visual = sim_data.visual
+        if visual is None:
+            self.zmp_world_pos = None
+            self.zmp_draw_enabled = False
+            return
+
+        self.zmp_world_pos = visual.zmp_world_pos
+        self.zmp_draw_enabled = bool(visual.zmp_draw_enabled)
+        self.zmp_draw_size = float(visual.zmp_draw_size)
+        self.zmp_draw_height_offset = float(visual.zmp_draw_height_offset)
+        if visual.zmp_draw_rgba is not None:
+            self.zmp_draw_rgba = np.array(visual.zmp_draw_rgba, dtype=np.float32)
+
+    @staticmethod
+    def _quat_to_rotmat(quat: np.ndarray) -> np.ndarray:
+        quat = np.asarray(quat, dtype=np.float64)
+        if quat.ndim == 1:
+            quat = quat[None, :]
+        quat_norm = np.linalg.norm(quat, axis=1, keepdims=True)
+        quat_norm = np.maximum(quat_norm, 1e-12)
+        quat = quat / quat_norm
+        w, x, y, z = quat[:, 0], quat[:, 1], quat[:, 2], quat[:, 3]
+        rot = np.empty((quat.shape[0], 3, 3), dtype=np.float32)
+        rot[:, 0, 0] = 1.0 - 2.0 * (y * y + z * z)
+        rot[:, 0, 1] = 2.0 * (x * y - z * w)
+        rot[:, 0, 2] = 2.0 * (x * z + y * w)
+        rot[:, 1, 0] = 2.0 * (x * y + z * w)
+        rot[:, 1, 1] = 1.0 - 2.0 * (x * x + z * z)
+        rot[:, 1, 2] = 2.0 * (y * z - x * w)
+        rot[:, 2, 0] = 2.0 * (x * z - y * w)
+        rot[:, 2, 1] = 2.0 * (y * z + x * w)
+        rot[:, 2, 2] = 1.0 - 2.0 * (x * x + y * y)
+        return rot
+
+    @staticmethod
+    def _rotation_delta_to_angular_velocity(
+            prev_rot: np.ndarray,
+            cur_rot: np.ndarray,
+            dt: float
+        ) -> np.ndarray:
+        ang_vel = np.zeros((cur_rot.shape[0], 3), dtype=np.float32)
+        if prev_rot is None or dt <= 0.0:
+            return ang_vel
+
+        rot_delta = cur_rot @ np.transpose(prev_rot, (0, 2, 1))
+        traces = np.trace(rot_delta, axis1=1, axis2=2)
+        cos_theta = np.clip((traces - 1.0) * 0.5, -1.0, 1.0)
+        theta = np.arccos(cos_theta)
+        skew = np.stack([
+            rot_delta[:, 2, 1] - rot_delta[:, 1, 2],
+            rot_delta[:, 0, 2] - rot_delta[:, 2, 0],
+            rot_delta[:, 1, 0] - rot_delta[:, 0, 1],
+        ], axis=1)
+
+        small_mask = theta < 1e-6
+        if np.any(small_mask):
+            ang_vel[small_mask] = 0.5 * skew[small_mask] / dt
+
+        normal_mask = ~small_mask
+        if np.any(normal_mask):
+            idx = np.where(normal_mask)[0]
+            sin_theta = np.sin(theta[idx])
+            singular_mask = np.abs(sin_theta) < 1e-6
+            if np.any(singular_mask):
+                singular_idx = idx[singular_mask]
+                ang_vel[singular_idx] = 0.5 * skew[singular_idx] / dt
+            regular_idx = idx[~singular_mask]
+            if regular_idx.size > 0:
+                axis = skew[regular_idx] / (2.0 * sin_theta[~singular_mask, None])
+                ang_vel[regular_idx] = axis * theta[regular_idx, None] / dt
+        return ang_vel
+
+    @staticmethod
+    def _max_pairwise_xy_distance(positions: np.ndarray) -> float:
+        if positions.shape[0] < 2:
+            return 0.0
+        xy = positions[:, :2]
+        diffs = xy[:, None, :] - xy[None, :, :]
+        dist = np.linalg.norm(diffs, axis=-1)
+        return float(np.max(dist))
+
+    def _get_body_name(self, body_id: int) -> str:
+        if body_id == 0:
+            return "worldbody"
+        name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, body_id)
+        return name if name is not None else f"body_{body_id}"
+
+    def _get_geom_name(self, geom_id: int) -> str:
+        name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+        return name if name is not None else f"geom_{geom_id}"
+
+    def reset_dynamics_cache(self):
+        self.prev_body_com_pos = None
+        self.prev_body_rot = None
+        self.prev_body_com_lin_vel = None
+        self.prev_body_ang_vel = None
+
+    def preload_dynamics_data(self):
+        self.robot_body_ids = []
+        robot_body_names = []
+        for body_id in range(self.mj_model.nbody):
+            body_name = mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, body_id)
+            if body_name is not None and body_name.startswith(self.robot_name_prefix):
+                self.robot_body_ids.append(body_id)
+                robot_body_names.append(body_name)
+        self.robot_body_ids = np.array(self.robot_body_ids, dtype=np.int32)
+        self.robot_body_id_set = set(int(body_id) for body_id in self.robot_body_ids.tolist())
+
+        if self.robot_body_ids.size == 0:
+            logger.warning("No robot bodies found for dynamics preprocessing.")
+            self.dynamic_body_ids = np.array([], dtype=np.int32)
+            self.dynamic_body_names = []
+            self.dynamic_body_mass = np.zeros((0,), dtype=np.float32)
+            self.dynamic_body_inertia_local = np.zeros((0, 3), dtype=np.float32)
+            self.dynamic_body_iquat = np.zeros((0, 4), dtype=np.float32)
+            self.foot_body_ids = np.array([], dtype=np.int32)
+            self.default_diagonal_foot_distance = 0.0
+            return
+
+        robot_body_mass = np.array(self.mj_model.body_mass[self.robot_body_ids], dtype=np.float32)
+        dynamic_mask = robot_body_mass > 0.0
+        self.dynamic_body_ids = self.robot_body_ids[dynamic_mask]
+        self.dynamic_body_names = [
+            robot_body_names[idx]
+            for idx, is_dynamic in enumerate(dynamic_mask.tolist())
+            if is_dynamic
+        ]
+        self.dynamic_body_mass = np.array(self.mj_model.body_mass[self.dynamic_body_ids], dtype=np.float32)
+        self.dynamic_body_inertia_local = np.array(self.mj_model.body_inertia[self.dynamic_body_ids], dtype=np.float32)
+        if hasattr(self.mj_model, 'body_iquat'):
+            self.dynamic_body_iquat = np.array(self.mj_model.body_iquat[self.dynamic_body_ids], dtype=np.float32)
+        else:
+            self.dynamic_body_iquat = np.tile(np.array([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32), (len(self.dynamic_body_ids), 1))
+
+        self.foot_body_ids = np.array([
+            body_id for body_id, body_name in zip(self.robot_body_ids.tolist(), robot_body_names)
+            if 'foot' in body_name.rsplit('/', 1)[-1].lower()
+        ], dtype=np.int32)
+        self.default_diagonal_foot_distance = self.compute_default_diagonal_foot_distance()
+        logger.info(
+            f"Dynamics preprocessing: robot_bodies={len(self.robot_body_ids)}, "
+            f"dynamic_bodies={len(self.dynamic_body_ids)}, foot_bodies={len(self.foot_body_ids)}, "
+            f"default_diagonal_foot_distance={self.default_diagonal_foot_distance:.4f}"
+        )
+
+    def compute_default_diagonal_foot_distance(self) -> float:
+        if self.foot_body_ids is not None and self.foot_body_ids.size >= 2:
+            if hasattr(self.mj_data, 'xpos'):
+                foot_pos = np.array(self.mj_data.xpos[self.foot_body_ids], dtype=np.float32)
+            else:
+                foot_pos = np.array(self.mj_data.xipos[self.foot_body_ids], dtype=np.float32)
+            return self._max_pairwise_xy_distance(foot_pos)
+
+        contacts = self.get_ground_contact_state()
+        if contacts.positions.shape[0] >= 2:
+            return self._max_pairwise_xy_distance(contacts.positions)
+        return 0.0
+
+    def get_ground_contact_state(self) -> GroundContactState:
+        positions = []
+        distances = []
+        robot_geom_names = []
+        other_geom_names = []
+        robot_body_names = []
+        other_body_names = []
+
+        for i in range(self.mj_data.ncon):
+            contact = self.mj_data.contact[i]
+            geom1 = int(contact.geom1)
+            geom2 = int(contact.geom2)
+            body1 = int(self.mj_model.geom_bodyid[geom1])
+            body2 = int(self.mj_model.geom_bodyid[geom2])
+            is_robot1 = body1 in self.robot_body_id_set
+            is_robot2 = body2 in self.robot_body_id_set
+            if is_robot1 == is_robot2:
+                continue
+
+            robot_geom = geom1 if is_robot1 else geom2
+            other_geom = geom2 if is_robot1 else geom1
+            robot_body = body1 if is_robot1 else body2
+            other_body = body2 if is_robot1 else body1
+
+            positions.append(np.array(contact.pos, dtype=np.float32))
+            distances.append(float(contact.dist))
+            robot_geom_names.append(self._get_geom_name(robot_geom))
+            other_geom_names.append(self._get_geom_name(other_geom))
+            robot_body_names.append(self._get_body_name(robot_body))
+            other_body_names.append(self._get_body_name(other_body))
+
+        positions = np.array(positions, dtype=np.float32).reshape(-1, 3)
+        distances = np.array(distances, dtype=np.float32)
+        return GroundContactState(
+            positions=positions,
+            distances=distances,
+            robot_geom_names=robot_geom_names,
+            other_geom_names=other_geom_names,
+            robot_body_names=robot_body_names,
+            other_body_names=other_body_names,
+        )
+
+    def get_dynamics_data(self) -> DynamicsState:
+        if self.dynamic_body_ids is None or self.dynamic_body_ids.size == 0:
+            empty_body = RigidBodyDynamics(
+                names=[],
+                mass=np.zeros((0,), dtype=np.float32),
+                com_pos=np.zeros((0, 3), dtype=np.float32),
+                com_lin_vel=np.zeros((0, 3), dtype=np.float32),
+                com_lin_acc=np.zeros((0, 3), dtype=np.float32),
+                ang_vel=np.zeros((0, 3), dtype=np.float32),
+                ang_acc=np.zeros((0, 3), dtype=np.float32),
+                inertia_world=np.zeros((0, 3, 3), dtype=np.float32),
+            )
+            return DynamicsState(
+                gravity=np.array(self.mj_model.opt.gravity, dtype=np.float32),
+                rigid_bodies=empty_body,
+                contacts=self.get_ground_contact_state(),
+                default_diagonal_foot_distance=float(self.default_diagonal_foot_distance),
+            )
+
+        com_pos = np.array(self.mj_data.xipos[self.dynamic_body_ids], dtype=np.float32)
+        body_rot = np.array(self.mj_data.xmat[self.dynamic_body_ids], dtype=np.float32).reshape(-1, 3, 3)
+        com_lin_vel = np.zeros_like(com_pos)
+        com_lin_acc = np.zeros_like(com_pos)
+        ang_vel = np.zeros_like(com_pos)
+        ang_acc = np.zeros_like(com_pos)
+
+        if self.prev_body_com_pos is not None:
+            com_lin_vel = (com_pos - self.prev_body_com_pos) / self.sim_dt
+            if self.prev_body_com_lin_vel is not None:
+                com_lin_acc = (com_lin_vel - self.prev_body_com_lin_vel) / self.sim_dt
+        if self.prev_body_rot is not None:
+            ang_vel = self._rotation_delta_to_angular_velocity(self.prev_body_rot, body_rot, self.sim_dt)
+            if self.prev_body_ang_vel is not None:
+                ang_acc = (ang_vel - self.prev_body_ang_vel) / self.sim_dt
+
+        if hasattr(self.mj_data, 'ximat'):
+            inertial_rot = np.array(self.mj_data.ximat[self.dynamic_body_ids], dtype=np.float32).reshape(-1, 3, 3)
+        else:
+            inertial_rot = body_rot @ self._quat_to_rotmat(self.dynamic_body_iquat)
+        inertia_local = np.zeros((self.dynamic_body_ids.size, 3, 3), dtype=np.float32)
+        inertia_local[:, 0, 0] = self.dynamic_body_inertia_local[:, 0]
+        inertia_local[:, 1, 1] = self.dynamic_body_inertia_local[:, 1]
+        inertia_local[:, 2, 2] = self.dynamic_body_inertia_local[:, 2]
+        inertia_world = inertial_rot @ inertia_local @ np.transpose(inertial_rot, (0, 2, 1))
+
+        self.prev_body_com_pos = com_pos.copy()
+        self.prev_body_rot = body_rot.copy()
+        self.prev_body_com_lin_vel = com_lin_vel.copy()
+        self.prev_body_ang_vel = ang_vel.copy()
+
+        return DynamicsState(
+            gravity=np.array(self.mj_model.opt.gravity, dtype=np.float32),
+            rigid_bodies=RigidBodyDynamics(
+                names=self.dynamic_body_names,
+                mass=self.dynamic_body_mass.copy(),
+                com_pos=com_pos,
+                com_lin_vel=com_lin_vel,
+                com_lin_acc=com_lin_acc,
+                ang_vel=ang_vel,
+                ang_acc=ang_acc,
+                inertia_world=inertia_world,
+            ),
+            contacts=self.get_ground_contact_state(),
+            default_diagonal_foot_distance=float(self.default_diagonal_foot_distance),
+        )
 
     def debug_print_proprio_shapes(self):
         """Log shapes (or lengths) of each numpy vector inside a RobotProprioception.

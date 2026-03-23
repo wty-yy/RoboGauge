@@ -11,3 +11,4 @@ logs/
 logs*/
 .aim/
 *.bkp
+.vscode/

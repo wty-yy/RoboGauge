@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="robogauge",  # 包名
-    version="1.1.3",   # 版本号
-    author="Wu Tianyang", # 你的名字
+    name="robogauge",
+    version="1.1.4",
+    author="Wu Tianyang",
     author_email="993660140@qq.com",
     description="A generic robot RL model evaluation library based on MuJoCo",
-    url="https://github.com/wty-yy/robot_gauge", # 如果有仓库地址
+    url="https://github.com/wty-yy/robot_gauge",
     packages=find_packages(),
     install_requires=[
         "torch",  # Refer: https://pytorch.org/get-started/locally/

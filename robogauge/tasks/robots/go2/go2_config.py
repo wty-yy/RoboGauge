@@ -48,7 +48,7 @@ class Go2Config(RobotConfig):
             cmd = [2.0, 2.0, 0.25]
 
     class commands(RobotConfig.commands):
-        lin_vel_x = [-2.0, 2.0]  # min max [m/s]
+        lin_vel_x = [-1.0, 1.0]  # min max [m/s]
         lin_vel_y = [-1.0, 1.0]  # min max [m/s]
         lin_vel_z = None  # min max [m/s]
         ang_vel_roll = None  # min max [rad/s]

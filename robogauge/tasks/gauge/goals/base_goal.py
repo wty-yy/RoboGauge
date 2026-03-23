@@ -49,10 +49,15 @@ class BaseGoal:
     def update_metrics(self, metrics: dict):
         """ Update step metrics for the current goal."""
         quality_score = 1.0
+        quality_weight_sum = 0.0
         for metric_name, value in metrics.items():
             self.goal_metrics[metric_name].append(value)
+            if metric_name not in QUALITY_WEIGHTS:
+                continue
             quality_score *= min(max(1e-9, value), 1.0) ** QUALITY_WEIGHTS[metric_name]
-        quality_score = quality_score ** (1.0 / sum(QUALITY_WEIGHTS.values()))
+            quality_weight_sum += QUALITY_WEIGHTS[metric_name]
+        if quality_weight_sum > 0.0:
+            quality_score = quality_score ** (1.0 / quality_weight_sum)
         self.goal_quality_scores.append(quality_score)
     
     @property

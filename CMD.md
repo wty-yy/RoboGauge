@@ -18,7 +18,7 @@ python robogauge/scripts/run.py \
     --headless
 
 # To evaluate metrics for level terrains, add `--goals` and `--spawn-type`
-# level terrains: wave, slope_fb, slope_bd, stairs_fb, stairs_bd, obstacle (default is target_pos)
+# level terrains: wave, slope_fd, slope_bd, stairs_fd, stairs_bd, obstacle (default is target_pos)
 python robogauge/scripts/run.py \
     --task go2_moe.obstacle \
     --experiment-name debug \
@@ -26,6 +26,14 @@ python robogauge/scripts/run.py \
     --friction 2 \
     --spawn-type level_eval \
     --goals max_velocity diagonal_velocity
+
+# For joystick control and tensorboard DEBUG 
+python robogauge/scripts/run.py \
+    --task go2_moe.flat \
+    --experiment-name debug \
+    --goals joystick \
+    --write-tensorboard \
+    --save-video
 ```
 
 # Multi Pipeline
