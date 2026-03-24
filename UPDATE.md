@@ -1,4 +1,7 @@
 # UPDATE
+## 20260324
+### v1.1.6
+1. 修复multi_pipeline中统计terrain_weighted_summary的地形等级加权分错误，但不影响stress_pipeline最终计算的benchmark_score，只影响metrics里面的mean和mean@50的计算
 ## 20260323
 ### v1.1.5
 1. 添加friction margin指标，计算足端切向力与法向力与摩擦系数比例，用法向力加权平均

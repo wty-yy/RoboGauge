@@ -172,7 +172,7 @@ class MultiPipeline:
             for mean_name, values in means.items():
                 twv = float(np.mean(values))
                 if summary['terrain_name'] in SEARCH_LEVELS_TERRAINS:
-                    twv = 0.09 * (summary['terrain_level'] - 1) + 0.19 * v
+                    twv = 0.09 * (summary['terrain_level'] - 1) + 0.19 * twv
                 summary['terrain_weighted_summary'][metric][mean_name] = f"{twv:.4f} ± {float(np.std(values)):.4f}"
         
         save_path = multi_logger.log_dir / "aggregated_results.yaml"

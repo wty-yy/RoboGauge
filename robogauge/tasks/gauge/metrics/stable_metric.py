@@ -142,9 +142,9 @@ class FrictionMarginMetric(BaseMetric):
             if force_data['normal'] <= self.force_threshold:
                 continue
             if force_data['friction_limit'] <= self.force_threshold:
-                logger.warning(
-                    f"Friction margin metric got too small friction limit on foot {foot_name}, returning 0 for this foot."
-                )
+                # logger.warning(
+                #     f"Friction margin metric got too small friction limit on foot {foot_name}, returning 0 for this foot."
+                # )
                 foot_margins.append(0.0)
                 foot_normal_forces.append(force_data['normal'])
                 utilization_values.append(float('inf'))

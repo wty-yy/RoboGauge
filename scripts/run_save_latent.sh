@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Change robogauge/tasks/robots/go2/go2_moe_config.py `save_additional_output = True`
-# This 
+# Add change max velocity to only x=1m/s
 
 source /root/Programs/miniforge3/bin/activate robot
 
@@ -21,7 +21,7 @@ MODEL_PATH="/root/Coding/RoboGauge/mytest/go2_moe_cts_79k_0.6637.pt"
 #     --num-processes 35 \
 #     --seeds 0 1 2 \
 #     --search-seeds 0 1 2 3 4 \
-#     --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+#     --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
 #     --compress-logs \
 #     --headless
 
@@ -30,7 +30,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -40,7 +40,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -50,7 +50,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -60,7 +60,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -70,7 +70,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -80,7 +80,7 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless
 
@@ -90,6 +90,6 @@ python robogauge/scripts/run.py \
     --model-path ${MODEL_PATH} \
     --experiment-name latent \
     --seed 0 \
-    --friction 1.5 \
+    --friction 0.6 \
     --goals max_velocity \
     --headless

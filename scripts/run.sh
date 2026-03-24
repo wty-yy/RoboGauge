@@ -10,7 +10,7 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 
@@ -23,7 +23,7 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 
@@ -36,7 +36,7 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 
@@ -48,7 +48,7 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 
@@ -61,7 +61,7 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
 
@@ -74,6 +74,6 @@ python robogauge/scripts/run.py \
     --num-processes 35 \
     --seeds 0 1 2 \
     --search-seeds 0 1 2 3 4 \
-    --frictions 0.5 0.75 1.0 1.25 1.5 1.75 2.0 2.25 2.5 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
     --compress-logs \
     --headless
