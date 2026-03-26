@@ -1,8 +1,8 @@
 <div align="center">
-	<h1 align="center">RoboGauge</h1>
-	<p align="center">
-		<a href="README.md">🌎 English</a> | <span>🇨🇳 中文</span>
-	</p>
+    <h1 align="center">RoboGauge</h1>
+    <p align="center">
+        <a href="README.md">🌎 English</a> | <span>🇨🇳 中文</span>
+    </p>
 </div>
 
 本仓库提供一系列**强化学习训练的运动控制模型指标**, 目标是衡量模型的以下信息, 从而能一定程度预测模型Sim2Real的结果, 避免损坏真机:
@@ -164,19 +164,19 @@ while True:
 ## 目录结构
 
 - `robogauge/`：核心 Python 包
-	- `robogauge/scripts/`：可执行入口脚本（运行评测 / 启动服务端）
-	- `robogauge/tasks/`：任务系统（仿真配置 + 指标/场景 + 机器人 + 调度执行）
-		- `robogauge/tasks/pipeline/`：调度与执行层（生命周期、域随机化、多 seed 并行、结果聚合）
-		- `robogauge/tasks/gauge/`：指标层（指令生成、指标计算、结果汇总）
-		- `robogauge/tasks/robots/`：机器人适配层（观测/动作、关节映射、模型加载、控制频率）
-		- `robogauge/tasks/simulator/`：仿真器封装 / 环境接口（MuJoCo 集成、step、状态读取等）
-		- `robogauge/tasks/custom/`：项目自定义扩展与自定义任务
-	- `robogauge/utils/`：工具库（日志、配置/文件处理、统计、数学工具）
+    - `robogauge/scripts/`：可执行入口脚本（运行评测 / 启动服务端）
+    - `robogauge/tasks/`：任务系统（仿真配置 + 指标/场景 + 机器人 + 调度执行）
+        - `robogauge/tasks/pipeline/`：调度与执行层（生命周期、域随机化、多 seed 并行、结果聚合）
+        - `robogauge/tasks/gauge/`：指标层（指令生成、指标计算、结果汇总）
+        - `robogauge/tasks/robots/`：机器人适配层（观测/动作、关节映射、模型加载、控制频率）
+        - `robogauge/tasks/simulator/`：仿真器封装 / 环境接口（MuJoCo 集成、step、状态读取等）
+        - `robogauge/tasks/custom/`：项目自定义扩展与自定义任务
+    - `robogauge/utils/`：工具库（日志、配置/文件处理、统计、数学工具）
 
 - `resources/`：仿真静态资源
-	- `resources/robots/`：机器人资源（XML / mesh / 纹理等），按机器人型号组织
-	- `resources/terrains/`：地形资源（如 `flat.xml`、slope/stairs/wave/obstacle 等）
-	- `resources/models/`：策略/模型资源
+    - `resources/robots/`：机器人资源（XML / mesh / 纹理等），按机器人型号组织
+    - `resources/terrains/`：地形资源（如 `flat.xml`、slope/stairs/wave/obstacle 等）
+    - `resources/models/`：策略/模型资源
 
 - `assets/`：文档资源
 - `scripts/`：实验运行的辅助 shell 脚本

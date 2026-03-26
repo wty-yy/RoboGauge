@@ -1,9 +1,9 @@
 
 <div align="center">
-	<h1 align="center">RoboGauge</h1>
-	<p align="center">
-		<span>🌎 English</span> | <a href="README_zh.md">🇨🇳 中文</a>
-	</p>
+    <h1 align="center">RoboGauge</h1>
+    <p align="center">
+        <span>🌎 English</span> | <a href="README_zh.md">🇨🇳 中文</a>
+    </p>
 </div>
 
 This repository provides a suite of **motion-control evaluation for reinforcement-learning locomotion policies**. The goal is to measure the following aspects of a policy, so we can partially predict Sim2Real performance and reduce the risk of damaging real hardware:
@@ -17,22 +17,22 @@ The evaluation is automated with MuJoCo and implemented fully in Python.
 Demo of the evaluation process (4 terrains, 2 difficulty levels):
 
 <table style="width: 100%; text-align: center;">
-	<tr>
-		<td><b>Wave</b></td>
-		<td><b>Slope</b></td>
-	</tr>
-	<tr>
-		<td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_wave.gif" width="100%"></td>
-		<td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_slope.gif" width="100%"></td>
-	</tr>
-	<tr>
-		<td><b>Stairs</b></td>
-		<td><b>Obstacles</b></td>
-	</tr>
-	<tr>
-		<td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_stairs.gif" width="100%"></td>
-		<td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_obstaces.gif" width="100%"></td>
-	</tr>
+    <tr>
+        <td><b>Wave</b></td>
+        <td><b>Slope</b></td>
+    </tr>
+    <tr>
+        <td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_wave.gif" width="100%"></td>
+        <td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_slope.gif" width="100%"></td>
+    </tr>
+    <tr>
+        <td><b>Stairs</b></td>
+        <td><b>Obstacles</b></td>
+    </tr>
+    <tr>
+        <td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_stairs.gif" width="100%"></td>
+        <td><img src="https://raw.githubusercontent.com/robogauge/picture-bed/refs/heads/main/robogague/robogauge_obstaces.gif" width="100%"></td>
+    </tr>
 </table>
 
 ## Supported Robots
@@ -78,22 +78,22 @@ from robogauge.scripts.client import RoboGaugeClient
 # Create client and submit a test task
 client = RoboGaugeClient(f"http://127.0.0.1:9973")
 task_id = client.submit_task(
-		model_path=test_payload["model_path"],
-		step=test_payload["step"],
-		task_name=test_payload["task_name"],
-		experiment_name=test_payload["experiment_name"],
-		wait_for_server=True
+    model_path=test_payload["model_path"],
+    step=test_payload["step"],
+    task_name=test_payload["task_name"],
+    experiment_name=test_payload["experiment_name"],
+    wait_for_server=True
 )
 
 # Monitor task status and get results
 while True:
-		client.monitor_tasks()
-		for task_id, resp in client.response_data.items():
-				scores = resp['results']['scores']
-				print("[RoboGaugeClient]📊 Scores:")
-				print(json.dumps(scores, indent=2, ensure_ascii=False))
-		client.response_data.clear()
-		time.sleep(5)
+    client.monitor_tasks()
+    for task_id, resp in client.response_data.items():
+        scores = resp['results']['scores']
+        print("[RoboGaugeClient]📊 Scores:")
+        print(json.dumps(scores, indent=2, ensure_ascii=False))
+    client.response_data.clear()
+    time.sleep(5)
 ```
 
 Example integration: `update_robogauge` in [`go2_rl_gym - on_policy_runner.py`](https://github.com/wty-yy/go2_rl_gym/blob/f9024e807758d497445857a21dce3b266876f375/rsl_rl/rsl_rl/runners/on_policy_runner.py#L252)
@@ -188,18 +188,18 @@ Create a new robot implementation and control-model configuration under `robogau
 ## Directory Structure
 
 - `robogauge/`: core Python package
-	- `robogauge/scripts/`: runnable entry scripts (run evaluation / start server)
-	- `robogauge/tasks/`: task system (sim config + metrics/scenes + robot + scheduling)
-		- `robogauge/tasks/pipeline/`: scheduling & execution layer (lifecycle, DR, parallel seeds, aggregation)
-		- `robogauge/tasks/gauge/`: gauge layer (command generation, metric computation, result aggregation)
-		- `robogauge/tasks/robots/`: robot adapters (obs/action, joint mapping, model loading, control rate)
-		- `robogauge/tasks/simulator/`: simulator wrappers / environment interfaces (MuJoCo integration, stepping, state access)
-		- `robogauge/tasks/custom/`: project-specific extensions and custom tasks
-	- `robogauge/utils/`: utilities (logging, config/file helpers, stats, math)
+    - `robogauge/scripts/`: runnable entry scripts (run evaluation / start server)
+    - `robogauge/tasks/`: task system (sim config + metrics/scenes + robot + scheduling)
+        - `robogauge/tasks/pipeline/`: scheduling & execution layer (lifecycle, DR, parallel seeds, aggregation)
+        - `robogauge/tasks/gauge/`: gauge layer (command generation, metric computation, result aggregation)
+        - `robogauge/tasks/robots/`: robot adapters (obs/action, joint mapping, model loading, control rate)
+        - `robogauge/tasks/simulator/`: simulator wrappers / environment interfaces (MuJoCo integration, stepping, state access)
+        - `robogauge/tasks/custom/`: project-specific extensions and custom tasks
+    - `robogauge/utils/`: utilities (logging, config/file helpers, stats, math)
 - `resources/`: simulation static assets
-	- `resources/robots/`: robot assets (XML / meshes / textures), organized by robot type
-	- `resources/terrains/`: terrain assets (e.g., `flat.xml`, slope/stairs/wave/obstacle variants)
-	- `resources/models/`: policy/model resources
+    - `resources/robots/`: robot assets (XML / meshes / textures), organized by robot type
+    - `resources/terrains/`: terrain assets (e.g., `flat.xml`, slope/stairs/wave/obstacle variants)
+    - `resources/models/`: policy/model resources
 - `assets/`: documentation assets
 - `scripts/`: helper shell scripts for running experiments
 
