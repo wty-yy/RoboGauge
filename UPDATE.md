@@ -1,4 +1,8 @@
 # UPDATE
+## 20260518
+### v1.1.7
+1. 新增go2 lab环境评估
+2. 新增server, client通讯检测
 ## 20260324
 ### v1.1.6
 1. 修复multi_pipeline中统计terrain_weighted_summary的地形等级加权分错误，但不影响stress_pipeline最终计算的benchmark_score，只影响metrics里面的mean和mean@50的计算

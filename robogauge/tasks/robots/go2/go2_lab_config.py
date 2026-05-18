@@ -14,6 +14,7 @@ class Go2LabConfig(Go2Config):
     """Go2 Lab robot configuration aligned with RobotLab observation scaling."""
 
     class control(Go2Config.control):
+        p_gains = [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0]  # [N*m/rad]
         class scales(Go2Config.control.scales):
             # RobotLab policy command observation uses unit scale.
             cmd = [1.0, 1.0, 1.0]
