@@ -6,11 +6,35 @@ from typing import Dict, Any, Optional
 from robogauge.scripts.server import ResponseStatus
 
 class RoboGaugeClient:
-    def __init__(self, base_url: str = "http://127.0.0.1:9973"):
+    def __init__(self, base_url: str = "http://127.0.0.1:9973", request_timeout: float = 5.0):
         self.base_url = base_url
+        self.request_timeout = request_timeout
         self.processing_ids = []
         self.task_id2info = {}
         self.response_data = {}
+
+    def is_server_available(self) -> bool:
+        """Return True when the RoboGauge API and evaluator main process are healthy."""
+        try:
+            response = requests.get(
+                f"{self.base_url}/health",
+                timeout=self.request_timeout,
+            )
+            if response.status_code != 200:
+                return False
+            return response.json().get("status") == "ok"
+        except (requests.exceptions.RequestException, ValueError):
+            return False
+
+    def wait_until_available(self, retry_interval: int = 2) -> None:
+        """Block until the RoboGauge API can be reached."""
+        while not self.is_server_available():
+            print(
+                f"[RoboGaugeClient]⏳ Waiting for RoboGauge server at {self.base_url} "
+                f"(retrying in {retry_interval}s)..."
+            )
+            time.sleep(retry_interval)
+        print(f"[RoboGaugeClient]✅ Connected to RoboGauge server at {self.base_url}.")
 
     def submit_task(self, 
         model_path: str, 
@@ -40,9 +64,16 @@ class RoboGaugeClient:
 
         print(f"[RoboGaugeClient]📤 Preparing to submit task: {task_name}")
 
+        if wait_for_server:
+            self.wait_until_available(retry_interval=retry_interval)
+
         while True:
             try:
-                response = requests.post(f"{self.base_url}/submit_eval", json=payload)
+                response = requests.post(
+                    f"{self.base_url}/submit_eval",
+                    json=payload,
+                    timeout=self.request_timeout,
+                )
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -55,9 +86,9 @@ class RoboGaugeClient:
                     print(f"[RoboGaugeClient]❌ Server returned error: {response.text}")
                     return None
 
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.RequestException:
                 if not wait_for_server:
-                    print("[RoboGaugeClient]❌ Unable to connect to server (Connection Refused).")
+                    print("[RoboGaugeClient]❌ Unable to connect to server.")
                     return None
                 
                 print(f"[RoboGaugeClient]⏳ Server not responding, retrying in {retry_interval} seconds... (Make sure server.py is running)")
@@ -66,11 +97,24 @@ class RoboGaugeClient:
                 print(f"[RoboGaugeClient]❌ Unknown error: {e}")
                 return None
 
-    def monitor_tasks(self):
+    def monitor_tasks(self, wait_for_server: bool = True, retry_interval: int = 2):
         print("[RoboGaugeClient]⏱️ Monitoring submitted tasks...")
         """ Monitor all submitted tasks until completion. """
+        if wait_for_server:
+            self.wait_until_available(retry_interval=retry_interval)
+
         for task_id in reversed(self.processing_ids):
-            respone = requests.get(f"{self.base_url}/get_result/{task_id}")
+            try:
+                respone = requests.get(f"{self.base_url}/get_result/{task_id}", timeout=self.request_timeout)
+            except requests.exceptions.RequestException:
+                if not wait_for_server:
+                    raise
+                print(
+                    f"[RoboGaugeClient]⏳ Lost connection to RoboGauge server at {self.base_url}; "
+                    f"waiting before checking task results..."
+                )
+                self.wait_until_available(retry_interval=retry_interval)
+                continue
             if respone.status_code != 200:
                 continue
             resp_data = respone.json()
