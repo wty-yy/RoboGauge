@@ -12,8 +12,8 @@ setup(
         "torch",  # Refer: https://pytorch.org/get-started/locally/
         "numpy==1.20.0",
         "pillow==9.0.0",
-        "mujoco>=3.0.0",
-        "dm_control>=1.0.14",
+        "mujoco==3.2.3",
+        "dm_control==1.0.23",
         "scipy",
         "matplotlib==3.6.3",
         "tqdm",
