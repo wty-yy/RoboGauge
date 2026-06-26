@@ -781,6 +781,13 @@ class MujocoSimulator:
 
             contact_force = np.zeros(6, dtype=np.float64)
             mujoco.mj_contactForce(self.mj_model, self.mj_data, i, contact_force)
+            max_contact_force = 1e6
+            contact_force = np.nan_to_num(
+                contact_force,
+                nan=0.0, posinf=max_contact_force, neginf=-max_contact_force
+            )
+            contact_force = np.clip(contact_force, -max_contact_force, max_contact_force)
+
             friction = np.array(contact.friction, dtype=np.float32).reshape(-1)
 
             positions.append(np.array(contact.pos, dtype=np.float32))

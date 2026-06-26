@@ -10,8 +10,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         "torch",  # Refer: https://pytorch.org/get-started/locally/
-        "numpy==1.20.0",
-        "pillow==9.0.0",
+        "numpy<2",
+        "pillow<10",
         "mujoco==3.2.3",
         "dm_control==1.0.23",
         "scipy",

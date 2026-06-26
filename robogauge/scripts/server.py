@@ -19,6 +19,7 @@ os.environ['MUJOCO_GL'] = 'glfw'
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["TORCH_CPP_LOG_LEVEL"] = "ERROR"
 
 import multiprocessing
 import threading
