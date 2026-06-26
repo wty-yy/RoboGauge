@@ -3,6 +3,19 @@
 source /data/user/wutianyang/Programs/miniforge3/bin/activate go2-gym
 
 python robogauge/scripts/run.py \
+    --task-name go2_lab \
+    --model-path /home/user/go2_rl_robotlab/logs/rsl_rl/go2_moe_cts_v4.2/2026-06-08_14-58-39/exported/policy.pt \
+    --experiment-name go2_moe_cts_v4.2_0.6984 \
+    --stress-benchmark \
+    --stress-terrain-names flat slope_fd slope_bd stairs_fd stairs_bd wave obstacle \
+    --num-processes 70 \
+    --seeds 0 1 2 \
+    --search-seeds 0 1 2 3 4 \
+    --frictions 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 \
+    --compress-logs \
+    --headless
+
+python robogauge/scripts/run.py \
     --task-name go2_moe \
     --model-path /data/user/wutianyang/Coding/go2_rl_gym/mytest_merge_data/rem_cts/go2_moe_cts_expert_goal_137000_0.6745/policies/policy.pt \
     --experiment-name go2_moe_cts_expert_goal_137000_0.6745 \
