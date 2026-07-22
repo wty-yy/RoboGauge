@@ -30,7 +30,28 @@ from robogauge.tasks.simulator.sim_data import (
 from robogauge.tasks.gauge.goal_data import VelocityGoal
 
 class MujocoSimulator:
+    _MAX_MUJOCO_VERSION = (3, 3, 0)
+
+    @classmethod
+    def _require_supported_mujoco_version(cls):
+        version_string = getattr(mujoco, '__version__', '')
+        version_match = re.match(r'^(\d+)\.(\d+)\.(\d+)', version_string)
+        if version_match is None:
+            raise RuntimeError(
+                f"Unable to parse the installed MuJoCo version: "
+                f"{version_string!r}. RoboGauge requires mujoco<3.3.0."
+            )
+
+        installed_version = tuple(map(int, version_match.groups()))
+        if installed_version >= cls._MAX_MUJOCO_VERSION:
+            raise RuntimeError(
+                f"Unsupported MuJoCo version {version_string}. "
+                "RoboGauge evaluation requires mujoco<3.3.0 because "
+                "MuJoCo 3.3.0 and newer use different contact dynamics."
+            )
+
     def __init__(self, sim_cfg: MujocoConfig):
+        self._require_supported_mujoco_version()
         self.cfg = sim_cfg
         self.terrain_xmls = None
         self.robot_xml = None

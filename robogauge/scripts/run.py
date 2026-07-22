@@ -8,14 +8,17 @@
 @Desc    : Run Robogauge Pipeline
 '''
 import os
+import sys
 
-# Headless solution for mujoco
-# For GPU
-# os.environ['MUJOCO_GL'] = 'egl'
-# For CPU (Slow)
-# os.environ['MUJOCO_GL'] = 'osmesa'
-# With a graphical user interface (GUI)
-os.environ['MUJOCO_GL'] = 'glfw'
+# Select the rendering backend before importing MuJoCo.  EGL provides an
+# offscreen context on headless Linux, while GLFW is used by the GUI viewer.
+# Keep an explicit MUJOCO_GL value so callers can override either default.
+default_mujoco_gl = (
+    'egl'
+    if sys.platform.startswith('linux') and '--headless' in sys.argv
+    else 'glfw'
+)
+os.environ.setdefault('MUJOCO_GL', default_mujoco_gl)
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
