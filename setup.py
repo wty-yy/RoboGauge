@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_namespace_packages, setup
 
 setup(
     name="robogauge",
@@ -7,22 +7,9 @@ setup(
     author_email="993660140@qq.com",
     description="A generic robot RL model evaluation library based on MuJoCo",
     url="https://github.com/wty-yy/robot_gauge",
-    packages=find_packages(),
+    packages=find_namespace_packages(include=["robogauge*"]),
     install_requires=[
-        "torch",  # Refer: https://pytorch.org/get-started/locally/
-        "numpy<2",
-        "pillow<10",
-        "mujoco==3.2.3",
-        "dm_control==1.0.23",
-        "scipy",
-        "matplotlib==3.6.3",
-        "tqdm",
-        "imageio[ffmpeg]",
-        "tensorboard",
-        "PyYAML",
-        "fastapi",
-        "uvicorn",
-        "pygame",
+        "requests",
     ],
     python_requires=">=3.8",
     

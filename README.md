@@ -43,13 +43,26 @@ Demo of the evaluation process (4 terrains, 2 difficulty levels):
 
 ## Installation
 
-Recommended environment: `python=3.8`. Install any PyTorch version >= 2.0 following the [official PyTorch guide](https://pytorch.org/get-started/locally/), then install this repo:
+The lightweight RoboGauge client supports Python 3.8 and newer. The full evaluation runtime supports Python 3.8 through 3.11. Clone the repository first:
 
 ```bash
 git clone https://github.com/wty-yy/RoboGauge.git
 cd RoboGauge
+```
+
+For a training environment that only imports `RoboGaugeClient`, install the lightweight client dependencies with pip:
+
+```bash
 pip install -e .
 ```
+
+To run the evaluator or server, install the full runtime in the uv-managed environment:
+
+```bash
+./robogauge.sh --install
+```
+
+Add `--group visualization` to the install command when the visualization utilities are needed.
 
 ## Usage
 
@@ -62,7 +75,7 @@ We provide four evaluation modes: **Single Pipeline**, **Multi Pipeline**, **Lev
 Start the evaluation server:
 
 ```bash
-python robogauge/scripts/server.py
+./robogauge.sh --server
 ```
 
 Key arguments:

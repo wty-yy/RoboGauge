@@ -35,6 +35,7 @@ import argparse
 from dataclasses import dataclass
 from robogauge.utils.helpers import parse_args, class_to_dict
 from robogauge.tasks.pipeline.stress_pipeline import StressPipeline
+from robogauge.scripts.status import ResponseStatus
 from pprint import pprint
 
 default_args_list = [
@@ -63,13 +64,6 @@ class EvalRequest(BaseModel):
     step: int
     task_name: str
     experiment_name: str
-
-class ResponseStatus:
-    PENDING = "pending"
-    PROCESSING = "processing"
-    FINISHED = "finished"
-    ERROR = "error"
-    NOT_FOUND = "not_found"
 
 def update_main_heartbeat(health_dict: dict, stop_event: threading.Event, interval: float = 1.0):
     while not stop_event.is_set():

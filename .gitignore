@@ -5,6 +5,7 @@ debug*
 # Python
 *.egg-info
 __pycache__/
+uv.lock
 
 # Logger
 logs/

@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robogauge"
+version = "1.1.6"
+description = "A generic robot RL model evaluation library based on MuJoCo"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Wu Tianyang", email = "993660140@qq.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Robotics",
+]
+dependencies = [
+    "requests",
+]
+
+[dependency-groups]
+runtime = [
+    "absl-py",
+    "dm-control==1.0.23",
+    "fastapi",
+    "imageio[ffmpeg]",
+    "matplotlib==3.6.3",
+    "mujoco==3.2.3",
+    "numpy<2",
+    "pillow<10",
+    "pydantic",
+    "pygame",
+    "pyyaml",
+    "scipy",
+    "tensorboard",
+    "torch>=2.0",
+    "tqdm",
+    "uvicorn",
+]
+visualization = [
+    { include-group = "runtime" },
+    "pandas",
+    "scikit-learn",
+]
+
+[tool.uv.dependency-groups]
+runtime = { requires-python = ">=3.8,<3.12" }
+visualization = { requires-python = ">=3.8,<3.12" }
+
+[project.urls]
+Homepage = "https://github.com/wty-yy/RoboGauge"
+Repository = "https://github.com/wty-yy/RoboGauge"
+
+[tool.setuptools.packages.find]
+include = ["robogauge*"]
+namespaces = true

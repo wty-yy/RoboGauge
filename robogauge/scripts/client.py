@@ -3,7 +3,7 @@ import time
 import json
 import sys
 from typing import Dict, Any, Optional
-from robogauge.scripts.server import ResponseStatus
+from robogauge.scripts.status import ResponseStatus
 
 class RoboGaugeClient:
     def __init__(self, base_url: str = "http://127.0.0.1:9973", request_timeout: float = 5.0):

@@ -12,14 +12,14 @@ Evaluate metrics in a single run
 
 ```bash
 # Default goals: max_velocity, diagonal_velocity
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.flat \
     --experiment-name debug \
     --headless
 
 # To evaluate metrics for level terrains, add `--goals` and `--spawn-type`
 # level terrains: wave, slope_fd, slope_bd, stairs_fd, stairs_bd, obstacle (default is target_pos)
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.obstacle \
     --experiment-name debug \
     --level 10 \
@@ -28,7 +28,7 @@ python robogauge/scripts/run.py \
     --goals max_velocity diagonal_velocity
 
 # For joystick control and tensorboard DEBUG 
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.flat \
     --experiment-name debug \
     --goals joystick \
@@ -40,7 +40,7 @@ python robogauge/scripts/run.py \
 Evaluate metrics in multiple runs with different seeds and environment parameters
 
 ```bash
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.flat \
     --experiment-name debug \
     --multi \
@@ -51,7 +51,7 @@ python robogauge/scripts/run.py \
     --headless
 
 # Terrain with Level, need specify goals (default is target_pos)
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.stairs_bd \
     --experiment-name debug \
     --multi \
@@ -70,7 +70,7 @@ Evaluate metrics across different terrain levels to find the maximum level the p
 
 ```bash
 # Must specify single frictions for LevelPipeline!
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe.slope \
     --experiment-name debug \
     --search-max-level \
@@ -85,7 +85,7 @@ python robogauge/scripts/run.py \
 Evaluate metrics across different terrain types and environment parameters to test policy robustness
 
 ```bash
-python robogauge/scripts/run.py \
+./robogauge.sh \
     --task go2_moe \
     --experiment-name debug \
     --stress-benchmark \

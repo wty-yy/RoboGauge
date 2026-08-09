@@ -38,22 +38,35 @@
 | Unitree go2 | 四足 | ✅ |
 
 ## 安装
-推荐安装`python=3.8`, 参考[PyTorch官网](https://pytorch.org/get-started/locally/)安装2.0以上任意版本, 安装本仓库
+RoboGauge 轻量客户端支持 Python 3.8 及以上版本，完整评测环境支持 Python 3.8 至 3.11。首先克隆仓库：
 
 ```bash
 git clone https://github.com/wty-yy/RoboGauge.git
 cd RoboGauge
+```
+
+如果训练环境只需要导入 `RoboGaugeClient`，使用 pip 安装轻量客户端依赖：
+
+```bash
 pip install -e .
 ```
+
+运行评测器或服务端时，使用 uv 安装完整运行环境：
+
+```bash
+./robogauge.sh --install
+```
+
+如果需要可视化工具，在安装命令后增加 `--group visualization`。
 
 ## 使用方法
 ### 直接评测指标
 包含Single Pipeline, Multi Pipeline, Level Pipeline, Stress Pipeline四种评测方式, 计算量逐个提升, 可并行加快评估速度, 参考[CMD.md](./CMD.md)中的使用示例
 
 ### 训练异步评估
-启动评估客户端，
+启动评估服务端：
 ```bash
-python robogauge/scripts/server.py
+./robogauge.sh --server
 ```
 
 包含如下参数：
