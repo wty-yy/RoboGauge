@@ -22,3 +22,17 @@ class Go2LabConfig(Go2Config):
 
 class Go2LabTerrainConfig(Go2LabConfig, Go2TerrainConfig):
     """Go2 Lab robot configuration for terrain tasks."""
+
+
+class Go2LabPoseConfig(Go2LabConfig):
+    """Go2 Lab configuration for policies trained with pose commands."""
+
+    robot_class = 'Go2LabPose'
+
+    class control(Go2LabConfig.control):
+        command_horizon_s = 1.0
+        small_angle_threshold = 1.0e-3
+
+
+class Go2LabPoseTerrainConfig(Go2LabPoseConfig, Go2TerrainConfig):
+    """Go2 Lab pose-command configuration for terrain tasks."""

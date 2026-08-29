@@ -4,9 +4,11 @@ from robogauge.tasks.robots import (
     RobotConfig,
     Go2Config,
     Go2LabConfig,
+    Go2LabPoseConfig,
     Go2MoEConfig,
     Go2TerrainConfig,
     Go2LabTerrainConfig,
+    Go2LabPoseTerrainConfig,
     Go2MoETerrainConfig,
 )
 from robogauge.tasks.pipeline import BasePipeline
@@ -43,3 +45,12 @@ task_register.register('go2_lab.wave', BasePipeline, MujocoConfig, Go2WaveGaugeC
 task_register.register('go2_lab.stairs_fd', BasePipeline, MujocoConfig, Go2StairsForwardGaugeConfig, Go2LabTerrainConfig)
 task_register.register('go2_lab.stairs_bd', BasePipeline, MujocoConfig, Go2StairsBackwardGaugeConfig, Go2LabTerrainConfig)
 task_register.register('go2_lab.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2LabTerrainConfig)
+
+# Go2 Lab pose command
+task_register.register('go2_lab_pose.flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfig, Go2LabPoseConfig)
+task_register.register('go2_lab_pose.slope_fd', BasePipeline, MujocoConfig, Go2SlopeForwardGaugeConfig, Go2LabPoseTerrainConfig)
+task_register.register('go2_lab_pose.slope_bd', BasePipeline, MujocoConfig, Go2SlopeBackwardGaugeConfig, Go2LabPoseTerrainConfig)
+task_register.register('go2_lab_pose.wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2LabPoseTerrainConfig)
+task_register.register('go2_lab_pose.stairs_fd', BasePipeline, MujocoConfig, Go2StairsForwardGaugeConfig, Go2LabPoseTerrainConfig)
+task_register.register('go2_lab_pose.stairs_bd', BasePipeline, MujocoConfig, Go2StairsBackwardGaugeConfig, Go2LabPoseTerrainConfig)
+task_register.register('go2_lab_pose.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2LabPoseTerrainConfig)

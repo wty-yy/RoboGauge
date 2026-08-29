@@ -26,6 +26,14 @@ class Go2(BaseRobot):
         self.action_scale = cfg.control.scales.action
         self.mj2model_idx = self.cfg.control.mj2model_dof_indices
         self.model2mj_idx = [self.mj2model_idx.index(i) for i in range(len(self.mj2model_idx))]
+
+    def transform_velocity_command(
+        self,
+        velocity_command: np.ndarray,
+        base_quat_wxyz: np.ndarray,
+    ) -> np.ndarray:
+        """Transform a gauge velocity target into the policy command representation."""
+        return velocity_command
     
     def build_observation(self, sim_data: SimData, goal_data: GoalData) -> np.ndarray:
         sim_proprio = sim_data.proprio
@@ -41,6 +49,7 @@ class Go2(BaseRobot):
             cmd = np.minimum(np.maximum(cmd, np.array([self.cmd_range.lin_vel_x[0], self.cmd_range.lin_vel_y[0], self.cmd_range.ang_vel_yaw[0]], dtype=np.float32)), 
                              np.array([self.cmd_range.lin_vel_x[1], self.cmd_range.lin_vel_y[1], self.cmd_range.ang_vel_yaw[1]], dtype=np.float32))
             
+            cmd = self.transform_velocity_command(cmd, sim_proprio.imu.quat)
             cmd *= self.cfg.control.scales.cmd
 
             obs[:3] = ang_vel

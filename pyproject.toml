@@ -36,7 +36,7 @@ runtime = [
     "pyyaml",
     "scipy",
     "tensorboard",
-    "torch>=2.0",
+    "torch==2.4.1+cu124",
     "tqdm",
     "uvicorn",
 ]
@@ -49,6 +49,14 @@ visualization = [
 [tool.uv.dependency-groups]
 runtime = { requires-python = ">=3.8,<3.12" }
 visualization = { requires-python = ">=3.8,<3.12" }
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
 
 [project.urls]
 Homepage = "https://github.com/wty-yy/RoboGauge"
