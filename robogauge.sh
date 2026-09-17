@@ -15,7 +15,11 @@ fi
 # contain interpreter-specific links, so keep each runtime under the
 # repository's .venv directory and derive the subdirectory from the selected
 # interpreter. This avoids hard-coded host/container paths.
-ROBOGAUGE_PYTHON="$(uv python find --no-project --managed-python --resolve-links 3.11)"
+if ! ROBOGAUGE_PYTHON="$(uv python find --no-project --managed-python --resolve-links 3.11 2>/dev/null)"; then
+    echo "uv-managed Python 3.11 not found; installing it for this runtime."
+    uv python install 3.11
+    ROBOGAUGE_PYTHON="$(uv python find --no-project --managed-python --resolve-links 3.11)"
+fi
 ROBOGAUGE_PYTHON_VERSION="$("$ROBOGAUGE_PYTHON" --version)"
 ROBOGAUGE_RUNTIME_ID="$(printf '%s\n%s' "$ROBOGAUGE_PYTHON" "$ROBOGAUGE_PYTHON_VERSION" | cksum | awk '{print $1}')"
 ROBOGAUGE_ENVIRONMENT="${ROBOGAUGE_VENV:-.venv/uv-${ROBOGAUGE_RUNTIME_ID}}"
