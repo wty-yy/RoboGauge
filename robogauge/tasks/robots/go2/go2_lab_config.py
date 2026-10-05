@@ -24,6 +24,19 @@ class Go2LabTerrainConfig(Go2LabConfig, Go2TerrainConfig):
     """Go2 Lab robot configuration for terrain tasks."""
 
 
+class Go2Lab131Config(Go2LabConfig):
+    """Go2 Lab 1.3.1 configuration with x-only velocity observation scaling."""
+
+    class control(Go2LabConfig.control):
+        class scales(Go2LabConfig.control.scales):
+            lin_vel = [0.5, 1.0, 1.0]
+            cmd = [0.5, 1.0, 1.0]
+
+
+class Go2Lab131TerrainConfig(Go2Lab131Config, Go2TerrainConfig):
+    """Go2 Lab 1.3.1 robot configuration for terrain tasks."""
+
+
 class Go2LabPoseConfig(Go2LabConfig):
     """Go2 Lab configuration for policies trained with pose commands."""
 

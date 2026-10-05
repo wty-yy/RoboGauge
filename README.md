@@ -178,6 +178,8 @@ Tasks are registered in [robogauge/tasks/__init__.py](./robogauge/tasks/__init__
 - **BaseGaugeConfig**: metric configuration (see below to add new metrics)
 - **RobotConfig**: robot configuration (see below to add a new robot)
 
+`go2_lab_1.3.1.<terrain>` provides the seven Go2 Lab terrain tasks with command observation scales `[0.5, 1.0, 1.0]`. For stress evaluation, use `--task-name go2_lab_1.3.1 --stress-benchmark`. The original `go2_lab.<terrain>` tasks retain command scales `[1.0, 1.0, 1.0]`.
+
 ### Add a New Metric
 
 Create a new scenario / metric implementation under `robogauge/tasks/gauge`.

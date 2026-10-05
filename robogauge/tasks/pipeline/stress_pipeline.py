@@ -29,6 +29,7 @@ from robogauge.utils.progress_monitor import report_progress, ProgressTypes, sta
 from robogauge.tasks.pipeline import MultiPipeline, LevelPipeline
 from robogauge.tasks.gauge.gauge_configs.terrain_levels_config import SEARCH_LEVELS_TERRAINS
 from robogauge.utils.file_utils import compress_directory
+from robogauge.utils.task_register import task_register
 
 stress_logger = Logger()  # StressPipeline logger
 
@@ -102,7 +103,10 @@ def run_pipeline(args, progress_queue, data):
 class StressPipeline:
     def __init__(self, args):
         self.args = args
-        self.task_robot_model = args.task_name.split('.')[0]
+        self.task_robot_model = (
+            args.task_name.rsplit('.', 1)[0]
+            if args.task_name in task_register.robot_cfgs else args.task_name
+        )
         self.num_processes = args.num_processes
         args.experiment_name = self.task_robot_model + '_stress' + ('' if args.cli_experiment_name is None else '_' + args.cli_experiment_name)
         self.static_info = {}

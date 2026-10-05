@@ -1,4 +1,9 @@
 # UPDATE
+## v1.1.9 - 2026-10-05
+1. Add `go2_lab_1.3.1.*` tasks with linear velocity and command observation scales `[0.5, 1.0, 1.0]`
+2. Preserve dotted robot task names in `StressPipeline`
+3. Synchronize package version metadata to `1.1.9`
+
 ## v1.1.8 - 2026-08-29
 1. 修复uv安装环境在不同环境打开后路径中的问题
 2. 新增go2_lab_pose.*的任务

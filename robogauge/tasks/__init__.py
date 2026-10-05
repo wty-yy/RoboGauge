@@ -3,6 +3,8 @@ from robogauge.tasks.simulator.mujoco_config import MujocoConfig
 from robogauge.tasks.robots import (
     RobotConfig,
     Go2Config,
+    Go2Lab131Config,
+    Go2Lab131TerrainConfig,
     Go2LabConfig,
     Go2LabPoseConfig,
     Go2MoEConfig,
@@ -45,6 +47,15 @@ task_register.register('go2_lab.wave', BasePipeline, MujocoConfig, Go2WaveGaugeC
 task_register.register('go2_lab.stairs_fd', BasePipeline, MujocoConfig, Go2StairsForwardGaugeConfig, Go2LabTerrainConfig)
 task_register.register('go2_lab.stairs_bd', BasePipeline, MujocoConfig, Go2StairsBackwardGaugeConfig, Go2LabTerrainConfig)
 task_register.register('go2_lab.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2LabTerrainConfig)
+
+# Go2 Lab 1.3.1: x-only velocity command observation scaling
+task_register.register('go2_lab_1.3.1.flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfig, Go2Lab131Config)
+task_register.register('go2_lab_1.3.1.slope_fd', BasePipeline, MujocoConfig, Go2SlopeForwardGaugeConfig, Go2Lab131TerrainConfig)
+task_register.register('go2_lab_1.3.1.slope_bd', BasePipeline, MujocoConfig, Go2SlopeBackwardGaugeConfig, Go2Lab131TerrainConfig)
+task_register.register('go2_lab_1.3.1.wave', BasePipeline, MujocoConfig, Go2WaveGaugeConfig, Go2Lab131TerrainConfig)
+task_register.register('go2_lab_1.3.1.stairs_fd', BasePipeline, MujocoConfig, Go2StairsForwardGaugeConfig, Go2Lab131TerrainConfig)
+task_register.register('go2_lab_1.3.1.stairs_bd', BasePipeline, MujocoConfig, Go2StairsBackwardGaugeConfig, Go2Lab131TerrainConfig)
+task_register.register('go2_lab_1.3.1.obstacle', BasePipeline, MujocoConfig, Go2ObstacleGaugeConfig, Go2Lab131TerrainConfig)
 
 # Go2 Lab pose command
 task_register.register('go2_lab_pose.flat', BasePipeline, MujocoConfig, Go2FlatGaugeConfig, Go2LabPoseConfig)

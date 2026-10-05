@@ -160,6 +160,9 @@ while True:
 - MujocoConfig: 仿真器配置文件, 一般无需修改
 - BaseGaugeConfig: 指标配置文件, 参考下文创建新指标
 - RobotConfig: 机器人配置文件, 参考下文创建新机器人
+
+`go2_lab_1.3.1.<terrain>` 提供七种 Go2 Lab 地形任务，速度指令观测缩放为 `[0.5, 1.0, 1.0]`。压力评估使用 `--task-name go2_lab_1.3.1 --stress-benchmark`。原 `go2_lab.<terrain>` 任务保留 `[1.0, 1.0, 1.0]` 的指令缩放。
+
 ### 新指标
 在`robogauge/tasks/gauge`下创建新的场景、评估指标
 ### 新机器人

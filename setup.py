@@ -2,7 +2,7 @@ from setuptools import find_namespace_packages, setup
 
 setup(
     name="robogauge",
-    version="1.1.6",
+    version="1.1.9",
     author="Wu Tianyang",
     author_email="993660140@qq.com",
     description="A generic robot RL model evaluation library based on MuJoCo",
